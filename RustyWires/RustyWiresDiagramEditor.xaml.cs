@@ -1,9 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using NationalInstruments.Core;
 using NationalInstruments.Design;
-using NationalInstruments.MocCommon.Design;
 using NationalInstruments.Shell;
 using NationalInstruments.SourceModel;
+using RustyWires.SourceModel;
 
 namespace RustyWires
 {
@@ -12,7 +12,7 @@ namespace RustyWires
         public RustyWiresDiagramEditorInfo(string uniqueId, RustyWiresDocument document)
             : base(uniqueId, document, document.Function.Diagram, "editor", RustyWiresDiagramPaletteLoader.RustyWiresDiagramPaletteIdentifier, string.Empty, string.Empty)
         {
-            // ClipboardDataFormat = SketchUtilities.SketchClipboardDataFormat;
+            ClipboardDataFormat = RustyWiresFunction.DiagramClipboardDataFormat;
         }
     }
 

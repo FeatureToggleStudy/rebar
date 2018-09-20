@@ -6,6 +6,8 @@ using NationalInstruments.MocCommon.SourceModel;
 using System.Collections.Generic;
 using NationalInstruments.VI.SourceModel;
 using RustyWires.Compiler;
+using NationalInstruments.Design;
+using NationalInstruments.Core;
 
 namespace RustyWires.SourceModel
 {
@@ -28,6 +30,10 @@ namespace RustyWires.SourceModel
         /// DefinitionType
         /// </summary>
         public const string RustyWiresFunctionDefinitionType = "RustyWires.SourceModel.RustyWiresFunction";
+
+        public static readonly string DiagramClipboardDataFormat = ClipboardFormatHelper.RegisterClipboardFormat(
+            DragDrop.NIDataFormatPrefix + DiagramPaletteConstants.DiagramPaletteIdentifier,
+            "RustyWiresDiagram");
 
         /// <summary>
         ///  Get the root diagram of the sketch.

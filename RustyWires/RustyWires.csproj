@@ -137,6 +137,7 @@
     <Compile Include="SourceModel\MutablePassthroughNode.cs" />
     <Compile Include="SourceModel\Primitives.cs" />
     <Compile Include="SourceModel\RustyWiresFunction.cs" />
+    <Compile Include="SourceModel\RustyWiresFunctionMergeScriptDataService.cs" />
     <Compile Include="SourceModel\RustyWiresNamespaceSchema.cs" />
     <Compile Include="SourceModel\RustyWiresRootDiagram.cs" />
     <Compile Include="SourceModel\RustyWiresCaseStructure.cs" />
