@@ -64,7 +64,8 @@ namespace RustyWires.SourceModel
 
         public override XName XmlElementName => XName.Get(ElementName, RustyWiresFunction.ParsableNamespaceName);
 
-        public override IWiringBehavior WiringBehavior => new ManhattanWiringBehavior();
+        /// <inheritdoc />
+        public override IWiringBehavior WiringBehavior => new VirtualInstrumentWiringBehavior();
 
         /// <inheritdoc />
         protected override void CreateBatchRules(ICollection<ModelBatchRule> rules)

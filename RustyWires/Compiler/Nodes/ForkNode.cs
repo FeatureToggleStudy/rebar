@@ -1,6 +1,7 @@
 ﻿using NationalInstruments.Dfir;
+using System.Collections.Generic;
 
-namespace RustyWires.Compiler
+namespace RustyWires.Compiler.Nodes
 {
     internal class ForkNode : RustyWiresDfirNode
     {
@@ -16,6 +17,15 @@ namespace RustyWires.Compiler
         protected override Node CopyNodeInto(Node newParentNode, NodeCopyInfo copyInfo)
         {
             return new ForkNode(newParentNode, OutputTerminals.Count);
+        }
+
+        /// <inheritdoc />
+        public override IEnumerable<PassthroughTerminalPair> PassthroughTerminalPairs
+        {
+            get
+            {
+                yield return new PassthroughTerminalPair(Terminals[0], Terminals[1]);
+            }
         }
     }
 }
