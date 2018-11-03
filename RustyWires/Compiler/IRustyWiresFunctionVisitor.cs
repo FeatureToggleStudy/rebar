@@ -5,6 +5,7 @@ namespace RustyWires.Compiler
     public interface IRustyWiresFunctionVisitor : IDataflowFunctionDefinitionVisitor
     {
         void VisitRustyWiresFunction(SourceModel.RustyWiresFunction function);
+        void VisitInputParameterAccessor(SourceModel.InputParameterAccessor accessor);
 
         void VisitDropNode(SourceModel.DropNode node);
         void VisitImmutablePassthroughNode(SourceModel.ImmutablePassthroughNode node);

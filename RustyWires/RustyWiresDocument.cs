@@ -19,6 +19,7 @@ using NationalInstruments.Shell;
 using NationalInstruments.SourceModel.Envoys;
 using RustyWires.Design;
 using RustyWires.SourceModel;
+using NationalInstruments.SourceModel;
 
 namespace RustyWires
 {
@@ -147,6 +148,25 @@ namespace RustyWires
         };
 
         /// <summary>
+        /// Adds an input parameter to the document.
+        /// </summary>
+        public static readonly ICommandEx AddInputParameterCommand = new ShellRelayCommand(HandleAddInputParameter)
+        {
+            UniqueId = _rustyWiresDocumentUniqueIdPrefix + "AddInputParameterCommand",
+            LabelTitle = "Add Input Parameter",
+        };
+
+        private static void HandleAddInputParameter(object parameter, ICompositionHost host, DocumentEditSite editSite)
+        {
+            var rustyWiresFunction = (RustyWiresFunction)((DefinitionDocument)editSite.ActiveDocument).Definition;
+            using (IActiveTransaction transaction = rustyWiresFunction.TransactionManager.BeginTransaction("Add input parameter", TransactionPurpose.User))
+            {
+                rustyWiresFunction.AddInputParameter();
+                transaction.Commit();
+            }
+        }
+
+        /// <summary>
         ///  The default constructor
         /// </summary>
         public RustyWiresDocument()
@@ -231,6 +251,14 @@ namespace RustyWires
             using (context.AddToolLauncherContent())
             {
                 context.Add(DocumentToolCommand);
+            }
+
+            using (context.AddConfigurationPaneContent())
+            {
+                using (context.AddGroup(ConfigurationPaneCommands.DefaultGroupCommand))
+                {
+                    context.Add(AddInputParameterCommand);
+                }
             }
 
             using (context.AddConfigurationPaneFooterContent())

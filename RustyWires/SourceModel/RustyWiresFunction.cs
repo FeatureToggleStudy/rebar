@@ -8,6 +8,9 @@ using NationalInstruments.VI.SourceModel;
 using RustyWires.Compiler;
 using NationalInstruments.Design;
 using NationalInstruments.Core;
+using NationalInstruments.CommonModel;
+using NationalInstruments.DataTypes;
+using System;
 
 namespace RustyWires.SourceModel
 {
@@ -95,6 +98,94 @@ namespace RustyWires.SourceModel
         }
 
         // TODO
-        public override IEnumerable<IDiagramParameter> Parameters => Enumerable.Empty<IDiagramParameter>();
+        public override IEnumerable<IDiagramParameter> Parameters => Components.OfType<RustyWiresFunctionParameter>();
+
+        internal void AddInputParameter()
+        {
+            var parameter = new RustyWiresFunctionParameter(ParameterCallDirection.Input, PFTypes.String.CreateMutableValue(), "input");
+            AddComponent(parameter);
+
+            InputParameterAccessor inputAccessor = RootDiagram.Components.OfType<InputParameterAccessor>().FirstOrDefault();
+            if (inputAccessor == null)
+            {
+                inputAccessor = new InputParameterAccessor(); // TODO: should be Create(ForNew)
+                RootDiagram.AddChild(inputAccessor);
+            }
+            inputAccessor.UpdateTerminals();
+        }
+    }
+
+    public class RustyWiresFunctionParameter : Content, IDiagramParameter
+    {
+        private readonly ParameterCallDirection _direction;
+        private readonly NIType _dataType;
+        private readonly string _name;
+
+        public RustyWiresFunctionParameter(ParameterCallDirection direction, NIType type, string name)
+        {
+            _direction = direction;
+            _dataType = type;
+            _name = name;
+        }
+
+        public ParameterCallDirection CallDirection
+        {
+            get
+            {
+                return _direction;
+            }
+            set
+            {
+            }
+        }
+
+        public ParameterCallUsage CallUsage
+        {
+            get
+            {
+                return ParameterCallUsage.Required;
+            }
+            set
+            {
+            }
+        }
+
+        public NIType DataType
+        {
+            get
+            {
+                return _dataType;
+            }
+            set
+            {
+            }
+        }
+
+        public Element Element
+        {
+            get
+            {
+                return this;
+            }
+        }
+
+        public string Name
+        {
+            get
+            {
+                return _name;
+            }
+            set
+            {
+            }
+        }
+
+        public ParameterCallDirection PreferredDirection
+        {
+            get
+            {
+                return _direction;
+            }
+        }
     }
 }

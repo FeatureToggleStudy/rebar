@@ -16,6 +16,7 @@ namespace RustyWires
         {
             AddSupportedModel<DiagramLabel>(n => new DiagramLabelViewModel(n));
             AddSupportedModel<MocCommonMethodCall>(n => new MethodCallViewModel(n));
+            AddSupportedModel<InputParameterAccessor>(n => new BasicNodeViewModel(n, "Inputs"));
 
             AddSupportedModel<DropNode>(n => new BasicNodeViewModel(n, "Drop Value"));
             AddSupportedModel<ImmutablePassthroughNode>(n => new BasicNodeViewModel(n, "Immutable Passthrough"));

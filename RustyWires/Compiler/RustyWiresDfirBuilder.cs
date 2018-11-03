@@ -19,6 +19,7 @@ using Structure = NationalInstruments.SourceModel.Structure;
 using Terminal = NationalInstruments.SourceModel.Terminal;
 using Tunnel = NationalInstruments.SourceModel.Tunnel;
 using Wire = NationalInstruments.SourceModel.Wire;
+using NationalInstruments;
 
 namespace RustyWires.Compiler
 {
@@ -444,7 +445,17 @@ namespace RustyWires.Compiler
             ConnectWires();
         }
 
-        private void MapTerminalAndType(NationalInstruments.SourceModel.Terminal modelTerminal,
+        public void VisitInputParameterAccessor(SourceModel.InputParameterAccessor accessor)
+        {
+            var inputParameterAccessorDfir = new Nodes.InputParameterAccessor(_currentDiagram, accessor.Terminals.Count());
+            _map.AddMapping(accessor, inputParameterAccessorDfir);
+            foreach (var terminalPair in accessor.Terminals.Zip(inputParameterAccessorDfir.Terminals))
+            {
+                _map.AddMapping(terminalPair.Key, terminalPair.Value);
+            }
+        }
+
+        private void MapTerminalAndType(Terminal modelTerminal,
             NationalInstruments.Dfir.Terminal dfirTerminal)
         {
             _map.AddMapping(modelTerminal, dfirTerminal);

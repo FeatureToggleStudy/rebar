@@ -87,6 +87,7 @@
     <Compile Include="Compiler\Nodes\ForkNode.cs" />
     <Compile Include="Compiler\Nodes\FreezeNode.cs" />
     <Compile Include="Compiler\Nodes\ImmutablePassthroughNode.cs" />
+    <Compile Include="Compiler\Nodes\InputParameterAccessor.cs" />
     <Compile Include="Compiler\Nodes\LockTunnel.cs" />
     <Compile Include="Compiler\Nodes\MutablePassthroughNode.cs" />
     <Compile Include="Compiler\Nodes\MutatingBinaryPrimitive.cs" />
@@ -146,6 +147,7 @@
     <Compile Include="SourceModel\Freeze.cs" />
     <Compile Include="SourceModel\ImmutableBorrowNode.cs" />
     <Compile Include="SourceModel\ImmutablePassthroughNode.cs" />
+    <Compile Include="SourceModel\InputParameterAccessor.cs" />
     <Compile Include="SourceModel\LockTunnel.cs" />
     <Compile Include="SourceModel\MutablePassthroughNode.cs" />
     <Compile Include="SourceModel\Primitives.cs" />
