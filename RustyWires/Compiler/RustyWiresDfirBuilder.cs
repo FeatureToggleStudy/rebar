@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using NationalInstruments;
 using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using NationalInstruments.MocCommon.SourceModel;
@@ -297,7 +298,6 @@ namespace RustyWires.Compiler
             Constant constant = Constant.Create(_currentDiagram, literal.Data, dataType.CreateImmutableReference());
             _map.AddMapping((Content)literal, constant);
             _map.AddMapping(literal.OutputTerminal, constant.Terminals.ElementAt(0));
-            constant.Terminals.ElementAt(0).SetLifetime(constant.DfirRoot.GetLifetimeSet().StaticLifetime);
         }
 
         public void VisitMethodCall(MocCommonMethodCall callStatic)
@@ -341,6 +341,16 @@ namespace RustyWires.Compiler
             _map.AddMapping(node, mutablePassthroughDfir);
             _map.AddMapping(node.Terminals.ElementAt(0), mutablePassthroughDfir.Terminals.ElementAt(0));
             _map.AddMapping(node.Terminals.ElementAt(1), mutablePassthroughDfir.Terminals.ElementAt(1));
+        }
+
+        public void VisitTerminateLifetimeNode(TerminateLifetime node)
+        {
+            var terminateLifetimeDfir = new TerminateLifetimeNode(_currentDiagram, node.InputTerminals.Count(), node.OutputTerminals.Count());
+            _map.AddMapping(node, terminateLifetimeDfir);
+            foreach (var pair in node.Terminals.Zip(terminateLifetimeDfir.Terminals))
+            {
+                _map.AddMapping(pair.Key, pair.Value);
+            }
         }
 
         public void VisitSelectReferenceNode(SourceModel.SelectReferenceNode node)

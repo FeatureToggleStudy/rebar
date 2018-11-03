@@ -1,18 +1,25 @@
-﻿using NationalInstruments.Dfir;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using NationalInstruments.Dfir;
 
 namespace RustyWires.Compiler
 {
     internal sealed class VariableSet
     {
-        private readonly Dictionary<Wire, Variable> _wireVariables = new Dictionary<Wire, Variable>();
+        private readonly List<Variable> _variables = new List<Variable>();
         private readonly Dictionary<Terminal, Variable> _terminalVariables = new Dictionary<Terminal, Variable>();
-        private int _setCount = 0;
+        private readonly Dictionary<Lifetime, List<Variable>> _variablesInterruptedByLifetimes = new Dictionary<Lifetime, List<Variable>>();
+        private readonly BoundedLifetimeGraph _boundedLifetimeGraph = new BoundedLifetimeGraph();
 
         private Variable CreateNewVariable(Terminal originatingTerminal)
         {
-            return new Variable(_setCount++, originatingTerminal);
+            var variable = new Variable(_variables.Count, originatingTerminal);
+            _variables.Add(variable);
+            return variable;
         }
+
+        public IEnumerable<Variable> Variables => _variables;
 
         public Variable AddTerminalToNewVariable(Terminal terminal)
         {
@@ -33,22 +40,55 @@ namespace RustyWires.Compiler
             _terminalVariables[terminal] = variable;
         }
 
-        public Variable GetVariableForWire(Wire wire)
+        public void MergeVariables(Variable toMerge, Variable mergeWith)
         {
-            Variable variable;
-            _wireVariables.TryGetValue(wire, out variable);
-            return variable;
+            if (!_variables.Contains(mergeWith))
+            {
+                throw new ArgumentException(nameof(mergeWith));
+            }
+            List<Terminal> terminalsToMerge = _terminalVariables.Where(pair => pair.Value == toMerge).Select(pair => pair.Key).ToList();
+            terminalsToMerge.ForEach(terminal => _terminalVariables[terminal] = mergeWith);
+            _variables.Remove(toMerge);
         }
 
-        public void AddWireToVariable(Variable variable, Wire wire)
+        public IEnumerable<Variable> GetVariablesInterruptedByLifetime(Lifetime lifetime)
         {
-            _wireVariables[wire] = variable;
-            variable.Wires.Add(wire);
+            List<Variable> variables;
+            if (_variablesInterruptedByLifetimes.TryGetValue(lifetime, out variables))
+            {
+                return variables;
+            }
+            return Enumerable.Empty<Variable>();
         }
 
         public VariableUsageValidator GetValidatorForTerminal(Terminal terminal)
         {
             return new VariableUsageValidator(GetVariableForTerminal(terminal), terminal);
+        }
+
+        public Lifetime DefineLifetimeThatOutlastsDiagram()
+        {
+            return _boundedLifetimeGraph.CreateLifetimeThatOutlastsDiagram();
+        }
+
+        public Lifetime DefineLifetimeThatIsBoundedByDiagram(IEnumerable<Variable> decomposedVariables)
+        {
+            Lifetime lifetime = _boundedLifetimeGraph.CreateLifetimeThatIsBoundedByDiagram();
+            _variablesInterruptedByLifetimes.Add(lifetime, decomposedVariables.ToList());
+            return lifetime;
+        }
+
+        public Lifetime ComputeCommonLifetime(Lifetime left, Lifetime right)
+        {
+            if (_boundedLifetimeGraph.DoesOutlast(left, right))
+            {
+                return right;
+            }
+            if (_boundedLifetimeGraph.DoesOutlast(right, left))
+            {
+                return left;
+            }
+            return Lifetime.Empty;
         }
     }
 
@@ -56,16 +96,42 @@ namespace RustyWires.Compiler
     {
         private static readonly AttributeDescriptor _variableSetTokenName = new AttributeDescriptor("RustyWires.Compiler.VariableSet", false);
 
-        public static void SetVariableSet(this DfirRoot dfirRoot, VariableSet variableSet)
+        public static void SetVariableSet(this Diagram diagram, VariableSet variableSet)
         {
-            var token = dfirRoot.GetOrCreateNamedSparseAttributeToken<VariableSet>(_variableSetTokenName);
-            dfirRoot.SetAttribute(token, variableSet);
+            var token = diagram.DfirRoot.GetOrCreateNamedSparseAttributeToken<VariableSet>(_variableSetTokenName);
+            diagram.SetAttribute(token, variableSet);
         }
 
-        public static VariableSet GetVariableSet(this DfirRoot dfirRoot)
+        public static VariableSet GetVariableSet(this Diagram diagram)
         {
-            var token = dfirRoot.GetOrCreateNamedSparseAttributeToken<VariableSet>(_variableSetTokenName);
-            return token.GetAttribute(dfirRoot);
+            var token = diagram.DfirRoot.GetOrCreateNamedSparseAttributeToken<VariableSet>(_variableSetTokenName);
+            return token.GetAttribute(diagram);
+        }
+
+        public static VariableSet GetVariableSet(this Terminal terminal)
+        {
+            return terminal.ParentDiagram.GetVariableSet();
+        }
+
+        public static Variable GetVariable(this Terminal terminal)
+        {
+            return terminal.GetVariableSet().GetVariableForTerminal(terminal);
+        }
+
+        public static void AddTerminalToVariable(this Terminal terminal, Variable variable)
+        {
+            // TODO: validate that variable is part of terminal.GetVariableSet()
+            terminal.GetVariableSet().AddTerminalToVariable(variable, terminal);
+        }
+
+        public static Variable AddTerminalToNewVariable(this Terminal terminal)
+        {
+            return terminal.GetVariableSet().AddTerminalToNewVariable(terminal);
+        }
+
+        public static VariableUsageValidator GetValidator(this Terminal terminal)
+        {
+            return terminal.GetVariableSet().GetValidatorForTerminal(terminal);
         }
     }
 }

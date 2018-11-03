@@ -74,9 +74,8 @@
   <ItemGroup>
     <Compile Include="Common\CommonNodes.cs" />
     <Compile Include="Common\NodeSignature.cs" />
+    <Compile Include="Compiler\BoundedLifetimeGraph.cs" />
     <Compile Include="Compiler\Lifetime.cs" />
-    <Compile Include="Compiler\LifetimeCategory.cs" />
-    <Compile Include="Compiler\LifetimeSet.cs" />
     <Compile Include="Compiler\Nodes\BorrowTunnel.cs" />
     <Compile Include="Compiler\Nodes\CreateCellNode.cs" />
     <Compile Include="Compiler\Nodes\CreateMutableCopyNode.cs" />
@@ -97,6 +96,7 @@
     <Compile Include="Compiler\Nodes\RustyWiresBorderNode.cs" />
     <Compile Include="Compiler\Nodes\RustyWiresDfirNode.cs" />
     <Compile Include="Compiler\Nodes\SelectReferenceNode.cs" />
+    <Compile Include="Compiler\Nodes\TerminateLifetimeNode.cs" />
     <Compile Include="Compiler\Nodes\UnborrowTunnel.cs" />
     <Compile Include="Compiler\Nodes\UnlockTunnel.cs" />
     <Compile Include="Compiler\DetermineVariablesTransform.cs" />
@@ -116,7 +116,6 @@
     <Compile Include="Compiler\VariableSet.cs" />
     <Compile Include="Compiler\VariableUsageValidator.cs" />
     <Compile Include="Compiler\VisitorTransformBase.cs" />
-    <Compile Include="Compiler\WireForkValidationTransform.cs" />
     <Compile Include="Design\BorrowTunnelViewModel.cs" />
     <Compile Include="Design\BasicNodeViewModel.cs" />
     <Compile Include="Design\RustyWiresFlatSequenceEditor.cs" />
@@ -159,6 +158,7 @@
     <Compile Include="SourceModel\RustyWiresFlatSequence.cs" />
     <Compile Include="SourceModel\RustyWiresSimpleNode.cs" />
     <Compile Include="SourceModel\SelectReferenceNode.cs" />
+    <Compile Include="SourceModel\TerminateLifetime.cs" />
     <Compile Include="SourceModel\UnborrowTunnel.cs" />
     <Compile Include="SourceModel\UnlockTunnel.cs" />
   </ItemGroup>

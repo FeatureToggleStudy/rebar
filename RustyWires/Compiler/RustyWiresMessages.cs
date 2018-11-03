@@ -1,8 +1,6 @@
 ﻿using NationalInstruments.Compiler.SemanticAnalysis;
-using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using NationalInstruments.SourceModel;
-using RustyWires.Compiler.Nodes;
 using Terminal = NationalInstruments.Dfir.Terminal;
 
 namespace RustyWires.Compiler
@@ -26,6 +24,30 @@ namespace RustyWires.Compiler
                 MessageSeverity.Error,
                 SemanticAnalysisMessageCategories.Connection,
                 TerminalDoesNotAcceptImmutableTypeDescriptor);
+
+        private static readonly MessageDescriptor TerminateLifetimeInputLifetimesNotUniqueDescriptor = new MessageDescriptor(ResourceDictionaryName, "TerminateLifetimeInputLifetimesNotUnique");
+
+        public static readonly DfirMessage TerminateLifetimeInputLifetimesNotUnique =
+            new DfirMessage(
+                MessageSeverity.Error,
+                SemanticAnalysisMessageCategories.Connection,
+                TerminateLifetimeInputLifetimesNotUniqueDescriptor);
+
+        private static readonly MessageDescriptor TerminateLifetimeInputLifetimeCannotBeTerminatedDescriptor = new MessageDescriptor(ResourceDictionaryName, "TerminateLifetimeInputLifetimeCannotBeTerminated");
+
+        public static readonly DfirMessage TerminateLifetimeInputLifetimeCannotBeTerminated =
+            new DfirMessage(
+                MessageSeverity.Error,
+                SemanticAnalysisMessageCategories.Connection,
+                TerminateLifetimeInputLifetimeCannotBeTerminatedDescriptor);
+
+        private static readonly MessageDescriptor TerminateLifetimeNotAllVariablesInLifetimeConnectedDescriptor = new MessageDescriptor(ResourceDictionaryName, "TerminateLifetimeNotAllVariablesInLifetimeConnected");
+
+        public static readonly DfirMessage TerminateLifetimeNotAllVariablesInLifetimeConnected =
+            new DfirMessage(
+                MessageSeverity.Error,
+                SemanticAnalysisMessageCategories.Connection,
+                TerminateLifetimeNotAllVariablesInLifetimeConnectedDescriptor);
 
         private static readonly MessageDescriptor WiredReferenceDoesNotLiveLongEnoughDescriptor = new MessageDescriptor(ResourceDictionaryName, "WiredReferenceDoesNotLiveLongEnough");
 
@@ -65,19 +87,6 @@ namespace RustyWires.Compiler
                 return false;
             }
             return true;
-        }
-
-        public static bool PropagateLifetimeAndTestNonEmpty(this Terminal inputTerminal, Terminal outputTerminal)
-        {
-            bool checkPassed = true;
-            if (inputTerminal.DataType.IsRWReferenceType() && inputTerminal.GetSourceLifetime().IsEmpty)
-            {
-                inputTerminal.SetDfirMessage(RustyWiresMessages.WiredReferenceDoesNotLiveLongEnough);
-                checkPassed = false;
-            }
-            Lifetime inputLifetime = inputTerminal.ComputeInputTerminalEffectiveLifetime();
-            outputTerminal.SetLifetime(inputLifetime);
-            return checkPassed;
         }
     }
 }

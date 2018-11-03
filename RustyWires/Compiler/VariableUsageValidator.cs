@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using NationalInstruments.Compiler.SemanticAnalysis;
+﻿using NationalInstruments.Compiler.SemanticAnalysis;
 using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 
@@ -10,12 +9,15 @@ namespace RustyWires.Compiler
         private readonly Variable _variable;
         private readonly Terminal _terminal;
 
-        public VariableUsageValidator(Variable variable, Terminal terminal)
+        public VariableUsageValidator(Variable variable, Terminal terminal, bool validateUsageWithinLifetime = true)
         {
             _variable = variable;
             _terminal = terminal;
             _terminal.TestRequiredTerminalConnected();
-            TestUsageWithinLifetime();
+            if (validateUsageWithinLifetime)
+            {
+                TestUsageWithinLifetime();
+            }
         }
 
         private void TestUsageWithinLifetime()
@@ -24,48 +26,7 @@ namespace RustyWires.Compiler
             if (_variable != null && _variable.Type.IsRWReferenceType())
             {
                 Lifetime lifetime = _variable.Lifetime;
-                bool isUsageWithinLifetime = false;
-                switch (lifetime.Category)
-                {
-                    case LifetimeCategory.Empty:
-                        break;
-                    case LifetimeCategory.FunctionStatic:
-                    case LifetimeCategory.FunctionParameter:
-                        isUsageWithinLifetime = true;
-                        break;
-                    case LifetimeCategory.Structure:
-                        {
-                            Node parent = _terminal.ParentNode;
-                            while (parent != null)
-                            {
-                                if (parent == lifetime.Origin)
-                                {
-                                    isUsageWithinLifetime = true;
-                                    break;
-                                }
-                                parent = parent.ParentNode;
-                            }
-                        }
-                        break;
-                    case LifetimeCategory.Node:
-                        {
-                            // determine whether _terminal's node lies downstream of the node beginning the lifetime and
-                            // upstream of the recompose node terminating it (if one exists)
-                            // Note: Since recompose nodes don't exist yet, it should not be possible for a terminal that
-                            // uses a variable with LifetimeCategory.Node not to be within its lifetime.
-                            Node parent = _terminal.ParentNode;
-                            while (parent != null)
-                            {
-                                if (parent.GetUpstreamNodesSameDiagram(true).Contains(lifetime.Origin))
-                                {
-                                    isUsageWithinLifetime = true;
-                                    break;
-                                }
-                                parent = parent.ParentNode;
-                            }
-                        }
-                        break;
-                }
+                bool isUsageWithinLifetime = lifetime.IsBounded || !lifetime.IsEmpty;
                 if (!isUsageWithinLifetime)
                 {
                     _terminal.SetDfirMessage(RustyWiresMessages.WiredReferenceDoesNotLiveLongEnough);
