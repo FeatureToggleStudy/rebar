@@ -7,13 +7,9 @@ namespace RustyWires.SourceModel
 {
     public class InputParameterAccessor : RustyWiresSimpleNode
     {
-        public override bool CanDelete
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool CanDelete => false;
+
+        protected override ViewElementTemplate DefaultTemplate => ViewElementTemplate.List;
 
         protected override void SetIconViewGeometry()
         {
@@ -33,7 +29,7 @@ namespace RustyWires.SourceModel
             {
                 if (!_parameterTerminals.ContainsKey(parameter))
                 {
-                    var terminal = new NodeTerminal(Direction.Input, parameter.DataType, parameter.Name);
+                    var terminal = new NodeTerminal(Direction.Output, parameter.DataType, parameter.Name);
                     _parameterTerminals[parameter] = terminal;
                     FixedTerminals.Insert(index, terminal);
                 }
