@@ -1,16 +1,15 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Linq;
+using NationalInstruments.CommonModel;
+using NationalInstruments.Core;
+using NationalInstruments.DataTypes;
+using NationalInstruments.Design;
+using NationalInstruments.MocCommon.SourceModel;
 using NationalInstruments.SourceModel;
 using NationalInstruments.SourceModel.Persistence;
-using System.Xml.Linq;
-using NationalInstruments.MocCommon.SourceModel;
-using System.Collections.Generic;
 using NationalInstruments.VI.SourceModel;
 using RustyWires.Compiler;
-using NationalInstruments.Design;
-using NationalInstruments.Core;
-using NationalInstruments.CommonModel;
-using NationalInstruments.DataTypes;
-using System;
 
 namespace RustyWires.SourceModel
 {
@@ -98,12 +97,15 @@ namespace RustyWires.SourceModel
         }
 
         // TODO
-        public override IEnumerable<IDiagramParameter> Parameters => Components.OfType<RustyWiresFunctionParameter>();
+        public override IEnumerable<IDiagramParameter> Parameters => Components.OfType<IDiagramParameter>();
 
         internal void AddInputParameter()
         {
-            var parameter = new RustyWiresFunctionParameter(ParameterCallDirection.Input, PFTypes.String.CreateMutableValue(), "input");
-            AddComponent(parameter);
+            var dataItem = DataItem.Create(ElementCreateInfo.ForNew);
+            dataItem.CallDirection = ParameterCallDirection.Input;
+            dataItem.DataType = PFTypes.String.CreateMutableValue();
+            dataItem.Name = "input";
+            AddComponent(dataItem);
 
             InputParameterAccessor inputAccessor = RootDiagram.Components.OfType<InputParameterAccessor>().FirstOrDefault();
             if (inputAccessor == null)
@@ -112,80 +114,8 @@ namespace RustyWires.SourceModel
                 RootDiagram.AddChild(inputAccessor);
             }
             inputAccessor.UpdateTerminals();
-        }
-    }
 
-    public class RustyWiresFunctionParameter : Content, IDiagramParameter
-    {
-        private readonly ParameterCallDirection _direction;
-        private readonly NIType _dataType;
-        private readonly string _name;
-
-        public RustyWiresFunctionParameter(ParameterCallDirection direction, NIType type, string name)
-        {
-            _direction = direction;
-            _dataType = type;
-            _name = name;
-        }
-
-        public ParameterCallDirection CallDirection
-        {
-            get
-            {
-                return _direction;
-            }
-            set
-            {
-            }
-        }
-
-        public ParameterCallUsage CallUsage
-        {
-            get
-            {
-                return ParameterCallUsage.Required;
-            }
-            set
-            {
-            }
-        }
-
-        public NIType DataType
-        {
-            get
-            {
-                return _dataType;
-            }
-            set
-            {
-            }
-        }
-
-        public Element Element
-        {
-            get
-            {
-                return this;
-            }
-        }
-
-        public string Name
-        {
-            get
-            {
-                return _name;
-            }
-            set
-            {
-            }
-        }
-
-        public ParameterCallDirection PreferredDirection
-        {
-            get
-            {
-                return _direction;
-            }
+            ConnectorPane.AddParameter(dataItem);
         }
     }
 }

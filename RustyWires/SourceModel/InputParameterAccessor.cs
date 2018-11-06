@@ -1,7 +1,8 @@
-﻿using NationalInstruments.SourceModel;
-using RustyWires.Compiler;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using NationalInstruments.MocCommon.SourceModel;
+using NationalInstruments.SourceModel;
+using RustyWires.Compiler;
 
 namespace RustyWires.SourceModel
 {
@@ -15,14 +16,14 @@ namespace RustyWires.SourceModel
         {
         }
 
-        private readonly Dictionary<RustyWiresFunctionParameter, Terminal> _parameterTerminals = new Dictionary<RustyWiresFunctionParameter, Terminal>();
+        private readonly Dictionary<DataItem, Terminal> _parameterTerminals = new Dictionary<DataItem, Terminal>();
 
         internal void UpdateTerminals()
         {
             var function = (RustyWiresFunction)Definition;
             var inputParameters = function
                 .Parameters
-                .OfType<RustyWiresFunctionParameter>()
+                .OfType<DataItem>()
                 .Where(parameter => parameter.CallDirection == NationalInstruments.CommonModel.ParameterCallDirection.Input).ToList();
             int index = 0;
             foreach (var parameter in inputParameters)
