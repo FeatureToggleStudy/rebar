@@ -54,8 +54,7 @@ namespace RustyWires.Compiler
             {
                 return false;
             }
-            if (_variable.Type.IsImmutableReferenceType() ||
-                _variable.Type.IsMutableReferenceType())
+            if (_variable.Type.IsRWReferenceType())
             {
                 _terminal.ParentNode.SetDfirMessage(RustyWiresMessages.TerminalDoesNotAcceptReference);
                 return false;

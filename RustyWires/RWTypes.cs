@@ -105,6 +105,11 @@ namespace RustyWires
             return type.IsGenericType() && type.GetGenericTypeDefinition() == ImmutableValueGenericType;
         }
 
+        public static bool IsRWMutableType(this NIType type)
+        {
+            return type.IsMutableReferenceType() || type.IsMutableValueType();
+        }
+
         public static NIType CreateLockingCell(this NIType dereferenceType)
         {
             var lockingCellTypeBuilder = LockingCellGenericType.DefineClassFromExisting();

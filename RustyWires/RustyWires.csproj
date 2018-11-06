@@ -95,6 +95,7 @@
     <Compile Include="Compiler\Nodes\PureUnaryPrimitive.cs" />
     <Compile Include="Compiler\Nodes\RustyWiresBorderNode.cs" />
     <Compile Include="Compiler\Nodes\RustyWiresDfirNode.cs" />
+    <Compile Include="Compiler\Nodes\RustyWiresMethodCallNode.cs" />
     <Compile Include="Compiler\Nodes\SelectReferenceNode.cs" />
     <Compile Include="Compiler\Nodes\TerminateLifetimeNode.cs" />
     <Compile Include="Compiler\Nodes\UnborrowTunnel.cs" />

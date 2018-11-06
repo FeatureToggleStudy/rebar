@@ -81,7 +81,7 @@ namespace RustyWires.Compiler
 
         public static bool TestTerminalHasMutableTypeConnected(this Terminal terminal)
         {
-            if (terminal.DataType.IsImmutableReferenceType() || terminal.DataType.IsImmutableValueType())
+            if (!terminal.DataType.IsRWMutableType())
             {
                 terminal.ParentNode.SetDfirMessage(RustyWiresMessages.TerminalDoesNotAcceptImmutableType);
                 return false;

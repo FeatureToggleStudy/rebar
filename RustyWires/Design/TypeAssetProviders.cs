@@ -18,7 +18,7 @@ namespace RustyWires.Design
 
         public IEnumerable<BindingKeyword> GetKeywords(NIType type)
         {
-            if (type.IsImmutableReferenceType() || type.IsMutableReferenceType())
+            if (type.IsRWReferenceType())
             {
                 return new BindingKeyword(RustyWiresKeyword).ToEnumerable();
             }
