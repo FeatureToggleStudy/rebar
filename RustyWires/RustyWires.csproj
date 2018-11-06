@@ -151,6 +151,7 @@
     <Compile Include="SourceModel\InputParameterAccessor.cs" />
     <Compile Include="SourceModel\LockTunnel.cs" />
     <Compile Include="SourceModel\MutablePassthroughNode.cs" />
+    <Compile Include="SourceModel\PairedTunnelBatchRule.cs" />
     <Compile Include="SourceModel\Primitives.cs" />
     <Compile Include="SourceModel\RustyWiresFunction.cs" />
     <Compile Include="SourceModel\RustyWiresFunctionMergeScriptDataService.cs" />
