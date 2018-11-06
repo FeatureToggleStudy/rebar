@@ -33,6 +33,10 @@ namespace RustyWires.Compiler.Nodes
         {
             foreach (var terminal in Terminals)
             {
+                VariableSet variableSet = terminal.GetVariableSet();
+                Variable variable = terminal.GetVariable();
+                Lifetime parameterLifetime = variableSet.DefineLifetimeThatOutlastsDiagram();
+                variable.SetTypeAndLifetime(terminal.DataType, parameterLifetime);
             }
         }
     }

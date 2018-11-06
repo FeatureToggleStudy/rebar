@@ -459,9 +459,14 @@ namespace RustyWires.Compiler
         {
             var inputParameterAccessorDfir = new Nodes.InputParameterAccessor(_currentDiagram, accessor.Terminals.Count());
             _map.AddMapping(accessor, inputParameterAccessorDfir);
-            foreach (var terminalPair in accessor.Terminals.Zip(inputParameterAccessorDfir.Terminals))
+            var inputParameters = ((RustyWiresFunction)accessor.Definition).Parameters.Where(parameter => parameter.CallDirection == NationalInstruments.CommonModel.ParameterCallDirection.Input);
+            foreach (var terminalPair in accessor.Terminals.Zip(inputParameterAccessorDfir.Terminals).Zip(inputParameters))
             {
-                _map.AddMapping(terminalPair.Key, terminalPair.Value);
+                Terminal terminal = terminalPair.Key.Key;
+                NationalInstruments.Dfir.Terminal dfirTerminal = terminalPair.Key.Value;
+                IDiagramParameter parameter = terminalPair.Value;
+                _map.AddMapping(terminal, dfirTerminal);
+                dfirTerminal.DataType = parameter.DataType;
             }
         }
 
