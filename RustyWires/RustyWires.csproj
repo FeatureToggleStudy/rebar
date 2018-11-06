@@ -118,6 +118,7 @@
     <Compile Include="Compiler\VisitorTransformBase.cs" />
     <Compile Include="Design\BorrowTunnelViewModel.cs" />
     <Compile Include="Design\BasicNodeViewModel.cs" />
+    <Compile Include="Design\InputParameterAccessorViewModel.cs" />
     <Compile Include="Design\RustyWiresFlatSequenceEditor.cs" />
     <Compile Include="Design\RustyWiresFunctionSignatureCacheService.cs" />
     <Compile Include="Design\RustyWiresProjectItemInfoService.cs" />
