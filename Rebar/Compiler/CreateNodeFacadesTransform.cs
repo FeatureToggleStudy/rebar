@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using Rebar.Common;
 using Rebar.Compiler.Nodes;
@@ -57,7 +58,12 @@ namespace Rebar.Compiler
         bool IDfirNodeVisitor<bool>.VisitConstant(Constant constant)
         {
             Terminal valueOutput = constant.OutputTerminals.ElementAt(0);
-            _nodeFacade[valueOutput] = new SimpleTerminalFacade(valueOutput);
+            var facade = new SimpleTerminalFacade(valueOutput);
+            _nodeFacade[valueOutput] = facade;
+
+            TypeVariableSet tVarSet = valueOutput.GetVariableSet().TypeVariableSet;
+            facade.FacadeVariable.AdoptTypeVariableReference(tVarSet.CreateReferenceToLiteralType(constant.DataType));
+
             return true;
         }
 
@@ -113,6 +119,13 @@ namespace Rebar.Compiler
             Terminal inputTerminal = immutablePassthroughNode.InputTerminals.ElementAt(0),
                 outputTerminal = immutablePassthroughNode.OutputTerminals.ElementAt(0);
             _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable).AddTerminalFacade(inputTerminal, outputTerminal);
+
+            TerminalFacade inputFacade = _nodeFacade[inputTerminal];
+            TypeVariableSet tVarSet = inputTerminal.GetVariableSet().TypeVariableSet;
+            TypeVariableReference dataTypeVariable = tVarSet.CreateReferenceToNewTypeVariable();
+            inputFacade.TrueVariable.AdoptTypeVariableReference(tVarSet.CreateReferenceToConstructorType("ImmRef", dataTypeVariable));
+            inputFacade.FacadeVariable.AdoptTypeVariableReference(tVarSet.CreateReferenceToPossibleBorrowType(false, inputFacade.FacadeVariable, inputFacade.TrueVariable));
+
             return true;
         }
 
@@ -204,8 +217,17 @@ namespace Rebar.Compiler
         {
             Terminal valueInput = someConstructorNode.InputTerminals.ElementAt(0),
                 optionOutput = someConstructorNode.OutputTerminals.ElementAt(0);
-            _nodeFacade[valueInput] = new SimpleTerminalFacade(valueInput);
-            _nodeFacade[optionOutput] = new SimpleTerminalFacade(optionOutput);
+
+            SimpleTerminalFacade inputFacade = new SimpleTerminalFacade(valueInput),
+                outputFacade = new SimpleTerminalFacade(optionOutput);
+            _nodeFacade[valueInput] = inputFacade;
+            _nodeFacade[optionOutput] = outputFacade;
+
+            TypeVariableSet tVarSet = valueInput.GetVariableSet().TypeVariableSet;
+            TypeVariableReference dataTypeVariable = tVarSet.CreateReferenceToNewTypeVariable();
+            inputFacade.FacadeVariable.AdoptTypeVariableReference(dataTypeVariable);
+            outputFacade.FacadeVariable.AdoptTypeVariableReference(tVarSet.CreateReferenceToConstructorType("Option", dataTypeVariable));
+
             return true;
         }
 

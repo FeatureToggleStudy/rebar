@@ -57,6 +57,7 @@ namespace Rebar.Compiler
             foreach (var sinkVariable in wire.SinkTerminals.Skip(1).Select(VariableExtensions.GetFacadeVariable))
             {
                 sinkVariable.SetTypeAndLifetime(sourceVariable.Value.Type, sourceVariable.Value.Lifetime);
+                // TODO: need to unify the sink type with the source type?
             }
         }
 

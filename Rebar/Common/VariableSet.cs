@@ -36,6 +36,21 @@ namespace Rebar.Common
             /// ImmutableReference and MutableReference types are allowed.</remarks>
             public NIType Type { get; set; }
 
+            private TypeVariableReference _typeVariableReference;
+
+            public TypeVariableReference TypeVariableReference
+            {
+                get { return _typeVariableReference; }
+                set
+                {
+                    if (_typeVariableReference.TypeVariableSet != null)
+                    {
+                        throw new InvalidOperationException("Cannot set TypeVariableReference more than once.");
+                    }
+                    _typeVariableReference = value;
+                }
+            }
+
             public Lifetime Lifetime { get; set; }
 
             public Variable(int id, int firstReferenceIndex, bool mutable)
@@ -59,6 +74,8 @@ namespace Rebar.Common
         private readonly List<Variable> _variableReferences = new List<Variable>();
         private readonly Dictionary<Lifetime, List<Variable>> _variablesInterruptedByLifetimes = new Dictionary<Lifetime, List<Variable>>();
         private readonly BoundedLifetimeGraph _boundedLifetimeGraph = new BoundedLifetimeGraph();
+
+        public TypeVariableSet TypeVariableSet { get; } = new TypeVariableSet();
 
         private Variable CreateNewVariable(bool mutableVariable, int firstReferenceIndex)
         {
@@ -103,6 +120,14 @@ namespace Rebar.Common
         {
             Variable mergeWithVariable = GetVariableForVariableReference(mergeWith),
                 toMergeVariable = GetVariableForVariableReference(toMerge);
+
+            // TODO: eventually shouldn't need this check
+            if (toMergeVariable.TypeVariableReference.TypeVariableSet != null
+                && mergeWithVariable.TypeVariableReference.TypeVariableSet != null)
+            {
+                TypeVariableSet.Unify(toMergeVariable.TypeVariableReference, mergeWithVariable.TypeVariableReference);
+            }
+
             for (int i = 0; i < _variableReferences.Count; ++i)
             {
                 if (_variableReferences[i] == toMergeVariable)
@@ -162,6 +187,23 @@ namespace Rebar.Common
             Variable variable = GetVariableForVariableReference(variableReference);
             variable.Type = type;
             variable.Lifetime = lifetime;
+        }
+
+        internal TypeVariableReference GetTypeVariableReference(VariableReference variableReference)
+        {
+            Variable variable = GetVariableForVariableReference(variableReference);
+            TypeVariableReference typeVariableReference = variable.TypeVariableReference;
+            if (typeVariableReference.TypeVariableSet == null)
+            {
+                throw new ArgumentException("Getting TypeVariableReference for a variable that hasn't set one.");
+            }
+            return typeVariableReference;
+        }
+
+        internal void SetTypeVariableReference(VariableReference variableReference, TypeVariableReference typeVariableReference)
+        {
+            Variable variable = GetVariableForVariableReference(variableReference);
+            variable.TypeVariableReference = typeVariableReference;
         }
 
         internal bool ReferenceSameVariable(VariableReference x, VariableReference y) => GetVariableForVariableReference(x) == GetVariableForVariableReference(y);

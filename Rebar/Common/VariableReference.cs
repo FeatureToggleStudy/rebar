@@ -57,5 +57,9 @@ namespace Rebar.Common
             }
             _variableSet.MergeVariables(this, intoVariable);
         }
+
+        internal TypeVariableReference TypeVariableReference => _variableSet.GetTypeVariableReference(this);
+
+        internal void AdoptTypeVariableReference(TypeVariableReference type) => _variableSet.SetTypeVariableReference(this, type);
     }
 }
