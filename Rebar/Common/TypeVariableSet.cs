@@ -13,6 +13,8 @@ namespace Rebar.Common
         private abstract class TypeBase
         {
             public abstract string DebuggerDisplay { get; }
+
+            public abstract NIType RenderNIType();
         }
 
         private sealed class TypeVariable : TypeBase
@@ -25,6 +27,11 @@ namespace Rebar.Common
             public int Id { get; }
 
             public override string DebuggerDisplay => $"T${Id}";
+
+            public override NIType RenderNIType()
+            {
+                return PFTypes.Void;
+            }
         }
 
         private sealed class LiteralType : TypeBase
@@ -37,6 +44,11 @@ namespace Rebar.Common
             public NIType Type { get; }
 
             public override string DebuggerDisplay => Type.AsFormattedStringSingleLine;
+
+            public override NIType RenderNIType()
+            {
+                return Type;
+            }
         }
 
         private sealed class ConstructorType : TypeBase
@@ -52,6 +64,24 @@ namespace Rebar.Common
             public TypeVariableReference Argument { get; }
 
             public override string DebuggerDisplay => $"{ConstructorName} ({Argument.DebuggerDisplay})";
+
+            public override NIType RenderNIType()
+            {
+                NIType argumentNIType = Argument.RenderNIType();
+                switch (ConstructorName)
+                {
+                    case "Vec":
+                        return argumentNIType.CreateVector();
+                    case "Iterator":
+                        return argumentNIType.CreateIterator();
+                    case "LockingCell":
+                        return argumentNIType.CreateLockingCell();
+                    case "Option":
+                        return argumentNIType.CreateOption();
+                    default:
+                        throw new NotSupportedException();
+                }
+            }
         }
 
         private sealed class ReferenceType : TypeBase
@@ -74,8 +104,14 @@ namespace Rebar.Common
                 get
                 {
                     string mut = Mutable ? "mut " : string.Empty;
-                    return $"& ({LifetimeType.DebuggerDisplay}) {mut}{UnderlyingType}";
+                    return $"& ({LifetimeType.DebuggerDisplay}) {mut}{UnderlyingType.DebuggerDisplay}";
                 }
+            }
+
+            public override NIType RenderNIType()
+            {
+                NIType underlyingNIType = UnderlyingType.RenderNIType();
+                return Mutable ? underlyingNIType.CreateMutableReference() : underlyingNIType.CreateImmutableReference();
             }
         }
 
@@ -115,6 +151,11 @@ namespace Rebar.Common
                     return "Lifetime";
                 }
             }
+
+            public override NIType RenderNIType()
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private sealed class PossibleBorrowType : TypeBase
@@ -144,6 +185,11 @@ namespace Rebar.Common
                     string mutable = Mutable ? "mut" : "imm";
                     return $"PossibleBorrow {mutable} {BorrowFrom.Id} -> {BorrowInto.Id}";
                 }
+            }
+
+            public override NIType RenderNIType()
+            {
+                throw new NotImplementedException();
             }
         }
 
@@ -381,6 +427,12 @@ namespace Rebar.Common
             TypeBase typeBase = GetTypeForTypeVariableReference(typeVariableReference);
             return typeBase?.DebuggerDisplay ?? "invalid";
         }
+
+        public NIType RenderNIType(TypeVariableReference typeVariableReference)
+        {
+            TypeBase typeBase = GetTypeForTypeVariableReference(typeVariableReference);
+            return typeBase?.RenderNIType() ?? PFTypes.Void;
+        }
     }
 
     [DebuggerDisplay("{DebuggerDisplay}")]
@@ -397,5 +449,7 @@ namespace Rebar.Common
         public int ReferenceIndex { get; }
 
         public string DebuggerDisplay => TypeVariableSet.GetDebuggerDisplay(this);
+
+        public NIType RenderNIType() => TypeVariableSet.RenderNIType(this);
     }
 }
