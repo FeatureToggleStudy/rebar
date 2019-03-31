@@ -305,7 +305,7 @@ namespace Rebar.Compiler
             TypeVariableReference inputTypeVariable = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32);
             _nodeFacade[lowInput].FacadeVariable.AdoptTypeVariableReference(inputTypeVariable);
             _nodeFacade[highInput].FacadeVariable.AdoptTypeVariableReference(inputTypeVariable);
-            _nodeFacade[rangeOutput].FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToConstructorType("Range", inputTypeVariable));
+            _nodeFacade[rangeOutput].FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToConstructorType("Iterator", inputTypeVariable));
 
             return true;
         }
@@ -394,15 +394,37 @@ namespace Rebar.Compiler
                 borrowOutput = borrowTunnel.OutputTerminals.ElementAt(0);
             _nodeFacade[valueInput] = new SimpleTerminalFacade(valueInput);
             _nodeFacade[borrowOutput] = new SimpleTerminalFacade(borrowOutput);
+
+            // T -> &'a (mode) T
+            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
+            Lifetime innerLifetime = borrowOutput.GetVariableSet().DefineLifetimeThatOutlastsDiagram();
+            TypeVariableReference referenceType = _typeVariableSet.CreateReferenceToReferenceType(
+                borrowTunnel.BorrowMode == BorrowMode.Mutable,
+                dataTypeVariable,
+                _typeVariableSet.CreateReferenceToLifetimeType(innerLifetime));
+            _nodeFacade[valueInput].FacadeVariable.AdoptTypeVariableReference(dataTypeVariable);
+            _nodeFacade[borrowOutput].FacadeVariable.AdoptTypeVariableReference(referenceType);
+
             return true;
         }
 
         bool IDfirNodeVisitor<bool>.VisitIterateTunnel(IterateTunnel iterateTunnel)
         {
             Terminal iteratorInput = iterateTunnel.InputTerminals.ElementAt(0),
-                borrowOutput = iterateTunnel.OutputTerminals.ElementAt(0);
+                itemOutput = iterateTunnel.OutputTerminals.ElementAt(0);
             _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable).AddTerminalFacade(iteratorInput);
-            _nodeFacade[borrowOutput] = new SimpleTerminalFacade(borrowOutput);
+            _nodeFacade[itemOutput] = new SimpleTerminalFacade(itemOutput);
+
+            // TODO: this is going to mess up pretty hard on iterators with reference Item types--like slices
+            // the Item type in the inner diagram will need to have an inner diagram lifetime
+            // &'a mut Iterator -> Item
+            // TODO: itemType should be a variable
+            TypeVariableReference itemType = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32);
+            TypeVariableReference iteratorType = _typeVariableSet.CreateReferenceToConstructorType("Iterator", itemType);
+            LifetimeTypeVariableGroup lifetimeTypeVariableGroup = new LifetimeTypeVariableGroup(iteratorInput.GetVariableSet());
+            lifetimeTypeVariableGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[iteratorInput], true, iteratorType);
+            _nodeFacade[itemOutput].FacadeVariable.AdoptTypeVariableReference(itemType);
+
             return true;
         }
 
@@ -412,6 +434,21 @@ namespace Rebar.Compiler
                 referenceOutput = lockTunnel.OutputTerminals.ElementAt(0);
             _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable).AddTerminalFacade(lockInput);
             _nodeFacade[referenceOutput] = new SimpleTerminalFacade(referenceOutput);
+
+            TypeVariableReference dataVariableType = _typeVariableSet.CreateReferenceToNewTypeVariable();
+            TypeVariableReference lockType = _typeVariableSet.CreateReferenceToConstructorType("LockingCell", dataVariableType);
+            LifetimeTypeVariableGroup lifetimeTypeVariableGroup = new LifetimeTypeVariableGroup(lockInput.GetVariableSet());
+            lifetimeTypeVariableGroup.CreateReferenceAndPossibleBorrowTypesForFacade(
+                _nodeFacade[lockInput],
+                false,
+                lockType);
+            Lifetime innerLifetime = referenceOutput.GetVariableSet().DefineLifetimeThatOutlastsDiagram();
+            TypeVariableReference referenceType = _typeVariableSet.CreateReferenceToReferenceType(
+                false,
+                lockType,
+                _typeVariableSet.CreateReferenceToLifetimeType(innerLifetime));
+            _nodeFacade[referenceOutput].FacadeVariable.AdoptTypeVariableReference(referenceType);
+
             return true;
         }
 
@@ -422,6 +459,16 @@ namespace Rebar.Compiler
                 loopConditionOutput = loopConditionTunnel.OutputTerminals.ElementAt(0);
             _nodeFacade[loopConditionInput] = new SimpleTerminalFacade(loopConditionInput);
             _nodeFacade[loopConditionOutput] = new SimpleTerminalFacade(loopConditionOutput);
+
+            TypeVariableReference boolType = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Boolean);
+            _nodeFacade[loopConditionInput].FacadeVariable.AdoptTypeVariableReference(boolType);
+            Lifetime innerLifetime = loopConditionOutput.GetVariableSet().DefineLifetimeThatOutlastsDiagram();
+            TypeVariableReference boolReferenceType = _typeVariableSet.CreateReferenceToReferenceType(
+                true,
+                boolType,
+                _typeVariableSet.CreateReferenceToLifetimeType(innerLifetime));
+            _nodeFacade[loopConditionOutput].FacadeVariable.AdoptTypeVariableReference(boolReferenceType);
+
             return true;
         }
 
@@ -431,6 +478,11 @@ namespace Rebar.Compiler
                 valueOutput = tunnel.OutputTerminals.ElementAt(0);
             _nodeFacade[valueInput] = new SimpleTerminalFacade(valueInput);
             _nodeFacade[valueOutput] = new SimpleTerminalFacade(valueOutput);
+
+            // TODO: something will need to unify these two variables, with caution for the different lifetimes
+            _nodeFacade[valueInput].FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToNewTypeVariable());
+            _nodeFacade[valueOutput].FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToNewTypeVariable());
+
             return true;
         }
 
@@ -452,6 +504,12 @@ namespace Rebar.Compiler
                 unwrappedOutput = unwrapOptionTunnel.OutputTerminals.ElementAt(0);
             _nodeFacade[optionInput] = new SimpleTerminalFacade(optionInput);
             _nodeFacade[unwrappedOutput] = new SimpleTerminalFacade(unwrappedOutput);
+
+            // TODO: something will need to unify the two type variables, with caustion for the different lifetimes
+            _nodeFacade[optionInput].FacadeVariable.AdoptTypeVariableReference(_typeVariableSet
+                .CreateReferenceToConstructorType("Option", _typeVariableSet.CreateReferenceToNewTypeVariable()));
+            _nodeFacade[unwrappedOutput].FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToNewTypeVariable());
+
             return true;
         }
     }
