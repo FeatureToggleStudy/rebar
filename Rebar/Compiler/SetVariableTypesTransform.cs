@@ -25,6 +25,7 @@ namespace Rebar.Compiler
 
         protected override void VisitWire(Wire wire)
         {
+#if FALSE
             // Merge together all connected wire and node terminals
             foreach (var wireTerminal in wire.Terminals)
             {
@@ -59,6 +60,7 @@ namespace Rebar.Compiler
                 sinkVariable.SetTypeAndLifetime(sourceVariable.Value.Type, sourceVariable.Value.Lifetime);
                 // TODO: need to unify the sink type with the source type?
             }
+#endif
         }
 
         protected override void VisitBorderNode(NationalInstruments.Dfir.BorderNode borderNode)
