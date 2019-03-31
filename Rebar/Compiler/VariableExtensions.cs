@@ -5,7 +5,24 @@ namespace Rebar.Compiler
 {
     internal static class VariableExtensions
     {
+        private static readonly AttributeDescriptor _typeVariableSetTokenName = new AttributeDescriptor("Rebar.Compiler.TypeVariableSet", true);
         private static readonly AttributeDescriptor _variableSetTokenName = new AttributeDescriptor("Rebar.Compiler.VariableSet", true);
+        
+        public static TypeVariableSet GetTypeVariableSet(this DfirRoot dfirRoot)
+        {
+            var token = dfirRoot.GetOrCreateNamedSparseAttributeToken<TypeVariableSet>(_typeVariableSetTokenName);
+            return token.GetAttribute(dfirRoot);
+        }
+
+        public static TypeVariableSet GetTypeVariableSet(this Node node)
+        {
+            return node.DfirRoot.GetTypeVariableSet();
+        }
+
+        public static TypeVariableSet GetTypeVariableSet(this Terminal terminal)
+        {
+            return terminal.DfirRoot.GetTypeVariableSet();
+        }
 
         public static void SetVariableSet(this Diagram diagram, VariableSet variableSet)
         {

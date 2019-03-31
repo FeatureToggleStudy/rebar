@@ -75,7 +75,17 @@ namespace Rebar.Common
         private readonly Dictionary<Lifetime, List<Variable>> _variablesInterruptedByLifetimes = new Dictionary<Lifetime, List<Variable>>();
         private readonly BoundedLifetimeGraph _boundedLifetimeGraph = new BoundedLifetimeGraph();
 
-        public TypeVariableSet TypeVariableSet { get; } = new TypeVariableSet();
+        public VariableSet()
+            : this(null)
+        {
+        }
+
+        public VariableSet(TypeVariableSet typeVariableSet)
+        {
+            TypeVariableSet = typeVariableSet;
+        }
+
+        public TypeVariableSet TypeVariableSet { get; }
 
         private Variable CreateNewVariable(bool mutableVariable, int firstReferenceIndex)
         {
