@@ -357,8 +357,7 @@ namespace Rebar.Compiler
             Terminal vectorOutput = vectorCreateNode.OutputTerminals.ElementAt(0);
             _nodeFacade[vectorOutput] = new SimpleTerminalFacade(vectorOutput);
 
-            // TODO: change to type variable
-            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32);
+            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
             _nodeFacade[vectorOutput].FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToConstructorType("Vec", dataTypeVariable));
 
             return true;
