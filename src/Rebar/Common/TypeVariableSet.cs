@@ -400,6 +400,7 @@ namespace Rebar.Common
                     {
                         MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
 
+                        Unify(possibleBorrowType.BorrowInto.TypeVariableReference, other);
                         possibleBorrowType.BorrowInto.MergeInto(possibleBorrowType.BorrowFrom);
                         return;
                     }
