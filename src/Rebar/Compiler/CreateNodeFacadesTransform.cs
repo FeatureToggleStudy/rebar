@@ -124,22 +124,6 @@ namespace Rebar.Compiler
             return true;
         }
 
-        bool IDfirNodeVisitor<bool>.VisitCreateCopyNode(CreateCopyNode createCopyNode)
-        {
-            Terminal originalInput = createCopyNode.InputTerminals.ElementAt(0),
-                originalOutput = createCopyNode.OutputTerminals.ElementAt(0),
-                copyOutput = createCopyNode.OutputTerminals.ElementAt(1);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable).AddTerminalFacade(originalInput, originalOutput);
-            _nodeFacade[copyOutput] = new SimpleTerminalFacade(copyOutput);
-
-            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-            var lifetimeGroup = new LifetimeTypeVariableGroup(originalInput.GetVariableSet());
-            lifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[originalInput], false, dataTypeVariable);
-            _nodeFacade[copyOutput].FacadeVariable.AdoptTypeVariableReference(dataTypeVariable);
-
-            return true;
-        }
-
         bool IDfirNodeVisitor<bool>.VisitDropNode(DropNode dropNode)
         {
             Terminal valueInput = dropNode.InputTerminals.ElementAt(0);
@@ -184,129 +168,57 @@ namespace Rebar.Compiler
             return true;
         }
 
-        bool IDfirNodeVisitor<bool>.VisitImmutablePassthroughNode(ImmutablePassthroughNode immutablePassthroughNode)
+        bool IDfirNodeVisitor<bool>.VisitFunctionalNode(FunctionalNode functionalNode)
         {
-            Terminal inputTerminal = immutablePassthroughNode.InputTerminals.ElementAt(0),
-                outputTerminal = immutablePassthroughNode.OutputTerminals.ElementAt(0);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable).AddTerminalFacade(inputTerminal, outputTerminal);
-
-            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-            var lifetimeGroup = new LifetimeTypeVariableGroup(inputTerminal.GetVariableSet());
-            lifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[inputTerminal], false, dataTypeVariable);
-
-            return true;
-        }
-
-        bool IDfirNodeVisitor<bool>.VisitMutablePassthroughNode(MutablePassthroughNode mutablePassthroughNode)
-        {
-            Terminal inputTerminal = mutablePassthroughNode.InputTerminals.ElementAt(0),
-                outputTerminal = mutablePassthroughNode.OutputTerminals.ElementAt(0);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable).AddTerminalFacade(inputTerminal, outputTerminal);
-
-            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-            var lifetimeGroup = new LifetimeTypeVariableGroup(inputTerminal.GetVariableSet());
-            lifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[inputTerminal], true, dataTypeVariable);
-
-            return true;
-        }
-
-        bool IDfirNodeVisitor<bool>.VisitMutatingBinaryPrimitive(MutatingBinaryPrimitive mutatingBinaryPrimitive)
-        {
-            Terminal accumulateInputTerminal = mutatingBinaryPrimitive.InputTerminals.ElementAt(0),
-                operandInputTerminal = mutatingBinaryPrimitive.InputTerminals.ElementAt(1),
-                accumulateOutputTerminal = mutatingBinaryPrimitive.OutputTerminals.ElementAt(0),
-                operandOutputTerminal = mutatingBinaryPrimitive.OutputTerminals.ElementAt(1);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable).AddTerminalFacade(accumulateInputTerminal, accumulateOutputTerminal);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable).AddTerminalFacade(operandInputTerminal, operandOutputTerminal);
-
-            VariableSet variableSet = accumulateInputTerminal.GetVariableSet();
-            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32);
-            var lifetimeGroup = new LifetimeTypeVariableGroup(variableSet);
-            lifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[accumulateInputTerminal], true, dataTypeVariable);
-            lifetimeGroup = new LifetimeTypeVariableGroup(variableSet);
-            lifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[operandInputTerminal], false, dataTypeVariable);
-
-            return true;
-        }
-
-        bool IDfirNodeVisitor<bool>.VisitMutatingUnaryPrimitive(MutatingUnaryPrimitive mutatingUnaryPrimitive)
-        {
-            Terminal inputTerminal = mutatingUnaryPrimitive.InputTerminals.ElementAt(0),
-                outputTerminal = mutatingUnaryPrimitive.OutputTerminals.ElementAt(0);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable).AddTerminalFacade(inputTerminal, outputTerminal);
-
-            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32);
-            var lifetimeGroup = new LifetimeTypeVariableGroup(inputTerminal.GetVariableSet());
-            lifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[inputTerminal], true, dataTypeVariable);
-
-            return true;
-        }
-
-        bool IDfirNodeVisitor<bool>.VisitOutputNode(OutputNode outputNode)
-        {
-            Terminal inputTerminal = outputNode.InputTerminals.ElementAt(0),
-                outputTerminal = outputNode.OutputTerminals.ElementAt(0);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable).AddTerminalFacade(inputTerminal, outputTerminal);
-
-            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32);
-            var lifetimeGroup = new LifetimeTypeVariableGroup(inputTerminal.GetVariableSet());
-            lifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[inputTerminal], false, dataTypeVariable);
-
-            return true;
-        }
-
-        bool IDfirNodeVisitor<bool>.VisitPureBinaryPrimitive(PureBinaryPrimitive pureBinaryPrimitive)
-        {
-            Terminal operand1Input = pureBinaryPrimitive.InputTerminals.ElementAt(0),
-                operand2Input = pureBinaryPrimitive.InputTerminals.ElementAt(1),
-                operand1Output = pureBinaryPrimitive.OutputTerminals.ElementAt(0),
-                operand2Output = pureBinaryPrimitive.OutputTerminals.ElementAt(1),
-                resultOutput = pureBinaryPrimitive.OutputTerminals.ElementAt(2);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable).AddTerminalFacade(operand1Input, operand1Output);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable).AddTerminalFacade(operand2Input, operand2Output);
-            _nodeFacade[resultOutput] = new SimpleTerminalFacade(resultOutput);
-
-            VariableSet variableSet = operand1Input.GetVariableSet();
-            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32);
-            var lifetimeGroup = new LifetimeTypeVariableGroup(variableSet);
-            lifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[operand1Input], false, dataTypeVariable);
-            lifetimeGroup = new LifetimeTypeVariableGroup(variableSet);
-            lifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[operand2Input], false, dataTypeVariable);
-            _nodeFacade[resultOutput].FacadeVariable.AdoptTypeVariableReference(dataTypeVariable);
-
-            return true;
-        }
-
-        bool IDfirNodeVisitor<bool>.VisitPureUnaryPrimitive(PureUnaryPrimitive pureUnaryPrimitive)
-        {
-            Terminal originalInput = pureUnaryPrimitive.InputTerminals.ElementAt(0),
-                originalOutput = pureUnaryPrimitive.OutputTerminals.ElementAt(0),
-                resultOutput = pureUnaryPrimitive.OutputTerminals.ElementAt(1);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable).AddTerminalFacade(originalInput, originalOutput);
-            _nodeFacade[resultOutput] = new SimpleTerminalFacade(resultOutput);
-
-            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32);
-            var lifetimeGroup = new LifetimeTypeVariableGroup(originalInput.GetVariableSet());
-            lifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[originalInput], false, dataTypeVariable);
-            _nodeFacade[resultOutput].FacadeVariable.AdoptTypeVariableReference(dataTypeVariable);
-
-            return true;
-        }
-
-        bool IDfirNodeVisitor<bool>.VisitRangeNode(RangeNode rangeNode)
-        {
-            Terminal lowInput = rangeNode.InputTerminals.ElementAt(0),
-                highInput = rangeNode.InputTerminals.ElementAt(1),
-                rangeOutput = rangeNode.OutputTerminals.ElementAt(0);
-            _nodeFacade[lowInput] = new SimpleTerminalFacade(lowInput);
-            _nodeFacade[highInput] = new SimpleTerminalFacade(highInput);
-            _nodeFacade[rangeOutput] = new SimpleTerminalFacade(rangeOutput);
-
-            TypeVariableReference inputTypeVariable = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32);
-            _nodeFacade[lowInput].FacadeVariable.AdoptTypeVariableReference(inputTypeVariable);
-            _nodeFacade[highInput].FacadeVariable.AdoptTypeVariableReference(inputTypeVariable);
-            _nodeFacade[rangeOutput].FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToConstructorType("Iterator", inputTypeVariable));
-
+            int inputIndex = 0, outputIndex = 0;
+            foreach (NIType parameter in functionalNode.Signature.GetParameters())
+            {
+                NIType parameterDataType = parameter.GetDataType();
+                bool isInput = parameter.GetInputParameterPassingRule() != NIParameterPassingRule.NotAllowed,
+                    isOutput = parameter.GetOutputParameterPassingRule() != NIParameterPassingRule.NotAllowed;
+                Terminal inputTerminal = null, outputTerminal = null;
+                if (isInput)
+                {
+                    inputTerminal = functionalNode.InputTerminals[inputIndex];
+                    ++inputIndex;
+                }
+                if (isOutput)
+                {
+                    outputTerminal = functionalNode.OutputTerminals[outputIndex];
+                    ++outputIndex;
+                }
+                if (isInput && isOutput)
+                {
+                    if (parameterDataType.IsImmutableReferenceType())
+                    {
+                        // TODO: sharing lifetime groups
+                        _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable)
+                            .AddTerminalFacade(inputTerminal, outputTerminal);
+                    }
+                    else if (parameterDataType.IsMutableReferenceType())
+                    {
+                        // TODO: sharing lifetime groups
+                        _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable)
+                            .AddTerminalFacade(inputTerminal, outputTerminal);
+                    }
+                    else
+                    {
+                        throw new System.NotSupportedException("Inout parameters must be reference types.");
+                    }
+                }
+                else if (isOutput)
+                {
+                    _nodeFacade[outputTerminal] = new SimpleTerminalFacade(outputTerminal);
+                }
+                else if (isInput)
+                {
+                    _nodeFacade[inputTerminal] = new SimpleTerminalFacade(inputTerminal);
+                }
+                else
+                {
+                    throw new System.NotSupportedException("Parameter is neither input nor output");
+                }
+            }
             return true;
         }
 
@@ -349,41 +261,6 @@ namespace Rebar.Compiler
                 // TODO: when updating terminals during SA, also update the TerminalFacades
                 _nodeFacade[terminal] = new SimpleTerminalFacade(terminal);
             }
-            return true;
-        }
-
-        bool IDfirNodeVisitor<bool>.VisitVectorCreateNode(VectorCreateNode vectorCreateNode)
-        {
-            Terminal vectorOutput = vectorCreateNode.OutputTerminals.ElementAt(0);
-            _nodeFacade[vectorOutput] = new SimpleTerminalFacade(vectorOutput);
-
-            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-            _nodeFacade[vectorOutput].FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToConstructorType("Vec", dataTypeVariable));
-
-            return true;
-        }
-
-        bool IDfirNodeVisitor<bool>.VisitVectorInsertNode(VectorInsertNode vectorInsertNode)
-        {
-            Terminal vectorInput = vectorInsertNode.InputTerminals.ElementAt(0),
-                indexInput = vectorInsertNode.InputTerminals.ElementAt(1),
-                elementInput = vectorInsertNode.InputTerminals.ElementAt(2),
-                vectorOutput = vectorInsertNode.OutputTerminals.ElementAt(0),
-                indexOutput = vectorInsertNode.OutputTerminals.ElementAt(1);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable).AddTerminalFacade(vectorInput, vectorOutput);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable).AddTerminalFacade(indexInput, indexOutput);
-            _nodeFacade[elementInput] = new SimpleTerminalFacade(elementInput);
-
-            VariableSet variableSet = vectorInput.GetVariableSet();
-            TypeVariableReference elementTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-            TypeVariableReference indexTypeVariable = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32);
-            LifetimeTypeVariableGroup indexLifetimeGroup = new LifetimeTypeVariableGroup(variableSet);
-            indexLifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[indexInput], false, indexTypeVariable);
-            LifetimeTypeVariableGroup vectorLifetimeGroup = new LifetimeTypeVariableGroup(variableSet);
-            TypeVariableReference vectorType = _typeVariableSet.CreateReferenceToConstructorType("Vec", elementTypeVariable);
-            vectorLifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[vectorInput], true, vectorType);
-            _nodeFacade[elementInput].FacadeVariable.AdoptTypeVariableReference(elementTypeVariable);
-
             return true;
         }
 
