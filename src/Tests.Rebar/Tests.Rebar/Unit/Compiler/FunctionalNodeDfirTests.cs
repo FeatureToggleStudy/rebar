@@ -233,6 +233,7 @@ namespace Tests.Rebar.Unit.Compiler
         {
             cancellationToken = cancellationToken ?? new NationalInstruments.Compiler.CompileCancellationToken();
             RunSemanticAnalysisUpToCreateNodeFacades(dfirRoot, cancellationToken);
+            new MergeVariablesAcrossWiresTransform().Execute(dfirRoot, cancellationToken);
             new SetVariableTypesAndLifetimesTransform().Execute(dfirRoot, cancellationToken);
         }
 

@@ -171,6 +171,19 @@ namespace Rebar.Compiler
         bool IDfirNodeVisitor<bool>.VisitFunctionalNode(FunctionalNode functionalNode)
         {
             int inputIndex = 0, outputIndex = 0;
+            var genericTypeParameters = new Dictionary<NIType, TypeVariableReference>();
+            if (functionalNode.Signature.IsOpenGeneric())
+            {
+                foreach (NIType genericParameterNIType in functionalNode.Signature.GetGenericParameters())
+                {
+                    if (genericParameterNIType.IsGenericParameter())
+                    {
+                        // TODO: handle generic lifetime parameters differently
+                        genericTypeParameters[genericParameterNIType] = _typeVariableSet.CreateReferenceToNewTypeVariable();
+                    }
+                }
+            }
+
             foreach (NIType parameter in functionalNode.Signature.GetParameters())
             {
                 NIType parameterDataType = parameter.GetDataType();
@@ -194,32 +207,62 @@ namespace Rebar.Compiler
                         // TODO: sharing lifetime groups
                         _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable)
                             .AddTerminalFacade(inputTerminal, outputTerminal);
+
+                        var lifetimeGroup = new LifetimeTypeVariableGroup(inputTerminal.GetVariableSet());
+                        TypeVariableReference referentTypeVariableReference = CreateTypeVariableReferenceFromNIType(parameterDataType.GetReferentType(), genericTypeParameters);
+                        lifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[inputTerminal], false, referentTypeVariableReference);
                     }
                     else if (parameterDataType.IsMutableReferenceType())
                     {
                         // TODO: sharing lifetime groups
                         _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable)
                             .AddTerminalFacade(inputTerminal, outputTerminal);
+
+                        var lifetimeGroup = new LifetimeTypeVariableGroup(inputTerminal.GetVariableSet());
+                        TypeVariableReference referentTypeVariableReference = CreateTypeVariableReferenceFromNIType(parameterDataType.GetReferentType(), genericTypeParameters);
+                        lifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[inputTerminal], true, referentTypeVariableReference);
                     }
                     else
                     {
-                        throw new System.NotSupportedException("Inout parameters must be reference types.");
+                        throw new NotSupportedException("Inout parameters must be reference types.");
                     }
                 }
                 else if (isOutput)
                 {
                     _nodeFacade[outputTerminal] = new SimpleTerminalFacade(outputTerminal);
+
+                    TypeVariableReference typeVariableReference = CreateTypeVariableReferenceFromNIType(parameterDataType, genericTypeParameters);
+                    _nodeFacade[outputTerminal].TrueVariable.AdoptTypeVariableReference(typeVariableReference);
                 }
                 else if (isInput)
                 {
                     _nodeFacade[inputTerminal] = new SimpleTerminalFacade(inputTerminal);
+
+                    // TODO: should adopt a TypeVariableReference for the TrueVariable here as in the output case,
+                    // but I need a test case for this.
                 }
                 else
                 {
-                    throw new System.NotSupportedException("Parameter is neither input nor output");
+                    throw new NotSupportedException("Parameter is neither input nor output");
                 }
             }
             return true;
+        }
+
+        private TypeVariableReference CreateTypeVariableReferenceFromNIType(NIType type, Dictionary<NIType, TypeVariableReference> genericTypeParameters)
+        {
+            if (type.IsGenericParameter())
+            {
+                return genericTypeParameters[type];
+            }
+            else if (!type.IsGeneric())
+            {
+                return _typeVariableSet.CreateReferenceToLiteralType(type);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
         bool IDfirNodeVisitor<bool>.VisitSelectReferenceNode(SelectReferenceNode selectReferenceNode)

@@ -160,10 +160,11 @@ namespace Rebar.Compiler
 
         public bool VisitFunctionalNode(FunctionalNode functionalNode)
         {
+            Signature signature = Signatures.GetSignatureForNIType(functionalNode.Signature);
+#if FALSE
             // type propagation: figure out substitutions for any type parameters based on inputs
             var genericParameters = functionalNode.Signature.GetGenericParameters();
             Dictionary<NIType, NIType> substitutions = new Dictionary<NIType, NIType>();
-            Signature signature = Signatures.GetSignatureForNIType(functionalNode.Signature);
             foreach (var inputPair in functionalNode.InputTerminals.Zip(signature.Inputs))
             {
                 Terminal input = inputPair.Key;
@@ -178,6 +179,7 @@ namespace Rebar.Compiler
                     }
                 }
             }
+#endif
 
             // SetTypeAndLifetime for any output parameters based on type parameter substitutions
             foreach (var outputPair in functionalNode.OutputTerminals.Zip(signature.Outputs))
@@ -188,6 +190,7 @@ namespace Rebar.Compiler
                     continue;
                 }
                 Terminal output = outputPair.Key;
+#if FALSE
                 NIType outputType = NIType.Unset;
                 if (signatureOutput.SignatureType.IsGenericParameter())
                 {
@@ -197,6 +200,8 @@ namespace Rebar.Compiler
                 {
                     outputType = signatureOutput.SignatureType;
                 }
+#endif
+                NIType outputType = output.GetTrueVariable().TypeVariableReference.RenderNIType();
                 if (!outputType.IsRebarReferenceType())
                 {
                     output.GetTrueVariable().SetTypeAndLifetime(outputType, Lifetime.Unbounded);
