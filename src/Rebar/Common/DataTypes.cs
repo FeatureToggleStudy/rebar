@@ -25,12 +25,12 @@ namespace Rebar.Common
         static DataTypes()
         {
             var mutableReferenceGenericTypeBuilder = PFTypes.Factory.DefineReferenceClass("MutableReference");
-            mutableReferenceGenericTypeBuilder.MakeGenericParameters("TDeref"); // TODO: also need a lifetime type parameter
+            mutableReferenceGenericTypeBuilder.MakeGenericParameters("TDeref", "TLife");
             mutableReferenceGenericTypeBuilder.AddTypeKeywordProviderAttribute(RebarTypeKeyword);
             MutableReferenceGenericType = mutableReferenceGenericTypeBuilder.CreateType();
 
             var immutableReferenceGenericTypeBuilder = PFTypes.Factory.DefineReferenceClass("ImmutableReference");
-            immutableReferenceGenericTypeBuilder.MakeGenericParameters("TDeref");    // TODO: also need a lifetime type parameter
+            immutableReferenceGenericTypeBuilder.MakeGenericParameters("TDeref", "TLife");
             immutableReferenceGenericTypeBuilder.AddTypeKeywordProviderAttribute(RebarTypeKeyword);
             ImmutableReferenceGenericType = immutableReferenceGenericTypeBuilder.CreateType();
 
@@ -60,10 +60,10 @@ namespace Rebar.Common
             VectorGenericType = vectorGenericTypeBuilder.CreateType();
         }
 
-        private static NIType SpecializeGenericType(NIType genericTypeDefinition, NIType typeParameter)
+        private static NIType SpecializeGenericType(NIType genericTypeDefinition, params NIType[] typeParameters)
         {
             var specializationTypeBuilder = genericTypeDefinition.DefineClassFromExisting();
-            specializationTypeBuilder.ReplaceGenericParameters(typeParameter);
+            specializationTypeBuilder.ReplaceGenericParameters(typeParameters);
             return specializationTypeBuilder.CreateType();
         }
 
@@ -72,9 +72,9 @@ namespace Rebar.Common
             return type.IsGenericType() && type.GetGenericTypeDefinition() == genericTypeDefinition;
         }
 
-        public static NIType CreateMutableReference(this NIType dereferenceType)
+        public static NIType CreateMutableReference(this NIType dereferenceType, NIType lifetimeType = default(NIType))
         {
-            return SpecializeGenericType(MutableReferenceGenericType, dereferenceType);
+            return SpecializeGenericType(MutableReferenceGenericType, dereferenceType, lifetimeType);
         }
 
         public static bool IsMutableReferenceType(this NIType type)
@@ -82,9 +82,9 @@ namespace Rebar.Common
             return type.IsGenericTypeSpecialization(MutableReferenceGenericType);
         }
 
-        public static NIType CreateImmutableReference(this NIType dereferenceType)
+        public static NIType CreateImmutableReference(this NIType dereferenceType, NIType lifetimeType = default(NIType))
         {
-            return SpecializeGenericType(ImmutableReferenceGenericType, dereferenceType);
+            return SpecializeGenericType(ImmutableReferenceGenericType, dereferenceType, lifetimeType);
         }
 
         public static bool IsImmutableReferenceType(this NIType type)
