@@ -220,18 +220,8 @@ namespace Rebar.Compiler
 
             public override void UpdateFromFacadeInput()
             {
-                if (NeedsBorrow)
-                {
-                    NIType underlyingType = FacadeVariable.Type.GetTypeOrReferentType();
-                    NIType referenceType = MutableBorrow
-                        ? underlyingType.CreateMutableReference()
-                        : underlyingType.CreateImmutableReference();
-                    TrueVariable.SetTypeAndLifetime(referenceType, BorrowLifetime);
-                }
-                else
-                {
-                    TrueVariable.MergeInto(FacadeVariable);
-                }
+                TypeVariableReference typeReference = TrueVariable.TypeVariableReference;
+                TrueVariable.SetTypeAndLifetime(typeReference.RenderNIType(), typeReference.Lifetime);
             }
         }
     }

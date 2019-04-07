@@ -76,7 +76,7 @@ namespace Rebar.Common
                 NIType argumentNIType = Argument.RenderNIType();
                 switch (ConstructorName)
                 {
-                    case "Vec":
+                    case "Vector":
                         return argumentNIType.CreateVector();
                     case "Iterator":
                         return argumentNIType.CreateIterator();
@@ -148,6 +148,8 @@ namespace Rebar.Common
                 {
                     AdoptNewLifetime();
                 }
+                // TODO: instead of using a canned supertype lifetime, it would be good to construct new supertype
+                // lifetimes from whatever we get unified with on the fly
             }
 
             public void AdoptNewLifetime()
@@ -416,18 +418,14 @@ namespace Rebar.Common
                 TypeVariableReference immRef;
                 if (otherReferenceType != null)
                 {
-                    if (!otherReferenceType.Mutable)
-                    {
-                        MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
-
-                        Unify(possibleBorrowType.BorrowInto.TypeVariableReference, other);
-                        possibleBorrowType.BorrowInto.MergeInto(possibleBorrowType.BorrowFrom);
-                        return;
-                    }
                     MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
 
-                    immRef = CreateReferenceToReferenceType(false, otherReferenceType.UnderlyingType, CreateReferenceToLifetimeType(possibleBorrowType.NewLifetime));
+                    immRef = CreateReferenceToReferenceType(
+                        false, 
+                        otherReferenceType.UnderlyingType, 
+                        CreateReferenceToLifetimeType(otherReferenceType.Mutable ? possibleBorrowType.NewLifetime : other.Lifetime));
                     Unify(possibleBorrowType.BorrowInto.TypeVariableReference, immRef);
+
                     // TODO: after unifying these two, might be good to remove immRef--I guess by merging?
                     // Or should unifying two Constructor types merge them after unifying their Arguments?
                     // somehow tell facade associated with possibleBorrowType that a borrow is required

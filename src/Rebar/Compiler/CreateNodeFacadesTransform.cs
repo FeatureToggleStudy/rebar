@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using NationalInstruments;
 using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using Rebar.Common;
@@ -161,6 +162,27 @@ namespace Rebar.Compiler
                 _nodeFacade[terminal] = new SimpleTerminalFacade(terminal);
             }
 
+            if (explicitBorrowNode.AlwaysCreateReference && explicitBorrowNode.AlwaysBeginLifetime)
+            {
+                bool mutable = explicitBorrowNode.BorrowMode == BorrowMode.Mutable;
+                VariableSet variableSet = explicitBorrowNode.ParentDiagram.GetVariableSet();
+                IEnumerable<VariableReference> decomposedVariables = explicitBorrowNode.InputTerminals.Select(VariableExtensions.GetFacadeVariable);
+                Lifetime borrowLifetime = variableSet.DefineLifetimeThatIsBoundedByDiagram(decomposedVariables);
+                TypeVariableReference borrowLifetimeType = _typeVariableSet.CreateReferenceToLifetimeType(borrowLifetime);
+
+                foreach (var terminalPair in explicitBorrowNode.InputTerminals.Zip(explicitBorrowNode.OutputTerminals))
+                {
+                    Terminal inputTerminal = terminalPair.Key, outputTerminal = terminalPair.Value;
+                    TypeVariableReference inputTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
+                    inputTerminal.GetFacadeVariable().AdoptTypeVariableReference(inputTypeVariable);
+                    TypeVariableReference outputReferenceType = _typeVariableSet.CreateReferenceToReferenceType(mutable, inputTypeVariable, borrowLifetimeType);
+                    outputTerminal.GetFacadeVariable().AdoptTypeVariableReference(outputReferenceType);
+                }
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
             // ...uh
             // If AlwaysCreateReference is false, then I guess we want PossiblyBorrow variables for each input, and reference
             // variables for each output that use the common lifetime variable

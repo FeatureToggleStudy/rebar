@@ -155,6 +155,27 @@ namespace Tests.Rebar.Unit.Compiler
             Assert.IsTrue(outputTerminalVariable.Type.GetReferentType().IsInt32());
         }
 
+        [TestMethod]
+        public void FunctionNodeWithSelectReferenceSignatureAndSameLifetimeImmutableReferencesWired_SetVariableTypes_SameLifetimeSetOnOutput()
+        {
+            NIType signatureType = Signatures.SelectReferenceType;
+            DfirRoot dfirRoot = DfirRoot.Create();
+            FunctionalNode functionalNode = new FunctionalNode(dfirRoot.BlockDiagram, signatureType);
+            ExplicitBorrowNode borrow = new ExplicitBorrowNode(dfirRoot.BlockDiagram, BorrowMode.Immutable, 2, true, true);
+            Wire wire1 = Wire.Create(dfirRoot.BlockDiagram, borrow.OutputTerminals[0], functionalNode.InputTerminals[1]);
+            Wire wire2 = Wire.Create(dfirRoot.BlockDiagram, borrow.OutputTerminals[1], functionalNode.InputTerminals[2]);
+            ConnectConstantToInputTerminal(borrow.InputTerminals[0], PFTypes.Int32, false);
+            ConnectConstantToInputTerminal(borrow.InputTerminals[1], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToSetVariableTypes(dfirRoot);
+
+            AutoBorrowNodeFacade nodeFacade = AutoBorrowNodeFacade.GetNodeFacade(functionalNode);
+            Terminal inputTerminal = functionalNode.InputTerminals[1];
+            Lifetime inputLifetime = inputTerminal.GetTrueVariable().Lifetime;
+            Terminal outputTerminal = functionalNode.OutputTerminals[1];
+            Assert.AreEqual(inputLifetime, outputTerminal.GetTrueVariable().Lifetime);
+        }
+
         #endregion
 
         #region ValidateVariableUsages
