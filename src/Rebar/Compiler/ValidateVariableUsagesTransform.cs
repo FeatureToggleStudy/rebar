@@ -133,22 +133,23 @@ namespace Rebar.Compiler
                 Terminal inputTerminal = inputTerminalPair.Key;
                 SignatureTerminal signatureInputTerminal = inputTerminalPair.Value;
                 VariableUsageValidator validator = inputTerminal.GetValidator();
-                if (signatureInputTerminal.DisplayType.IsMutableReferenceType())
+                if (signatureInputTerminal.SignatureType.IsRebarReferenceType())
                 {
-                    validator.TestVariableIsMutableType();
+                    if (signatureInputTerminal.SignatureType.IsMutableReferenceType())
+                    {
+                        validator.TestVariableIsMutableType();
+                    }
+                    NIType underlyingType = signatureInputTerminal.SignatureType.GetReferentType();
+                    if (!underlyingType.IsGenericParameter())
+                    {
+                        validator.TestExpectedUnderlyingType(underlyingType);
+                    }
                 }
-                if (!signatureInputTerminal.SignatureType.IsGenericParameter())
+                else if (!signatureInputTerminal.SignatureType.IsGenericParameter())
                 {
                     NIType underlyingType = signatureInputTerminal.SignatureType;
-                    if (signatureInputTerminal.SignatureType.IsRebarReferenceType())
-                    {
-                        underlyingType = underlyingType.GetReferentType();
-                    }
-                    else
-                    {
-                        validator.TestVariableIsOwnedType();
-                    }
                     validator.TestExpectedUnderlyingType(underlyingType);
+                    validator.TestVariableIsOwnedType();
                 }
             }
 

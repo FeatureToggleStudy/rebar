@@ -154,14 +154,26 @@ namespace Tests.Rebar.Unit.Compiler
         }
 
         [TestMethod]
+        public void FunctionNodeWithGenericImmutableInOutSignatureParameterAndImmutableReferenceVariableWired_ValidateVariableUsages_NoErrorCreated()
+        {
+            NIType signatureType = Signatures.ImmutablePassthroughType;
+            DfirRoot dfirRoot = DfirRoot.Create();
+            FunctionalNode functionalNode = new FunctionalNode(dfirRoot.BlockDiagram, signatureType);
+            ExplicitBorrowNode borrow = ConnectExplicitBorrowToInputTerminal(functionalNode.InputTerminals[0]);
+            ConnectConstantToInputTerminal(borrow.InputTerminals[0], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToValidation(dfirRoot);
+
+            Assert.IsFalse(functionalNode.InputTerminals[0].GetDfirMessages().Any());
+        }
+
+        [TestMethod]
         public void FunctionNodeWithNonReferenceInSignatureParameterAndReferenceVariableWired_ValidateVariableUsages_ErrorCreated()
         {
             NIType signatureType = Signatures.RangeType;
             DfirRoot dfirRoot = DfirRoot.Create();
             FunctionalNode functionalNode = new FunctionalNode(dfirRoot.BlockDiagram, signatureType);
-            ExplicitBorrowNode borrow = new ExplicitBorrowNode(dfirRoot.BlockDiagram, BorrowMode.Immutable, 1, true, true);
-            Terminal inputTerminal = functionalNode.InputTerminals[0];
-            Wire wire = Wire.Create(inputTerminal.ParentDiagram, borrow.OutputTerminals[0], inputTerminal);
+            ExplicitBorrowNode borrow = ConnectExplicitBorrowToInputTerminal(functionalNode.InputTerminals[0]);
             ConnectConstantToInputTerminal(borrow.InputTerminals[0], PFTypes.Int32, false);
 
             RunSemanticAnalysisUpToValidation(dfirRoot);
@@ -220,6 +232,7 @@ namespace Tests.Rebar.Unit.Compiler
 
             Assert.IsTrue(functionalNode.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
         }
+
         #endregion
 
         private void RunSemanticAnalysisUpToCreateNodeFacades(DfirRoot dfirRoot, NationalInstruments.Compiler.CompileCancellationToken cancellationToken = null)
@@ -249,6 +262,13 @@ namespace Tests.Rebar.Unit.Compiler
             Constant constant = Constant.Create(inputTerminal.ParentDiagram, variableType.CreateDefaultValue(), variableType);
             Wire wire = Wire.Create(inputTerminal.ParentDiagram, constant.OutputTerminal, inputTerminal);
             wire.SetWireBeginsMutableVariable(mutable);
+        }
+
+        private ExplicitBorrowNode ConnectExplicitBorrowToInputTerminal(Terminal inputTerminal)
+        {
+            ExplicitBorrowNode borrow = new ExplicitBorrowNode(inputTerminal.ParentDiagram, BorrowMode.Immutable, 1, true, true);
+            Wire wire = Wire.Create(inputTerminal.ParentDiagram, borrow.OutputTerminals[0], inputTerminal);
+            return borrow;
         }
     }
 }
