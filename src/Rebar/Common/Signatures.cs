@@ -80,6 +80,28 @@ namespace Rebar.Common
                 "valueRef");
             OutputType = functionTypeBuilder.CreateType();
 
+            functionTypeBuilder = PFTypes.Factory.DefineFunction("SelectReference");
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                PFTypes.Boolean.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife1")),
+                "selectorRef");
+            tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
+            var tLifetimeParameter = AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife2");
+            // TODO: allow mutability polymorphism
+            AddInputParameter(
+                functionTypeBuilder,
+                tDataParameter.CreateImmutableReference(tLifetimeParameter),
+                "trueValueRef");
+            AddInputParameter(
+                functionTypeBuilder,
+                tDataParameter.CreateImmutableReference(tLifetimeParameter),
+                "falseValueRef");
+            AddOutputParameter(
+                functionTypeBuilder,
+                tDataParameter.CreateImmutableReference(tLifetimeParameter),
+                "selectedValueRef");
+            SelectReferenceType = functionTypeBuilder.CreateType();
+
             functionTypeBuilder = PFTypes.Factory.DefineFunction("Range");
             AddInputParameter(
                 functionTypeBuilder,
@@ -132,6 +154,8 @@ namespace Rebar.Common
         public static NIType CreateCopyType { get; }
 
         public static NIType OutputType { get; }
+
+        public static NIType SelectReferenceType { get; }
 
         public static NIType RangeType { get; }
 
