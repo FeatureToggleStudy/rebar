@@ -161,26 +161,6 @@ namespace Rebar.Compiler
         public bool VisitFunctionalNode(FunctionalNode functionalNode)
         {
             Signature signature = Signatures.GetSignatureForNIType(functionalNode.Signature);
-#if FALSE
-            // type propagation: figure out substitutions for any type parameters based on inputs
-            var genericParameters = functionalNode.Signature.GetGenericParameters();
-            Dictionary<NIType, NIType> substitutions = new Dictionary<NIType, NIType>();
-            foreach (var inputPair in functionalNode.InputTerminals.Zip(signature.Inputs))
-            {
-                Terminal input = inputPair.Key;
-                SignatureTerminal signatureInput = inputPair.Value;
-                if (signatureInput.SignatureType.IsImmutableReferenceType() || signatureInput.SignatureType.IsMutableReferenceType())
-                {
-                    NIType genericParameter = signatureInput.SignatureType.GetGenericParameters().ElementAt(0);
-                    if (genericParameter.IsGenericParameter())
-                    {
-                        NIType referentType = input.GetTrueVariable().Type.GetReferentType();
-                        substitutions[genericParameter] = referentType;
-                    }
-                }
-            }
-#endif
-
             // SetTypeAndLifetime for any output parameters based on type parameter substitutions
             foreach (var outputPair in functionalNode.OutputTerminals.Zip(signature.Outputs))
             {
@@ -190,17 +170,6 @@ namespace Rebar.Compiler
                     continue;
                 }
                 Terminal output = outputPair.Key;
-#if FALSE
-                NIType outputType = NIType.Unset;
-                if (signatureOutput.SignatureType.IsGenericParameter())
-                {
-                    substitutions.TryGetValue(signatureOutput.SignatureType, out outputType);
-                }
-                else
-                {
-                    outputType = signatureOutput.SignatureType;
-                }
-#endif
                 VariableReference outputVariable = output.GetTrueVariable();
                 NIType outputType = outputVariable.TypeVariableReference.RenderNIType();
                 if (!outputType.IsRebarReferenceType())
