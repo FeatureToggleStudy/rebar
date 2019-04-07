@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NationalInstruments;
 using NationalInstruments.DataTypes;
@@ -228,6 +227,12 @@ namespace Rebar.Common
             }
 
             return new Signature(inputs.ToArray(), outputs.ToArray());
+        }
+
+        public static bool IsLifetimeType(this NIType type)
+        {
+            AttributeValue? attribute = type.TryGetAttributeValue("Lifetime");
+            return attribute.HasValue && (bool)attribute.Value.Value;
         }
     }
 

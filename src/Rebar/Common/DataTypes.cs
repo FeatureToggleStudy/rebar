@@ -113,6 +113,15 @@ namespace Rebar.Common
             return type.GetGenericParameters().ElementAt(0);
         }
 
+        public static NIType GetReferenceLifetimeType(this NIType type)
+        {
+            if (!type.IsRebarReferenceType())
+            {
+                throw new ArgumentException("Expected a reference type.", "type");
+            }
+            return type.GetGenericParameters().ElementAt(1);
+        }
+
         public static NIType CreateOption(this NIType valueType)
         {
             return SpecializeGenericType(OptionGenericType, valueType);
