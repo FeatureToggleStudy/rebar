@@ -55,15 +55,16 @@ namespace Rebar.Compiler
             private readonly TypeVariableSet _typeVariableSet;
             private readonly List<VariableReference> _interruptedVariables = new List<VariableReference>();
             private readonly Lazy<Lifetime> _lazyNewLifetime;
-            private readonly TypeVariableReference _lifetimeTypeReference;
 
             public LifetimeTypeVariableGroup(VariableSet variableSet)
             {
                 _variableSet = variableSet;
                 _typeVariableSet = variableSet.TypeVariableSet;
                 _lazyNewLifetime = new Lazy<Lifetime>(() => _variableSet.DefineLifetimeThatIsBoundedByDiagram(_interruptedVariables));
-                _lifetimeTypeReference = _typeVariableSet.CreateReferenceToLifetimeType(_lazyNewLifetime);
+                LifetimeType = _typeVariableSet.CreateReferenceToLifetimeType(_lazyNewLifetime);
             }
+
+            public TypeVariableReference LifetimeType { get; }
 
             public void CreateReferenceAndPossibleBorrowTypesForFacade(TerminalFacade terminalFacade, bool mutable, TypeVariableReference underlyingTypeReference)
             {
@@ -73,8 +74,8 @@ namespace Rebar.Compiler
                 }
                 TypeVariableReference referenceType = _typeVariableSet.CreateReferenceToReferenceType(
                     mutable, 
-                    underlyingTypeReference, 
-                    _lifetimeTypeReference);
+                    underlyingTypeReference,
+                    LifetimeType);
                 terminalFacade.TrueVariable.AdoptTypeVariableReference(referenceType);
                 terminalFacade.FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToPossibleBorrowType(
                     mutable, 
@@ -183,7 +184,9 @@ namespace Rebar.Compiler
                     {
                         if (genericParameterNIType.IsLifetimeType())
                         {
-                            lifetimeVariableGroups[genericParameterNIType] = new LifetimeTypeVariableGroup(functionalNode.ParentDiagram.GetVariableSet());
+                            var group = new LifetimeTypeVariableGroup(functionalNode.ParentDiagram.GetVariableSet());
+                            lifetimeVariableGroups[genericParameterNIType] = group;
+                            genericTypeParameters[genericParameterNIType] = group.LifetimeType;
                         }
                         else
                         {
@@ -235,10 +238,22 @@ namespace Rebar.Compiler
                 }
                 else if (isInput)
                 {
-                    _nodeFacade[inputTerminal] = new SimpleTerminalFacade(inputTerminal);
-
-                    // TODO: should adopt a TypeVariableReference for the TrueVariable here as in the output case,
-                    // but I need a test case for this.
+                    if (parameterDataType.IsRebarReferenceType())
+                    {
+                        CreateFacadesForInoutReferenceParameter(
+                            parameterDataType,
+                            inputTerminal,
+                            null,
+                            genericTypeParameters,
+                            lifetimeFacadeGroups,
+                            lifetimeVariableGroups);
+                    }
+                    else
+                    {
+                        _nodeFacade[inputTerminal] = new SimpleTerminalFacade(inputTerminal);
+                        // TODO: should adopt a TypeVariableReference for the TrueVariable here as in the output case,
+                        // but I need a test case for this.
+                    }
                 }
                 else
                 {
@@ -264,6 +279,8 @@ namespace Rebar.Compiler
                 InputReferenceMutability mutability = isMutable ? InputReferenceMutability.RequireMutable : InputReferenceMutability.AllowImmutable;
                 facadeGroup = _nodeFacade.CreateInputLifetimeGroup(mutability);
             }
+            // TODO: should not add outputTerminal here if borrow cannot be auto-terminated
+            // i.e., if there are in-only or out-only parameters that share lifetimeType
             facadeGroup.AddTerminalFacade(inputTerminal, outputTerminal);
 
             var lifetimeGroup = lifetimeVariableGroups[lifetimeType];
@@ -277,12 +294,25 @@ namespace Rebar.Compiler
             {
                 return genericTypeParameters[type];
             }
-            else if (!type.IsGeneric())
+            else if (!type.IsGenericType())
             {
                 return _typeVariableSet.CreateReferenceToLiteralType(type);
             }
             else
             {
+                if (type.IsRebarReferenceType())
+                {
+                    TypeVariableReference referentType = CreateTypeVariableReferenceFromNIType(type.GetReferentType(), genericTypeParameters);
+                    TypeVariableReference lifetimeType = CreateTypeVariableReferenceFromNIType(type.GetReferenceLifetimeType(), genericTypeParameters);
+                    return _typeVariableSet.CreateReferenceToReferenceType(type.IsMutableReferenceType(), referentType, lifetimeType);
+                }
+                string constructorTypeName = type.GetName();
+                var constructorParameters = type.GetGenericParameters();
+                if (constructorParameters.Count == 1)
+                {
+                    TypeVariableReference parameterType = CreateTypeVariableReferenceFromNIType(constructorParameters.ElementAt(0), genericTypeParameters);
+                    return _typeVariableSet.CreateReferenceToConstructorType(constructorTypeName, parameterType);
+                }
                 throw new NotImplementedException();
             }
         }

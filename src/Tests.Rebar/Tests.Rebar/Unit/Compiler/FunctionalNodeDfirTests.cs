@@ -92,6 +92,20 @@ namespace Tests.Rebar.Unit.Compiler
             Assert.IsInstanceOfType(nodeFacade[inputTerminal], typeof(SimpleTerminalFacade));
         }
 
+        [TestMethod]
+        public void FunctionNodeWithSelectReferenceSignature_CreateNodeFacades_CreatesFacades()
+        {
+            NIType signatureType = Signatures.SelectReferenceType;
+            DfirRoot dfirRoot = DfirRoot.Create();
+            FunctionalNode functionalNode = new FunctionalNode(dfirRoot.BlockDiagram, signatureType);
+
+            RunSemanticAnalysisUpToCreateNodeFacades(dfirRoot);
+
+            AutoBorrowNodeFacade nodeFacade = AutoBorrowNodeFacade.GetNodeFacade(functionalNode);
+            Terminal inputTerminal = functionalNode.InputTerminals[1];
+            Assert.IsNotInstanceOfType(nodeFacade[inputTerminal], typeof(SimpleTerminalFacade));
+        }
+
         #endregion
 
         #region SetVariableTypes
@@ -121,6 +135,24 @@ namespace Tests.Rebar.Unit.Compiler
 
             Terminal outputTerminal = functionalNode.OutputTerminals[1];
             Assert.IsTrue(outputTerminal.GetTrueVariable().Type.IsInt32());
+        }
+
+        [TestMethod]
+        public void FunctionNodeWithSelectReferenceSignatureAndImmutableValuesWired_SetVariableTypes_ImmutableReferenceTypeSetOnOutput()
+        {
+            NIType signatureType = Signatures.SelectReferenceType;
+            DfirRoot dfirRoot = DfirRoot.Create();
+            FunctionalNode functionalNode = new FunctionalNode(dfirRoot.BlockDiagram, signatureType);
+            ConnectConstantToInputTerminal(functionalNode.InputTerminals[1], PFTypes.Int32, false);
+            ConnectConstantToInputTerminal(functionalNode.InputTerminals[2], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToSetVariableTypes(dfirRoot);
+
+            AutoBorrowNodeFacade nodeFacade = AutoBorrowNodeFacade.GetNodeFacade(functionalNode);
+            Terminal outputTerminal = functionalNode.OutputTerminals[1];
+            VariableReference outputTerminalVariable = outputTerminal.GetTrueVariable();
+            Assert.IsTrue(outputTerminalVariable.Type.IsImmutableReferenceType());
+            Assert.IsTrue(outputTerminalVariable.Type.GetReferentType().IsInt32());
         }
 
         #endregion

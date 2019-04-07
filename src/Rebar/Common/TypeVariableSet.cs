@@ -15,6 +15,8 @@ namespace Rebar.Common
             public abstract string DebuggerDisplay { get; }
 
             public abstract NIType RenderNIType();
+
+            public abstract Lifetime Lifetime { get; }
         }
 
         private sealed class TypeVariable : TypeBase
@@ -32,6 +34,8 @@ namespace Rebar.Common
             {
                 return PFTypes.Void;
             }
+
+            public override Lifetime Lifetime => Lifetime.Empty;
         }
 
         private sealed class LiteralType : TypeBase
@@ -49,6 +53,8 @@ namespace Rebar.Common
             {
                 return Type;
             }
+
+            public override Lifetime Lifetime => Lifetime.Unbounded;
         }
 
         private sealed class ConstructorType : TypeBase
@@ -82,6 +88,8 @@ namespace Rebar.Common
                         throw new NotSupportedException();
                 }
             }
+
+            public override Lifetime Lifetime => Argument.Lifetime;
         }
 
         private sealed class ReferenceType : TypeBase
@@ -113,6 +121,8 @@ namespace Rebar.Common
                 NIType underlyingNIType = UnderlyingType.RenderNIType();
                 return Mutable ? underlyingNIType.CreateMutableReference() : underlyingNIType.CreateImmutableReference();
             }
+
+            public override Lifetime Lifetime => LifetimeType.Lifetime;
         }
 
         private sealed class LifetimeTypeContainer : TypeBase
@@ -124,15 +134,17 @@ namespace Rebar.Common
                 _lazyNewLifetime = lazyNewLifetime;
             }
 
-            public Lifetime Lifetime { get; private set; }
+            public Lifetime LifetimeValue { get; private set; }
+
+            public override Lifetime Lifetime => LifetimeValue;
 
             public void AdoptLifetimeIfPossible(Lifetime lifetime)
             {
-                if (Lifetime == null)
+                if (LifetimeValue == null)
                 {
-                    Lifetime = lifetime;
+                    LifetimeValue = lifetime;
                 }
-                else if (Lifetime != lifetime)
+                else if (LifetimeValue != lifetime)
                 {
                     AdoptNewLifetime();
                 }
@@ -140,7 +152,7 @@ namespace Rebar.Common
 
             public void AdoptNewLifetime()
             {
-                Lifetime = _lazyNewLifetime.Value;
+                LifetimeValue = _lazyNewLifetime.Value;
             }
 
             public override string DebuggerDisplay
@@ -190,6 +202,14 @@ namespace Rebar.Common
             public override NIType RenderNIType()
             {
                 throw new NotImplementedException();
+            }
+
+            public override Lifetime Lifetime
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
             }
         }
 
@@ -338,7 +358,7 @@ namespace Rebar.Common
             if (toUnifyLifetime != null && toUnifyWithLifetime != null)
             {
                 // toUnify is the possible supertype container here
-                toUnifyLifetime.AdoptLifetimeIfPossible(toUnifyWithLifetime.Lifetime);
+                toUnifyLifetime.AdoptLifetimeIfPossible(toUnifyWithLifetime.LifetimeValue);
                 return;
             }
 
@@ -434,6 +454,12 @@ namespace Rebar.Common
             TypeBase typeBase = GetTypeForTypeVariableReference(typeVariableReference);
             return typeBase?.RenderNIType() ?? PFTypes.Void;
         }
+
+        public Lifetime GetLifetime(TypeVariableReference typeVariableReference)
+        {
+            TypeBase typeBase = GetTypeForTypeVariableReference(typeVariableReference);
+            return typeBase?.Lifetime ?? Lifetime.Empty;
+        }
     }
 
     [DebuggerDisplay("{DebuggerDisplay}")]
@@ -452,5 +478,7 @@ namespace Rebar.Common
         public string DebuggerDisplay => TypeVariableSet.GetDebuggerDisplay(this);
 
         public NIType RenderNIType() => TypeVariableSet.RenderNIType(this);
+
+        public Lifetime Lifetime => TypeVariableSet.GetLifetime(this);
     }
 }

@@ -201,13 +201,17 @@ namespace Rebar.Compiler
                     outputType = signatureOutput.SignatureType;
                 }
 #endif
-                NIType outputType = output.GetTrueVariable().TypeVariableReference.RenderNIType();
+                VariableReference outputVariable = output.GetTrueVariable();
+                NIType outputType = outputVariable.TypeVariableReference.RenderNIType();
                 if (!outputType.IsRebarReferenceType())
                 {
-                    output.GetTrueVariable().SetTypeAndLifetime(outputType, Lifetime.Unbounded);
-                    continue;
+                    outputVariable.SetTypeAndLifetime(outputType, Lifetime.Unbounded);
                 }
-                throw new System.NotImplementedException();
+                else
+                {
+                    Lifetime lifetime = outputVariable.TypeVariableReference.Lifetime;
+                    outputVariable.SetTypeAndLifetime(outputType, lifetime);
+                }
             }
             return true;
         }
