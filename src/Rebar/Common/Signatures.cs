@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using NationalInstruments;
 using NationalInstruments.DataTypes;
@@ -7,76 +8,92 @@ namespace Rebar.Common
 {
     public static class Signatures
     {
+        private static void SetLifetimeTypeAttribute(NIAttributedBaseBuilder builder)
+        {
+            builder.AddAttribute("Lifetime", true, true);
+        }
+
+        private static NIType AddGenericDataTypeParameter(NIFunctionBuilder functionBuilder, string name)
+        {
+            var genericTypeParameters = functionBuilder.MakeGenericParameters(name);
+            return genericTypeParameters.ElementAt(0).CreateType();
+        }
+
+        private static NIType AddGenericLifetimeTypeParameter(NIFunctionBuilder functionBuilder, string name)
+        {
+            var genericTypeParameters = functionBuilder.MakeGenericParameters(name);
+            var parameterBuilder = genericTypeParameters.ElementAt(0);
+            SetLifetimeTypeAttribute((NIAttributedBaseBuilder)parameterBuilder);
+            return parameterBuilder.CreateType();
+        }
+
+        private static void AddInputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
+        {
+            functionBuilder.DefineParameter(parameterType, name, NIParameterPassingRule.Required, NIParameterPassingRule.NotAllowed);
+        }
+
+        private static void AddOutputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
+        {
+            functionBuilder.DefineParameter(parameterType, name, NIParameterPassingRule.NotAllowed, NIParameterPassingRule.Recommended);
+        }
+
+        private static void AddInputOutputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
+        {
+            functionBuilder.DefineParameter(parameterType, name, NIParameterPassingRule.Required, NIParameterPassingRule.Recommended);
+        }
+
         static Signatures()
         {
             var functionTypeBuilder = PFTypes.Factory.DefineFunction("ImmutPass");
-            var genericTypeParameters = functionTypeBuilder.MakeGenericParameters(
-                "TData");
-            var tDataParameter = genericTypeParameters.ElementAt(0).CreateType();
-            var immutableReferenceType = tDataParameter.CreateImmutableReference();
-            functionTypeBuilder.DefineParameter(
-                immutableReferenceType,
-                "valueRef",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.Recommended);
+            var tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                tDataParameter.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife")),
+                "valueRef");
             ImmutablePassthroughType = functionTypeBuilder.CreateType();
 
             functionTypeBuilder = PFTypes.Factory.DefineFunction("MutPass");
-            genericTypeParameters = functionTypeBuilder.MakeGenericParameters(
-                "TData");
-            tDataParameter = genericTypeParameters.ElementAt(0).CreateType();
-            var mutableReferenceType = tDataParameter.CreateMutableReference();
-            functionTypeBuilder.DefineParameter(
-                mutableReferenceType,
-                "valueRef",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.Recommended);
+            tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                tDataParameter.CreateMutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife")),
+                "valueRef");
             MutablePassthroughType = functionTypeBuilder.CreateType();
 
             functionTypeBuilder = PFTypes.Factory.DefineFunction("CreateCopy");
             // TODO: constrain TData to be Copy
-            genericTypeParameters = functionTypeBuilder.MakeGenericParameters(
-                "TData");
-            tDataParameter = genericTypeParameters.ElementAt(0).CreateType();
-            immutableReferenceType = tDataParameter.CreateImmutableReference();
-            functionTypeBuilder.DefineParameter(
-                immutableReferenceType,
-                "valueRef",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.Recommended);
-            functionTypeBuilder.DefineParameter(
+            tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                tDataParameter.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife")),
+                "valueRef");
+            AddOutputParameter(
+                functionTypeBuilder,
                 tDataParameter,
-                "copy",
-                NIParameterPassingRule.NotAllowed,
-                NIParameterPassingRule.Recommended);
+                "copy");
             CreateCopyType = functionTypeBuilder.CreateType();
 
             functionTypeBuilder = PFTypes.Factory.DefineFunction("Output");
             // TODO: allow other types later
-            immutableReferenceType = PFTypes.Int32.CreateImmutableReference();
-            functionTypeBuilder.DefineParameter(
-                immutableReferenceType,
-                "valueRef",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.Recommended);
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                PFTypes.Int32.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife")),
+                "valueRef");
             OutputType = functionTypeBuilder.CreateType();
 
             functionTypeBuilder = PFTypes.Factory.DefineFunction("Range");
-            functionTypeBuilder.DefineParameter(
+            AddInputParameter(
+                functionTypeBuilder,
                 PFTypes.Int32,
-                "lowValue",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.NotAllowed);
-            functionTypeBuilder.DefineParameter(
+                "lowValue");
+            AddInputParameter(
+                functionTypeBuilder,
                 PFTypes.Int32,
-                "highValue",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.NotAllowed);
-            functionTypeBuilder.DefineParameter(
+                "highValue");
+            AddOutputParameter(
+                functionTypeBuilder,
                 PFTypes.Int32.CreateIterator(),
-                "range",
-                NIParameterPassingRule.NotAllowed,
-                NIParameterPassingRule.Recommended);
+                "range");
             RangeType = functionTypeBuilder.CreateType();
 
             functionTypeBuilder = PFTypes.Factory.DefineFunction("VectorCreate");
@@ -86,32 +103,26 @@ namespace Rebar.Common
                 "TData");
             tDataParameter = genericTypeParameters.ElementAt(0).CreateType();
 #endif
-            functionTypeBuilder.DefineParameter(
+            AddOutputParameter(
+                functionTypeBuilder,
                 PFTypes.Int32.CreateVector(),
-                "valueRef",
-                NIParameterPassingRule.NotAllowed,
-                NIParameterPassingRule.Recommended);
+                "valueRef");
             VectorCreateType = functionTypeBuilder.CreateType();
 
             functionTypeBuilder = PFTypes.Factory.DefineFunction("VectorInsert");
-            genericTypeParameters = functionTypeBuilder.MakeGenericParameters(
-                "TData");
-            tDataParameter = genericTypeParameters.ElementAt(0).CreateType();
-            functionTypeBuilder.DefineParameter(
-                tDataParameter.CreateVector().CreateMutableReference(),
-                "vectorRef",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.Recommended);
-            functionTypeBuilder.DefineParameter(
-                PFTypes.Int32.CreateImmutableReference(),
-                "indexRef",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.Recommended);
-            functionTypeBuilder.DefineParameter(
+            tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                tDataParameter.CreateVector().CreateMutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife1")),
+                "vectorRef");
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                PFTypes.Int32.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife2")),
+                "indexRef");
+            AddInputParameter(
+                functionTypeBuilder,
                 tDataParameter,
-                "element",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.NotAllowed);
+                "element");
             VectorInsertType = functionTypeBuilder.CreateType();
         }
 
@@ -132,66 +143,56 @@ namespace Rebar.Common
         public static NIType DefinePureUnaryFunction(string name, NIType inputType, NIType outputType)
         {
             var functionTypeBuilder = PFTypes.Factory.DefineFunction(name);
-            var immutableReferenceType = inputType.CreateImmutableReference();
-            functionTypeBuilder.DefineParameter(
-                immutableReferenceType,
-                "operandRef",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.Recommended);
-            functionTypeBuilder.DefineParameter(
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                inputType.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife")),
+                "operandRef");
+            AddOutputParameter(
+                functionTypeBuilder,
                 outputType,
-                "result",
-                NIParameterPassingRule.NotAllowed,
-                NIParameterPassingRule.Recommended);
+                "result");
             return functionTypeBuilder.CreateType();
         }
 
         public static NIType DefinePureBinaryFunction(string name, NIType inputType, NIType outputType)
         {
             var functionTypeBuilder = PFTypes.Factory.DefineFunction(name);
-            var immutableReferenceType = inputType.CreateImmutableReference();
-            functionTypeBuilder.DefineParameter(
-                immutableReferenceType,
-                "operand1Ref",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.Recommended);
-            functionTypeBuilder.DefineParameter(
-                immutableReferenceType,
-                "operand2Ref",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.Recommended);
-            functionTypeBuilder.DefineParameter(
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                inputType.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife1")),
+                "operand1Ref");
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                inputType.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife2")),
+                "operand2Ref");
+            AddOutputParameter(
+                functionTypeBuilder,
                 outputType,
-                "result",
-                NIParameterPassingRule.NotAllowed,
-                NIParameterPassingRule.Recommended);
+                "result");
             return functionTypeBuilder.CreateType();
         }
 
         public static NIType DefineMutatingUnaryFunction(string name, NIType inputType)
         {
             var functionTypeBuilder = PFTypes.Factory.DefineFunction(name);
-            functionTypeBuilder.DefineParameter(
-                inputType.CreateMutableReference(),
-                "operandRef",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.Recommended);
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                inputType.CreateMutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife")),
+                "operandRef");
             return functionTypeBuilder.CreateType();
         }
 
         public static NIType DefineMutatingBinaryFunction(string name, NIType inputType)
         {
             var functionTypeBuilder = PFTypes.Factory.DefineFunction(name);
-            functionTypeBuilder.DefineParameter(
-                inputType.CreateMutableReference(),
-                "operand1Ref",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.Recommended);
-            functionTypeBuilder.DefineParameter(
-                inputType.CreateImmutableReference(),
-                "operand2Ref",
-                NIParameterPassingRule.Required,
-                NIParameterPassingRule.Recommended);
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                inputType.CreateMutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife1")),
+                "operand1Ref");
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                inputType.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife2")),
+                "operand2Ref");
             return functionTypeBuilder.CreateType();
         }
 
