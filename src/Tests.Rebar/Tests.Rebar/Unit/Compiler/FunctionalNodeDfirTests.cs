@@ -176,6 +176,24 @@ namespace Tests.Rebar.Unit.Compiler
             Assert.AreEqual(inputLifetime, outputTerminal.GetTrueVariable().Lifetime);
         }
 
+        [TestMethod]
+        public void FunctionNodeWithSelectReferenceSignatureAndMutableValuesWired_SetVariableTypes_MutableReferenceTypeSetOnOutput()
+        {
+            NIType signatureType = Signatures.SelectReferenceType;
+            DfirRoot dfirRoot = DfirRoot.Create();
+            FunctionalNode functionalNode = new FunctionalNode(dfirRoot.BlockDiagram, signatureType);
+            ConnectConstantToInputTerminal(functionalNode.InputTerminals[1], PFTypes.Int32, true);
+            ConnectConstantToInputTerminal(functionalNode.InputTerminals[2], PFTypes.Int32, true);
+
+            RunSemanticAnalysisUpToSetVariableTypes(dfirRoot);
+
+            AutoBorrowNodeFacade nodeFacade = AutoBorrowNodeFacade.GetNodeFacade(functionalNode);
+            Terminal outputTerminal = functionalNode.OutputTerminals[1];
+            VariableReference outputTerminalVariable = outputTerminal.GetTrueVariable();
+            Assert.IsTrue(outputTerminalVariable.Type.IsMutableReferenceType());
+            Assert.IsTrue(outputTerminalVariable.Type.GetReferentType().IsInt32());
+        }
+
         #endregion
 
         #region ValidateVariableUsages

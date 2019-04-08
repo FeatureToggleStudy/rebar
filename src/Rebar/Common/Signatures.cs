@@ -81,11 +81,11 @@ namespace Rebar.Common
             OutputType = functionTypeBuilder.CreateType();
 
             functionTypeBuilder = PFTypes.Factory.DefineFunction("SelectReference");
+            tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
             AddInputOutputParameter(
                 functionTypeBuilder,
                 PFTypes.Boolean.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife1")),
                 "selectorRef");
-            tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
             var tLifetimeParameter = AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife2");
             // TODO: allow mutability polymorphism
             AddInputParameter(
