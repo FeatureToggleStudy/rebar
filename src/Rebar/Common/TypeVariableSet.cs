@@ -494,22 +494,12 @@ namespace Rebar.Common
             {
                 case InputReferenceMutability.RequireMutable:
                 {
-                    if (otherReferenceType != null)
-                    {
-                        if (otherReferenceType.Mutable)
-                        {
-                            MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
-
-                            possibleBorrowType.BorrowInto.MergeInto(possibleBorrowType.BorrowFrom);
-                            return;
-                        }
-
-                        // type error
-                        return;
-                    }
                     MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
-
-                    TypeVariableReference mutRef = CreateReferenceToReferenceType(true, other, CreateReferenceToLifetimeType(possibleBorrowType.NewLifetime));
+                    TypeVariableReference underlyingType = otherReferenceType != null ? otherReferenceType.UnderlyingType : other;
+                    TypeVariableReference lifetimeType = CreateReferenceToLifetimeType(otherReferenceType != null 
+                        ? otherReferenceType.Lifetime
+                        : possibleBorrowType.NewLifetime);
+                    TypeVariableReference mutRef = CreateReferenceToReferenceType(true, underlyingType, lifetimeType);
                     Unify(possibleBorrowType.BorrowInto.TypeVariableReference, mutRef);
                     // TODO: after unifying these two, might be good to remove mutRef--I guess by merging?
                     // somehow tell facade associated with possibleBorrowType that a borrow is required
@@ -517,26 +507,12 @@ namespace Rebar.Common
                 }
                 case InputReferenceMutability.AllowImmutable:
                 {
-                    TypeVariableReference immRef;
-                    if (otherReferenceType != null)
-                    {
-                        MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
-
-                        immRef = CreateReferenceToReferenceType(
-                            false,
-                            otherReferenceType.UnderlyingType,
-                            CreateReferenceToLifetimeType(otherReferenceType.Mutable ? possibleBorrowType.NewLifetime : other.Lifetime));
-                        Unify(possibleBorrowType.BorrowInto.TypeVariableReference, immRef);
-
-                        // TODO: after unifying these two, might be good to remove immRef--I guess by merging?
-                        // Or should unifying two Constructor types merge them after unifying their Arguments?
-                        // somehow tell facade associated with possibleBorrowType that a borrow is required
-                        return;
-                    }
                     MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
-
-                    // each of these TODOs should be basically a constant lifetime type of the associated lazy new lifetime
-                    immRef = CreateReferenceToReferenceType(false, other, CreateReferenceToLifetimeType(possibleBorrowType.NewLifetime));
+                    TypeVariableReference underlyingType = otherReferenceType != null ? otherReferenceType.UnderlyingType : other;
+                    TypeVariableReference lifetimeType = CreateReferenceToLifetimeType(otherReferenceType != null && !otherReferenceType.Mutable
+                        ? other.Lifetime
+                        : possibleBorrowType.NewLifetime);
+                    TypeVariableReference immRef = CreateReferenceToReferenceType(false, underlyingType, lifetimeType);
                     Unify(possibleBorrowType.BorrowInto.TypeVariableReference, immRef);
                     // TODO: after unifying these two, might be good to remove immRef--I guess by merging?
                     // somehow tell facade associated with possibleBorrowType that a borrow is required
