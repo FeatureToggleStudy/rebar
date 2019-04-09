@@ -12,6 +12,8 @@ namespace Rebar.Common
 
         private static NIType ImmutableReferenceGenericType { get; }
 
+        private static NIType PolymorphicReferenceGenericType { get; }
+
         private static NIType OptionGenericType { get; }
 
         private static NIType LockingCellGenericType { get; }
@@ -33,6 +35,11 @@ namespace Rebar.Common
             immutableReferenceGenericTypeBuilder.MakeGenericParameters("TDeref", "TLife");
             immutableReferenceGenericTypeBuilder.AddTypeKeywordProviderAttribute(RebarTypeKeyword);
             ImmutableReferenceGenericType = immutableReferenceGenericTypeBuilder.CreateType();
+
+            var polymorphicReferenceGenericTypeBuilder = PFTypes.Factory.DefineReferenceClass("PolymorphicReference");
+            polymorphicReferenceGenericTypeBuilder.MakeGenericParameters("TDeref", "TLife", "TMut");
+            polymorphicReferenceGenericTypeBuilder.AddTypeKeywordProviderAttribute(RebarTypeKeyword);
+            PolymorphicReferenceGenericType = polymorphicReferenceGenericTypeBuilder.CreateType();
 
             var optionGenericTypeBuilder = PFTypes.Factory.DefineValueClass("Option");
             optionGenericTypeBuilder.MakeGenericParameters("T");
@@ -94,7 +101,7 @@ namespace Rebar.Common
 
         public static bool IsRebarReferenceType(this NIType type)
         {
-            return type.IsImmutableReferenceType() || type.IsMutableReferenceType();
+            return type.IsImmutableReferenceType() || type.IsMutableReferenceType() || type.IsPolymorphicReferenceType();
         }
 
         public static NIType GetTypeOrReferentType(this NIType type)
@@ -120,6 +127,42 @@ namespace Rebar.Common
                 throw new ArgumentException("Expected a reference type.", "type");
             }
             return type.GetGenericParameters().ElementAt(1);
+        }
+
+        public static NIType CreatePolymorphicReference(this NIType dereferenceType, NIType lifetimeType, NIType mutabilityType)
+        {
+            return SpecializeGenericType(PolymorphicReferenceGenericType, dereferenceType, lifetimeType, mutabilityType);
+        }
+
+        public static bool IsPolymorphicReferenceType(this NIType type)
+        {
+            return type.IsGenericTypeSpecialization(PolymorphicReferenceGenericType);
+        }
+
+        public static NIType GetReferenceMutabilityType(this NIType type)
+        {
+            if (!type.IsPolymorphicReferenceType())
+            {
+                throw new ArgumentException("Expected a polymorphic reference type.", "type");
+            }
+            return type.GetGenericParameters().ElementAt(2);
+        }
+
+        internal static InputReferenceMutability GetInputReferenceMutabilityFromType(this NIType type)
+        {
+            if (!type.IsRebarReferenceType())
+            {
+                throw new ArgumentException("Expected a reference type.", "type");
+            }
+            if (type.IsImmutableReferenceType())
+            {
+                return InputReferenceMutability.AllowImmutable;
+            }
+            if (type.IsMutableReferenceType())
+            {
+                return InputReferenceMutability.RequireMutable;
+            }
+            return InputReferenceMutability.Polymorphic;
         }
 
         public static NIType CreateOption(this NIType valueType)

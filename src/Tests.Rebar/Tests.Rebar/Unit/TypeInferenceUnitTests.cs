@@ -115,7 +115,7 @@ namespace Tests.Rebar.Unit
             trueVariable.AdoptTypeVariableReference(possibleBorrowSetup.ReferenceType);
             possibleBorrowSetup.BorrowLifetime = variableSet.DefineLifetimeThatIsBoundedByDiagram(facadeVariable.ToEnumerable());
             possibleBorrowSetup.PossibleBorrow = typeVariableSet.CreateReferenceToPossibleBorrowType(
-                false, facadeVariable, trueVariable, new Lazy<Lifetime>(() => possibleBorrowSetup.BorrowLifetime));
+                InputReferenceMutability.AllowImmutable, facadeVariable, trueVariable, new Lazy<Lifetime>(() => possibleBorrowSetup.BorrowLifetime));
             return possibleBorrowSetup;
         }
 

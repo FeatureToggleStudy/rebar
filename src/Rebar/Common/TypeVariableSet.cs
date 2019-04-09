@@ -1,7 +1,7 @@
-﻿using NationalInstruments.DataTypes;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System;
 using System.Diagnostics;
+using NationalInstruments.DataTypes;
 
 namespace Rebar.Common
 {
@@ -94,9 +94,61 @@ namespace Rebar.Common
 
         private sealed class ReferenceType : TypeBase
         {
+            private abstract class Mutability
+            {
+                public abstract void UnifyMutability(Mutability unifyWith);
+            }
+
+            private sealed class ConstantMutability : Mutability
+            {
+                private readonly bool _mutable;
+
+                public ConstantMutability(bool mutable)
+                {
+                    _mutable = mutable;
+                }
+
+                public override void UnifyMutability(Mutability unifyWith)
+                {
+                    var unifyWithConstant = unifyWith as ConstantMutability;
+                    if (unifyWithConstant != null)
+                    {
+                        if (_mutable != unifyWithConstant._mutable)
+                        {
+                            // type error
+                        }
+                    }
+                }
+            }
+
+            private sealed class VariableMutability : Mutability
+            {
+                private readonly TypeVariableReference _mutabilityVariable;
+
+                public VariableMutability(TypeVariableReference mutabilityVariable)
+                {
+                    _mutabilityVariable = mutabilityVariable;
+                }
+
+                public override void UnifyMutability(Mutability unifyWith)
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            private readonly Mutability _mutability;
+
             public ReferenceType(bool mutable, TypeVariableReference underlyingType, TypeVariableReference lifetimeType)
             {
                 Mutable = mutable;
+                _mutability = new ConstantMutability(mutable);
+                UnderlyingType = underlyingType;
+                LifetimeType = lifetimeType;
+            }
+
+            public ReferenceType(TypeVariableReference mutability, TypeVariableReference underlyingType, TypeVariableReference lifetimeType)
+            {
+                _mutability = new VariableMutability(mutability);
                 UnderlyingType = underlyingType;
                 LifetimeType = lifetimeType;
             }
@@ -106,6 +158,11 @@ namespace Rebar.Common
             public TypeVariableReference UnderlyingType { get; }
 
             public TypeVariableReference LifetimeType { get; }
+
+            public void UnifyMutability(ReferenceType unifyWith)
+            {
+                _mutability.UnifyMutability(unifyWith._mutability);
+            }
 
             public override string DebuggerDisplay
             {
@@ -172,19 +229,43 @@ namespace Rebar.Common
             }
         }
 
+        private sealed class MutabilityTypeVariable : TypeBase
+        {            
+            public override string DebuggerDisplay
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public override Lifetime Lifetime
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public override NIType RenderNIType()
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         private sealed class PossibleBorrowType : TypeBase
         {
             private readonly Lazy<Lifetime> _lazyNewLifetime;
 
-            public PossibleBorrowType(bool mutable, VariableReference borrowFrom, VariableReference borrowInto, Lazy<Lifetime> lazyNewLifetime)
+            public PossibleBorrowType(InputReferenceMutability mutability, VariableReference borrowFrom, VariableReference borrowInto, Lazy<Lifetime> lazyNewLifetime)
             {
-                Mutable = mutable;
+                Mutability = mutability;
                 BorrowFrom = borrowFrom;
                 BorrowInto = borrowInto;
                 _lazyNewLifetime = lazyNewLifetime;
             }
 
-            public bool Mutable { get; }
+            public InputReferenceMutability Mutability { get; }
 
             public VariableReference BorrowFrom { get; }
 
@@ -196,7 +277,19 @@ namespace Rebar.Common
             {
                 get
                 {
-                    string mutable = Mutable ? "mut" : "imm";
+                    string mutable;
+                    switch (Mutability)
+                    {
+                        case InputReferenceMutability.AllowImmutable:
+                            mutable = "imm";
+                            break;
+                        case InputReferenceMutability.RequireMutable:
+                            mutable = "mut";
+                            break;
+                        default:
+                            mutable = "poly";
+                            break;
+                    }
                     return $"PossibleBorrow {mutable} {BorrowFrom.Id} -> {BorrowInto.Id}";
                 }
             }
@@ -243,6 +336,11 @@ namespace Rebar.Common
             return CreateReferenceToNewType(new ReferenceType(mutable, underlyingType, lifetimeType));
         }
 
+        public TypeVariableReference CreateReferenceToPolymorphicReferenceType(TypeVariableReference mutabilityType, TypeVariableReference underlyingType, TypeVariableReference lifetimeType)
+        {
+            return CreateReferenceToNewType(new ReferenceType(mutabilityType, underlyingType, lifetimeType));
+        }
+
         public TypeVariableReference CreateReferenceToLifetimeType(Lazy<Lifetime> lazyNewLifetime)
         {
             return CreateReferenceToNewType(new LifetimeTypeContainer(lazyNewLifetime));
@@ -255,9 +353,14 @@ namespace Rebar.Common
             return CreateReferenceToNewType(lifetimeTypeContainer);
         }
 
-        public TypeVariableReference CreateReferenceToPossibleBorrowType(bool mutable, VariableReference borrowFrom, VariableReference borrowInto, Lazy<Lifetime> lazyNewLifetime)
+        public TypeVariableReference CreateReferenceToMutabilityType()
         {
-            return CreateReferenceToNewType(new PossibleBorrowType(mutable, borrowFrom, borrowInto, lazyNewLifetime));
+            return CreateReferenceToNewType(new MutabilityTypeVariable());
+        }
+
+        public TypeVariableReference CreateReferenceToPossibleBorrowType(InputReferenceMutability mutability, VariableReference borrowFrom, VariableReference borrowInto, Lazy<Lifetime> lazyNewLifetime)
+        {
+            return CreateReferenceToNewType(new PossibleBorrowType(mutability, borrowFrom, borrowInto, lazyNewLifetime));
         }
 
         private TypeVariableReference CreateReferenceToNewType(TypeBase type)
@@ -345,11 +448,7 @@ namespace Rebar.Common
                 toUnifyWithReference = toUnifyWithTypeBase as ReferenceType;
             if (toUnifyReference != null && toUnifyWithReference != null)
             {
-                if (toUnifyReference.Mutable != toUnifyWithReference.Mutable)
-                {
-                    // type error
-                    return;
-                }
+                toUnifyReference.UnifyMutability(toUnifyWithReference);
                 Unify(toUnifyReference.UnderlyingType, toUnifyWithReference.UnderlyingType);
                 Unify(toUnifyReference.LifetimeType, toUnifyWithReference.LifetimeType);
                 return;
@@ -391,53 +490,62 @@ namespace Rebar.Common
             PossibleBorrowType possibleBorrowType = (PossibleBorrowType)GetTypeForTypeVariableReference(possibleBorrow);
             TypeBase otherTypeBase = GetTypeForTypeVariableReference(other);
             ReferenceType otherReferenceType = otherTypeBase as ReferenceType;
-            if (possibleBorrowType.Mutable)
+            switch (possibleBorrowType.Mutability)
             {
-                if (otherReferenceType != null)
+                case InputReferenceMutability.RequireMutable:
                 {
-                    if (otherReferenceType.Mutable)
+                    if (otherReferenceType != null)
+                    {
+                        if (otherReferenceType.Mutable)
+                        {
+                            MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
+
+                            possibleBorrowType.BorrowInto.MergeInto(possibleBorrowType.BorrowFrom);
+                            return;
+                        }
+
+                        // type error
+                        return;
+                    }
+                    MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
+
+                    TypeVariableReference mutRef = CreateReferenceToReferenceType(true, other, CreateReferenceToLifetimeType(possibleBorrowType.NewLifetime));
+                    Unify(possibleBorrowType.BorrowInto.TypeVariableReference, mutRef);
+                    // TODO: after unifying these two, might be good to remove mutRef--I guess by merging?
+                    // somehow tell facade associated with possibleBorrowType that a borrow is required
+                    break;
+                }
+                case InputReferenceMutability.AllowImmutable:
+                {
+                    TypeVariableReference immRef;
+                    if (otherReferenceType != null)
                     {
                         MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
 
-                        possibleBorrowType.BorrowInto.MergeInto(possibleBorrowType.BorrowFrom);
+                        immRef = CreateReferenceToReferenceType(
+                            false,
+                            otherReferenceType.UnderlyingType,
+                            CreateReferenceToLifetimeType(otherReferenceType.Mutable ? possibleBorrowType.NewLifetime : other.Lifetime));
+                        Unify(possibleBorrowType.BorrowInto.TypeVariableReference, immRef);
+
+                        // TODO: after unifying these two, might be good to remove immRef--I guess by merging?
+                        // Or should unifying two Constructor types merge them after unifying their Arguments?
+                        // somehow tell facade associated with possibleBorrowType that a borrow is required
                         return;
                     }
-
-                    // type error
-                    return;
-                }
-                MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
-
-                TypeVariableReference mutRef = CreateReferenceToReferenceType(true, other, CreateReferenceToLifetimeType(possibleBorrowType.NewLifetime));
-                Unify(possibleBorrowType.BorrowInto.TypeVariableReference, mutRef);
-                // TODO: after unifying these two, might be good to remove mutRef--I guess by merging?
-                // somehow tell facade associated with possibleBorrowType that a borrow is required
-            }
-            else
-            {
-                TypeVariableReference immRef;
-                if (otherReferenceType != null)
-                {
                     MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
 
-                    immRef = CreateReferenceToReferenceType(
-                        false, 
-                        otherReferenceType.UnderlyingType, 
-                        CreateReferenceToLifetimeType(otherReferenceType.Mutable ? possibleBorrowType.NewLifetime : other.Lifetime));
+                    // each of these TODOs should be basically a constant lifetime type of the associated lazy new lifetime
+                    immRef = CreateReferenceToReferenceType(false, other, CreateReferenceToLifetimeType(possibleBorrowType.NewLifetime));
                     Unify(possibleBorrowType.BorrowInto.TypeVariableReference, immRef);
-
                     // TODO: after unifying these two, might be good to remove immRef--I guess by merging?
-                    // Or should unifying two Constructor types merge them after unifying their Arguments?
                     // somehow tell facade associated with possibleBorrowType that a borrow is required
-                    return;
+                    break;
                 }
-                MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
-
-                // each of these TODOs should be basically a constant lifetime type of the associated lazy new lifetime
-                immRef = CreateReferenceToReferenceType(false, other, CreateReferenceToLifetimeType(possibleBorrowType.NewLifetime));
-                Unify(possibleBorrowType.BorrowInto.TypeVariableReference, immRef);
-                // TODO: after unifying these two, might be good to remove immRef--I guess by merging?
-                // somehow tell facade associated with possibleBorrowType that a borrow is required
+                case InputReferenceMutability.Polymorphic:
+                {
+                    break;
+                }
             }
         }
 

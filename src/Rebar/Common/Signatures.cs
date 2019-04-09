@@ -7,11 +7,6 @@ namespace Rebar.Common
 {
     public static class Signatures
     {
-        private static void SetLifetimeTypeAttribute(NIAttributedBaseBuilder builder)
-        {
-            builder.AddAttribute("Lifetime", true, true);
-        }
-
         private static NIType AddGenericDataTypeParameter(NIFunctionBuilder functionBuilder, string name)
         {
             var genericTypeParameters = functionBuilder.MakeGenericParameters(name);
@@ -24,6 +19,24 @@ namespace Rebar.Common
             var parameterBuilder = genericTypeParameters.ElementAt(0);
             SetLifetimeTypeAttribute((NIAttributedBaseBuilder)parameterBuilder);
             return parameterBuilder.CreateType();
+        }
+
+        private static void SetLifetimeTypeAttribute(NIAttributedBaseBuilder builder)
+        {
+            builder.AddAttribute("Lifetime", true, true);
+        }
+
+        private static NIType AddGenericMutabilityTypeParameter(NIFunctionBuilder functionBuilder, string name)
+        {
+            var genericTypeParameters = functionBuilder.MakeGenericParameters(name);
+            var parameterBuilder = genericTypeParameters.ElementAt(0);
+            SetMutabilityTypeAttribute((NIAttributedBaseBuilder)parameterBuilder);
+            return parameterBuilder.CreateType();
+        }
+
+        private static void SetMutabilityTypeAttribute(NIAttributedBaseBuilder builder)
+        {
+            builder.AddAttribute("Mutability", true, true);
         }
 
         private static void AddInputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
@@ -87,18 +100,19 @@ namespace Rebar.Common
                 PFTypes.Boolean.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife1")),
                 "selectorRef");
             var tLifetimeParameter = AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife2");
-            // TODO: allow mutability polymorphism
+            var tMutabilityParameter = AddGenericMutabilityTypeParameter(functionTypeBuilder, "TMut");
+            var referenceType = tDataParameter.CreatePolymorphicReference(tLifetimeParameter, tMutabilityParameter);
             AddInputParameter(
                 functionTypeBuilder,
-                tDataParameter.CreateImmutableReference(tLifetimeParameter),
+                referenceType,
                 "trueValueRef");
             AddInputParameter(
                 functionTypeBuilder,
-                tDataParameter.CreateImmutableReference(tLifetimeParameter),
+                referenceType,
                 "falseValueRef");
             AddOutputParameter(
                 functionTypeBuilder,
-                tDataParameter.CreateImmutableReference(tLifetimeParameter),
+                referenceType,
                 "selectedValueRef");
             SelectReferenceType = functionTypeBuilder.CreateType();
 
@@ -256,6 +270,12 @@ namespace Rebar.Common
         public static bool IsLifetimeType(this NIType type)
         {
             AttributeValue? attribute = type.TryGetAttributeValue("Lifetime");
+            return attribute.HasValue && (bool)attribute.Value.Value;
+        }
+
+        public static bool IsMutabilityType(this NIType type)
+        {
+            AttributeValue? attribute = type.TryGetAttributeValue("Mutability");
             return attribute.HasValue && (bool)attribute.Value.Value;
         }
     }
