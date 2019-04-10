@@ -302,61 +302,6 @@ namespace Rebar.Common
             }
         }
 
-        private sealed class PossibleBorrowType : TypeBase
-        {
-            private readonly Lazy<Lifetime> _lazyNewLifetime;
-
-            public PossibleBorrowType(InputReferenceMutability mutability, VariableReference borrowFrom, VariableReference borrowInto, Lazy<Lifetime> lazyNewLifetime)
-            {
-                Mutability = mutability;
-                BorrowFrom = borrowFrom;
-                BorrowInto = borrowInto;
-                _lazyNewLifetime = lazyNewLifetime;
-            }
-
-            public InputReferenceMutability Mutability { get; }
-
-            public VariableReference BorrowFrom { get; }
-
-            public VariableReference BorrowInto { get; }
-
-            public Lifetime NewLifetime => _lazyNewLifetime.Value;
-
-            public override string DebuggerDisplay
-            {
-                get
-                {
-                    string mutable;
-                    switch (Mutability)
-                    {
-                        case InputReferenceMutability.AllowImmutable:
-                            mutable = "imm";
-                            break;
-                        case InputReferenceMutability.RequireMutable:
-                            mutable = "mut";
-                            break;
-                        default:
-                            mutable = "poly";
-                            break;
-                    }
-                    return $"PossibleBorrow {mutable} {BorrowFrom.Id} -> {BorrowInto.Id}";
-                }
-            }
-
-            public override NIType RenderNIType()
-            {
-                throw new NotImplementedException();
-            }
-
-            public override Lifetime Lifetime
-            {
-                get
-                {
-                    throw new NotImplementedException();
-                }
-            }
-        }
-
         #endregion
 
         private List<TypeBase> _types = new List<TypeBase>();
@@ -407,11 +352,6 @@ namespace Rebar.Common
             return CreateReferenceToNewType(new MutabilityTypeVariable());
         }
 
-        public TypeVariableReference CreateReferenceToPossibleBorrowType(InputReferenceMutability mutability, VariableReference borrowFrom, VariableReference borrowInto, Lazy<Lifetime> lazyNewLifetime)
-        {
-            return CreateReferenceToNewType(new PossibleBorrowType(mutability, borrowFrom, borrowInto, lazyNewLifetime));
-        }
-
         private TypeVariableReference CreateReferenceToNewType(TypeBase type)
         {
             int referenceIndex = _currentReferenceIndex++;
@@ -455,16 +395,6 @@ namespace Rebar.Common
         {
             TypeBase toUnifyTypeBase = GetTypeForTypeVariableReference(toUnify),
                 toUnifyWithTypeBase = GetTypeForTypeVariableReference(toUnifyWith);
-            if (toUnifyTypeBase is PossibleBorrowType && !(toUnifyWithTypeBase is TypeVariable))
-            {
-                UnifyPossibleBorrowType(toUnify, toUnifyWith);
-                return;
-            }
-            if (toUnifyWithTypeBase is PossibleBorrowType && !(toUnifyTypeBase is TypeVariable))
-            {
-                UnifyPossibleBorrowType(toUnifyWith, toUnify);
-                return;
-            }
 
             LiteralType toUnifyLiteral = toUnifyTypeBase as LiteralType,
                 toUnifyWithLiteral = toUnifyWithTypeBase as LiteralType;
@@ -532,46 +462,6 @@ namespace Rebar.Common
 
             // type error
             return;
-        }
-
-        private void UnifyPossibleBorrowType(TypeVariableReference possibleBorrow, TypeVariableReference other)
-        {
-            PossibleBorrowType possibleBorrowType = (PossibleBorrowType)GetTypeForTypeVariableReference(possibleBorrow);
-            TypeBase otherTypeBase = GetTypeForTypeVariableReference(other);
-            ReferenceType otherReferenceType = otherTypeBase as ReferenceType;
-            switch (possibleBorrowType.Mutability)
-            {
-                case InputReferenceMutability.RequireMutable:
-                {
-                    MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
-                    TypeVariableReference underlyingType = otherReferenceType != null ? otherReferenceType.UnderlyingType : other;
-                    TypeVariableReference lifetimeType = CreateReferenceToLifetimeType(otherReferenceType != null 
-                        ? otherReferenceType.Lifetime
-                        : possibleBorrowType.NewLifetime);
-                    TypeVariableReference mutRef = CreateReferenceToReferenceType(true, underlyingType, lifetimeType);
-                    Unify(possibleBorrowType.BorrowInto.TypeVariableReference, mutRef);
-                    // TODO: after unifying these two, might be good to remove mutRef--I guess by merging?
-                    // somehow tell facade associated with possibleBorrowType that a borrow is required
-                    break;
-                }
-                case InputReferenceMutability.AllowImmutable:
-                {
-                    MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
-                    TypeVariableReference underlyingType = otherReferenceType != null ? otherReferenceType.UnderlyingType : other;
-                    TypeVariableReference lifetimeType = CreateReferenceToLifetimeType(otherReferenceType != null && !otherReferenceType.Mutable
-                        ? other.Lifetime
-                        : possibleBorrowType.NewLifetime);
-                    TypeVariableReference immRef = CreateReferenceToReferenceType(false, underlyingType, lifetimeType);
-                    Unify(possibleBorrowType.BorrowInto.TypeVariableReference, immRef);
-                    // TODO: after unifying these two, might be good to remove immRef--I guess by merging?
-                    // somehow tell facade associated with possibleBorrowType that a borrow is required
-                    break;
-                }
-                case InputReferenceMutability.Polymorphic:
-                {
-                    break;
-                }
-            }
         }
 
         public string GetDebuggerDisplay(TypeVariableReference typeVariableReference)

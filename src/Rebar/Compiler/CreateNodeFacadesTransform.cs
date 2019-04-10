@@ -101,11 +101,7 @@ namespace Rebar.Compiler
                     throw new InvalidOperationException("Cannot add borrowed variables after creating new lifetime.");
                 }
                 terminalFacade.TrueVariable.AdoptTypeVariableReference(referenceType);
-                terminalFacade.FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToPossibleBorrowType(
-                    mutability,
-                    terminalFacade.FacadeVariable,
-                    terminalFacade.TrueVariable,
-                    LazyNewLifetime));
+                terminalFacade.FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToNewTypeVariable());
             }
         }
 
