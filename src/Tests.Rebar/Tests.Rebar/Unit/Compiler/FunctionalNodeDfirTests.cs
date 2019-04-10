@@ -327,6 +327,20 @@ namespace Tests.Rebar.Unit.Compiler
             Assert.IsTrue(functionalNode.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
         }
 
+        [TestMethod]
+        public void FunctionNodeWithSelectReferenceSignatureAndDifferentValueTypesWired_ValidateVariableUsages_TypeMismatchErrorCreated()
+        {
+            NIType signatureType = Signatures.SelectReferenceType;
+            DfirRoot dfirRoot = DfirRoot.Create();
+            FunctionalNode functionalNode = new FunctionalNode(dfirRoot.BlockDiagram, signatureType);
+            ConnectConstantToInputTerminal(functionalNode.InputTerminals[1], PFTypes.Boolean, false);
+            ConnectConstantToInputTerminal(functionalNode.InputTerminals[2], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToValidation(dfirRoot);
+
+            Assert.IsTrue(functionalNode.InputTerminals[2].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+        }
+
         #endregion
 
         private void RunSemanticAnalysisUpToCreateNodeFacades(DfirRoot dfirRoot, NationalInstruments.Compiler.CompileCancellationToken cancellationToken = null)
