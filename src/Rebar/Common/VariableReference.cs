@@ -61,5 +61,10 @@ namespace Rebar.Common
         internal TypeVariableReference TypeVariableReference => _variableSet.GetTypeVariableReference(this);
 
         internal void AdoptTypeVariableReference(TypeVariableReference type) => _variableSet.SetTypeVariableReference(this, type);
+
+        public void UnifyTypeVariableInto(VariableReference intoVariable)
+        {
+            _variableSet.TypeVariableSet.Unify(TypeVariableReference, intoVariable.TypeVariableReference);
+        }
     }
 }

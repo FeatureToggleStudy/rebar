@@ -234,6 +234,8 @@ namespace Rebar.Compiler
 
             public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable)
             {
+                // TODO: remove when FacadeVariable can be created without a TypeVariableReference
+                FacadeVariable.UnifyTypeVariableInto(wireFacadeVariable);
                 FacadeVariable.MergeInto(wireFacadeVariable);
 
                 TypeVariableSet typeVariableSet = _variableSet.TypeVariableSet;

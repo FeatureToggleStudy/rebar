@@ -23,15 +23,17 @@ namespace Rebar.Compiler
                 var connectedNodeTerminal = wireTerminal.ConnectedTerminal;
                 if (connectedNodeTerminal != null)
                 {
+                    VariableReference wireVariable = wireTerminal.GetFacadeVariable(),
+                        nodeVariable = connectedNodeTerminal.GetFacadeVariable();
                     if (wireTerminal.Direction == Direction.Input)
                     {
-                        wireTerminal.GetFacadeVariable().MergeInto(connectedNodeTerminal.GetFacadeVariable());
+                        wireVariable.MergeInto(nodeVariable);
                     }
                     else
                     {
                         AutoBorrowNodeFacade connectedNodeFacade = AutoBorrowNodeFacade.GetNodeFacade(connectedNodeTerminal.ParentNode);
                         TerminalFacade terminalFacade = connectedNodeFacade[connectedNodeTerminal];
-                        terminalFacade.UnifyWithConnectedWireTypeAsNodeInput(wireTerminal.GetFacadeVariable());
+                        terminalFacade.UnifyWithConnectedWireTypeAsNodeInput(wireVariable);
                     }
                 }
             }

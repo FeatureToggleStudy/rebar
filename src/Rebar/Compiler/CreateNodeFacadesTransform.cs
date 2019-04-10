@@ -299,8 +299,9 @@ namespace Rebar.Compiler
                     else
                     {
                         _nodeFacade[inputTerminal] = new SimpleTerminalFacade(inputTerminal);
-                        // TODO: should adopt a TypeVariableReference for the TrueVariable here as in the output case,
-                        // but I need a test case for this.
+
+                        TypeVariableReference typeVariableReference = CreateTypeVariableReferenceFromNIType(parameterDataType, genericTypeParameters);
+                        _nodeFacade[inputTerminal].TrueVariable.AdoptTypeVariableReference(typeVariableReference);
                     }
                 }
                 else

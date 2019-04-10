@@ -35,6 +35,7 @@ namespace Rebar.Compiler
 
         public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable)
         {
+            FacadeVariable.UnifyTypeVariableInto(wireFacadeVariable);
             FacadeVariable.MergeInto(wireFacadeVariable);
         }
     }
