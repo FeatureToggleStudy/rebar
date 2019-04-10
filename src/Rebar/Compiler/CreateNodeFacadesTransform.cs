@@ -55,15 +55,16 @@ namespace Rebar.Compiler
             private readonly VariableSet _variableSet;
             private readonly TypeVariableSet _typeVariableSet;
             private readonly List<VariableReference> _interruptedVariables = new List<VariableReference>();
-            private readonly Lazy<Lifetime> _lazyNewLifetime;
 
             public LifetimeTypeVariableGroup(VariableSet variableSet)
             {
                 _variableSet = variableSet;
                 _typeVariableSet = variableSet.TypeVariableSet;
-                _lazyNewLifetime = new Lazy<Lifetime>(() => _variableSet.DefineLifetimeThatIsBoundedByDiagram(_interruptedVariables));
-                LifetimeType = _typeVariableSet.CreateReferenceToLifetimeType(_lazyNewLifetime);
+                LazyNewLifetime = new Lazy<Lifetime>(() => _variableSet.DefineLifetimeThatIsBoundedByDiagram(_interruptedVariables));
+                LifetimeType = _typeVariableSet.CreateReferenceToLifetimeType(LazyNewLifetime);
             }
+
+            public Lazy<Lifetime> LazyNewLifetime { get; }
 
             public TypeVariableReference LifetimeType { get; }
 
@@ -95,7 +96,7 @@ namespace Rebar.Compiler
                 TypeVariableReference referenceType,
                 TypeVariableReference underlyingTypeReference)
             {
-                if (_lazyNewLifetime.IsValueCreated)
+                if (LazyNewLifetime.IsValueCreated)
                 {
                     throw new InvalidOperationException("Cannot add borrowed variables after creating new lifetime.");
                 }
@@ -104,7 +105,7 @@ namespace Rebar.Compiler
                     mutability,
                     terminalFacade.FacadeVariable,
                     terminalFacade.TrueVariable,
-                    _lazyNewLifetime));
+                    LazyNewLifetime));
             }
         }
 
@@ -113,11 +114,13 @@ namespace Rebar.Compiler
             Terminal assigneeInput = assignNode.InputTerminals.ElementAt(0),
                 newValueInput = assignNode.InputTerminals.ElementAt(1),
                 assigneeOutput = assignNode.OutputTerminals.ElementAt(0);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable).AddTerminalFacade(assigneeInput, assigneeOutput);
+            var lifetimeGroup = new LifetimeTypeVariableGroup(assigneeInput.GetVariableSet());
+            _nodeFacade
+                .CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable, lifetimeGroup.LazyNewLifetime)
+                .AddTerminalFacade(assigneeInput, assigneeOutput);
             _nodeFacade[newValueInput] = new SimpleTerminalFacade(newValueInput);
 
             TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-            var lifetimeGroup = new LifetimeTypeVariableGroup(assigneeInput.GetVariableSet());
             lifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[assigneeInput], InputReferenceMutability.RequireMutable, dataTypeVariable);
             _nodeFacade[newValueInput].FacadeVariable.AdoptTypeVariableReference(dataTypeVariable);
 
@@ -165,12 +168,13 @@ namespace Rebar.Compiler
                 input2Terminal = exchangeValuesNode.InputTerminals.ElementAt(1),
                 output1Terminal = exchangeValuesNode.OutputTerminals.ElementAt(0),
                 output2Terminal = exchangeValuesNode.OutputTerminals.ElementAt(1);
-            ReferenceInputTerminalLifetimeGroup lifetimeGroup = _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable);
+            var lifetimeTypeVariableGroup = new LifetimeTypeVariableGroup(input1Terminal.GetVariableSet());
+            ReferenceInputTerminalLifetimeGroup lifetimeGroup = _nodeFacade
+                .CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable, lifetimeTypeVariableGroup.LazyNewLifetime);
             lifetimeGroup.AddTerminalFacade(input1Terminal, output1Terminal);
             lifetimeGroup.AddTerminalFacade(input2Terminal, output2Terminal);
 
             TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-            var lifetimeTypeVariableGroup = new LifetimeTypeVariableGroup(input1Terminal.GetVariableSet());
             lifetimeTypeVariableGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[input1Terminal], InputReferenceMutability.RequireMutable, dataTypeVariable);
             lifetimeTypeVariableGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[input2Terminal], InputReferenceMutability.RequireMutable, dataTypeVariable);
 
@@ -322,16 +326,16 @@ namespace Rebar.Compiler
             NIType lifetimeType = parameterDataType.GetReferenceLifetimeType();
             bool isMutable = parameterDataType.IsMutableReferenceType();
             InputReferenceMutability mutability = parameterDataType.GetInputReferenceMutabilityFromType();
+            var lifetimeGroup = lifetimeVariableGroups[lifetimeType];
             ReferenceInputTerminalLifetimeGroup facadeGroup;
             if (!lifetimeFacadeGroups.TryGetValue(lifetimeType, out facadeGroup))
             {
-                facadeGroup = _nodeFacade.CreateInputLifetimeGroup(mutability);
+                facadeGroup = _nodeFacade.CreateInputLifetimeGroup(mutability, lifetimeGroup.LazyNewLifetime);
             }
             // TODO: should not add outputTerminal here if borrow cannot be auto-terminated
             // i.e., if there are in-only or out-only parameters that share lifetimeType
             facadeGroup.AddTerminalFacade(inputTerminal, outputTerminal);
 
-            var lifetimeGroup = lifetimeVariableGroups[lifetimeType];
             TypeVariableReference referentTypeVariableReference = CreateTypeVariableReferenceFromNIType(parameterDataType.GetReferentType(), genericTypeParameters);
             TypeVariableReference referenceType;
             if (mutability == InputReferenceMutability.Polymorphic)
@@ -373,6 +377,11 @@ namespace Rebar.Compiler
                 {
                     TypeVariableReference referentType = CreateTypeVariableReferenceFromNIType(type.GetReferentType(), genericTypeParameters);
                     TypeVariableReference lifetimeType = CreateTypeVariableReferenceFromNIType(type.GetReferenceLifetimeType(), genericTypeParameters);
+                    if (type.IsPolymorphicReferenceType())
+                    {
+                        TypeVariableReference mutabilityType = CreateTypeVariableReferenceFromNIType(type.GetReferenceMutabilityType(), genericTypeParameters);
+                        return _typeVariableSet.CreateReferenceToPolymorphicReferenceType(mutabilityType, referentType, lifetimeType);
+                    }
                     return _typeVariableSet.CreateReferenceToReferenceType(type.IsMutableReferenceType(), referentType, lifetimeType);
                 }
                 string constructorTypeName = type.GetName();
@@ -393,11 +402,31 @@ namespace Rebar.Compiler
                 falseInput = selectReferenceNode.InputTerminals.ElementAt(2),
                 selectorOutput = selectReferenceNode.OutputTerminals.ElementAt(0),
                 resultOutput = selectReferenceNode.OutputTerminals.ElementAt(1);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable).AddTerminalFacade(selectorInput, selectorOutput);
-            ReferenceInputTerminalLifetimeGroup lifetimeGroup = _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.Polymorphic);
+            LifetimeTypeVariableGroup selectorLifetimeGroup = new LifetimeTypeVariableGroup(selectorInput.GetVariableSet()),
+                dataLifetimeGroup = new LifetimeTypeVariableGroup(trueInput.GetVariableSet());
+            _nodeFacade
+                .CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable, selectorLifetimeGroup.LazyNewLifetime)
+                .AddTerminalFacade(selectorInput, selectorOutput);
+            ReferenceInputTerminalLifetimeGroup lifetimeGroup = _nodeFacade
+                .CreateInputLifetimeGroup(InputReferenceMutability.Polymorphic, dataLifetimeGroup.LazyNewLifetime);
             lifetimeGroup.AddTerminalFacade(trueInput);
             lifetimeGroup.AddTerminalFacade(falseInput);
             _nodeFacade[resultOutput] = new SimpleTerminalFacade(resultOutput);
+
+            selectorLifetimeGroup.CreateReferenceAndPossibleBorrowTypesForFacade(
+                _nodeFacade[selectorInput],
+                InputReferenceMutability.AllowImmutable,
+                _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Boolean));
+            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
+            TypeVariableReference dataMutabilityVariable = _typeVariableSet.CreateReferenceToMutabilityType();
+            TypeVariableReference dataReferenceType = _typeVariableSet.CreateReferenceToPolymorphicReferenceType(
+                dataMutabilityVariable,
+                dataTypeVariable,
+                dataLifetimeGroup.LifetimeType);
+            _nodeFacade[trueInput].FacadeVariable.AdoptTypeVariableReference(dataReferenceType);
+            _nodeFacade[falseInput].FacadeVariable.AdoptTypeVariableReference(dataReferenceType);
+            _nodeFacade[resultOutput].FacadeVariable.AdoptTypeVariableReference(dataReferenceType);
+
             return true;
         }
 
@@ -452,7 +481,10 @@ namespace Rebar.Compiler
         {
             Terminal iteratorInput = iterateTunnel.InputTerminals.ElementAt(0),
                 itemOutput = iterateTunnel.OutputTerminals.ElementAt(0);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable).AddTerminalFacade(iteratorInput);
+            LifetimeTypeVariableGroup lifetimeTypeVariableGroup = new LifetimeTypeVariableGroup(iteratorInput.GetVariableSet());
+            _nodeFacade
+                .CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable, lifetimeTypeVariableGroup.LazyNewLifetime)
+                .AddTerminalFacade(iteratorInput);
             _nodeFacade[itemOutput] = new SimpleTerminalFacade(itemOutput);
 
             // TODO: this is going to mess up pretty hard on iterators with reference Item types--like slices
@@ -461,7 +493,6 @@ namespace Rebar.Compiler
             // TODO: itemType should be a variable
             TypeVariableReference itemType = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32);
             TypeVariableReference iteratorType = _typeVariableSet.CreateReferenceToConstructorType("Iterator", itemType);
-            LifetimeTypeVariableGroup lifetimeTypeVariableGroup = new LifetimeTypeVariableGroup(iteratorInput.GetVariableSet());
             lifetimeTypeVariableGroup.CreateReferenceAndPossibleBorrowTypesForFacade(_nodeFacade[iteratorInput], InputReferenceMutability.RequireMutable, iteratorType);
             _nodeFacade[itemOutput].FacadeVariable.AdoptTypeVariableReference(itemType);
 
@@ -472,12 +503,14 @@ namespace Rebar.Compiler
         {
             Terminal lockInput = lockTunnel.InputTerminals.ElementAt(0),
                 referenceOutput = lockTunnel.OutputTerminals.ElementAt(0);
-            _nodeFacade.CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable).AddTerminalFacade(lockInput);
+            LifetimeTypeVariableGroup lifetimeTypeVariableGroup = new LifetimeTypeVariableGroup(lockInput.GetVariableSet());
+            _nodeFacade
+                .CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable, lifetimeTypeVariableGroup.LazyNewLifetime)
+                .AddTerminalFacade(lockInput);
             _nodeFacade[referenceOutput] = new SimpleTerminalFacade(referenceOutput);
 
             TypeVariableReference dataVariableType = _typeVariableSet.CreateReferenceToNewTypeVariable();
             TypeVariableReference lockType = _typeVariableSet.CreateReferenceToConstructorType("LockingCell", dataVariableType);
-            LifetimeTypeVariableGroup lifetimeTypeVariableGroup = new LifetimeTypeVariableGroup(lockInput.GetVariableSet());
             lifetimeTypeVariableGroup.CreateReferenceAndPossibleBorrowTypesForFacade(
                 _nodeFacade[lockInput],
                 InputReferenceMutability.AllowImmutable,

@@ -29,7 +29,9 @@ namespace Rebar.Compiler
                     }
                     else
                     {
-                        connectedNodeTerminal.GetFacadeVariable().MergeInto(wireTerminal.GetFacadeVariable());
+                        AutoBorrowNodeFacade connectedNodeFacade = AutoBorrowNodeFacade.GetNodeFacade(connectedNodeTerminal.ParentNode);
+                        TerminalFacade terminalFacade = connectedNodeFacade[connectedNodeTerminal];
+                        terminalFacade.UnifyWithConnectedWireTypeAsNodeInput(wireTerminal.GetFacadeVariable());
                     }
                 }
             }

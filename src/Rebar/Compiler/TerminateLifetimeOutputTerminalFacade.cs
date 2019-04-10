@@ -1,4 +1,5 @@
-﻿using NationalInstruments.Dfir;
+﻿using System;
+using NationalInstruments.Dfir;
 using Rebar.Common;
 
 namespace Rebar.Compiler
@@ -23,6 +24,12 @@ namespace Rebar.Compiler
 
         public override void UpdateFromFacadeInput()
         {
+        }
+
+        public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable)
+        {
+            // we're a node output facade; this should never be called.
+            throw new NotImplementedException();
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using Rebar.Common;
 using Rebar.Compiler.Nodes;
@@ -15,16 +14,21 @@ namespace Rebar.Compiler
         private readonly List<ReferenceInputTerminalFacade> _facades = new List<ReferenceInputTerminalFacade>();
         private bool _borrowRequired, _mutableBorrow;
         private Lifetime _borrowLifetime;
+        private readonly Lazy<Lifetime> _lazyNewLifetime;
 
-        public ReferenceInputTerminalLifetimeGroup(AutoBorrowNodeFacade nodeFacade, InputReferenceMutability mutability)
+        public ReferenceInputTerminalLifetimeGroup(
+            AutoBorrowNodeFacade nodeFacade,
+            InputReferenceMutability mutability,
+            Lazy<Lifetime> lazyNewLifetime)
         {
             _nodeFacade = nodeFacade;
             _mutability = mutability;
+            _lazyNewLifetime = lazyNewLifetime;
         }
 
         public void AddTerminalFacade(Terminal inputTerminal, Terminal terminateLifetimeOutputTerminal = null)
         {
-            var terminalFacade = new ReferenceInputTerminalFacade(inputTerminal);
+            var terminalFacade = new ReferenceInputTerminalFacade(inputTerminal, _mutability, _lazyNewLifetime);
             _nodeFacade[inputTerminal] = terminalFacade;
             _facades.Add(terminalFacade);
             if (terminateLifetimeOutputTerminal != null)
@@ -199,10 +203,14 @@ namespace Rebar.Compiler
         private class ReferenceInputTerminalFacade : TerminalFacade
         {
             private readonly VariableSet _variableSet;
+            private readonly InputReferenceMutability _mutability;
+            private readonly Lazy<Lifetime> _lazyNewLifetime;
 
-            public ReferenceInputTerminalFacade(Terminal terminal)
+            public ReferenceInputTerminalFacade(Terminal terminal, InputReferenceMutability mutability, Lazy<Lifetime> lazyNewLifetime)
                 : base(terminal)
             {
+                _mutability = mutability;
+                _lazyNewLifetime = lazyNewLifetime;
                 _variableSet = terminal.GetVariableSet();
                 FacadeVariable = _variableSet.CreateNewVariable();
                 TrueVariable = _variableSet.CreateNewVariable();
@@ -222,6 +230,59 @@ namespace Rebar.Compiler
             {
                 TypeVariableReference typeReference = TrueVariable.TypeVariableReference;
                 TrueVariable.SetTypeAndLifetime(typeReference.RenderNIType(), typeReference.Lifetime);
+            }
+
+            public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable)
+            {
+                FacadeVariable.MergeInto(wireFacadeVariable);
+
+                TypeVariableSet typeVariableSet = _variableSet.TypeVariableSet;
+                TypeVariableReference other = wireFacadeVariable.TypeVariableReference;
+                TypeVariableReference u, l;
+                bool mutableReference;
+                bool otherIsReference = typeVariableSet.TryDecomposeReferenceType(other, out u, out l, out mutableReference);
+                switch (_mutability)
+                {
+                    case InputReferenceMutability.RequireMutable:
+                        {
+                            TypeVariableReference underlyingType = otherIsReference ? u : other;
+                            NeedsBorrow = !otherIsReference;
+                            TypeVariableReference lifetimeType = otherIsReference
+                                ? l
+                                : typeVariableSet.CreateReferenceToLifetimeType(_lazyNewLifetime.Value);
+                            // TODO: the mutability of this reference should also depend on the input variable mutability
+                            TypeVariableReference mutRef = typeVariableSet.CreateReferenceToReferenceType(true, underlyingType, lifetimeType);
+                            typeVariableSet.Unify(TrueVariable.TypeVariableReference, mutRef);
+                            // TODO: after unifying these two, might be good to remove mutRef--I guess by merging?
+                            break;
+                        }
+                    case InputReferenceMutability.AllowImmutable:
+                        {
+                            TypeVariableReference underlyingType = otherIsReference ? u : other;
+                            NeedsBorrow = !(otherIsReference && !mutableReference);
+                            TypeVariableReference lifetimeType = NeedsBorrow
+                                ? typeVariableSet.CreateReferenceToLifetimeType(_lazyNewLifetime.Value)
+                                : l;
+                            TypeVariableReference immRef = typeVariableSet.CreateReferenceToReferenceType(false, underlyingType, lifetimeType);
+                            typeVariableSet.Unify(TrueVariable.TypeVariableReference, immRef);
+                            // TODO: after unifying these two, might be good to remove immRef--I guess by merging?
+                            break;
+                        }
+                    case InputReferenceMutability.Polymorphic:
+                        {
+                            TypeVariableReference underlyingType = otherIsReference ? u : other;
+                            // TODO: we should compute NeedsBorrow from whether all facade variable types/lifetimes
+                            // match all true variable types/lifetimes
+                            // NeedsBorrow = !(otherIsReference && !mutableReference);
+                            TypeVariableReference lifetimeType = !otherIsReference
+                                ? typeVariableSet.CreateReferenceToLifetimeType(_lazyNewLifetime.Value)
+                                : l;
+                            bool mutable = otherIsReference ? mutableReference : wireFacadeVariable.Mutable;
+                            TypeVariableReference reference = typeVariableSet.CreateReferenceToReferenceType(mutable, underlyingType, lifetimeType);
+                            typeVariableSet.Unify(TrueVariable.TypeVariableReference, reference);
+                            break;
+                        }
+                }
             }
         }
     }

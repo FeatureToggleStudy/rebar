@@ -96,27 +96,32 @@ namespace Rebar.Common
         {
             private abstract class Mutability
             {
+                public abstract bool Mutable { get; }
                 public abstract void UnifyMutability(Mutability unifyWith);
             }
 
             private sealed class ConstantMutability : Mutability
             {
-                private readonly bool _mutable;
-
                 public ConstantMutability(bool mutable)
                 {
-                    _mutable = mutable;
+                    Mutable = mutable;
                 }
+
+                public override bool Mutable { get; }
 
                 public override void UnifyMutability(Mutability unifyWith)
                 {
                     var unifyWithConstant = unifyWith as ConstantMutability;
                     if (unifyWithConstant != null)
                     {
-                        if (_mutable != unifyWithConstant._mutable)
+                        if (Mutable != unifyWithConstant.Mutable)
                         {
                             // type error
                         }
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
                     }
                 }
             }
@@ -132,7 +137,23 @@ namespace Rebar.Common
 
                 public override void UnifyMutability(Mutability unifyWith)
                 {
-                    throw new NotImplementedException();
+                    ConstantMutability constant = unifyWith as ConstantMutability;
+                    if (constant != null)
+                    {
+                        _mutabilityVariable.AndWith(constant.Mutable);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+
+                public override bool Mutable
+                {
+                    get
+                    {
+                        return _mutabilityVariable.Mutable;
+                    }
                 }
             }
 
@@ -140,7 +161,6 @@ namespace Rebar.Common
 
             public ReferenceType(bool mutable, TypeVariableReference underlyingType, TypeVariableReference lifetimeType)
             {
-                Mutable = mutable;
                 _mutability = new ConstantMutability(mutable);
                 UnderlyingType = underlyingType;
                 LifetimeType = lifetimeType;
@@ -153,7 +173,7 @@ namespace Rebar.Common
                 LifetimeType = lifetimeType;
             }
 
-            public bool Mutable { get; }
+            public bool Mutable => _mutability.Mutable;
 
             public TypeVariableReference UnderlyingType { get; }
 
@@ -168,7 +188,7 @@ namespace Rebar.Common
             {
                 get
                 {
-                    string mut = Mutable ? "mut " : string.Empty;
+                    string mut = _mutability.Mutable ? "mut " : string.Empty;
                     return $"& ({LifetimeType.DebuggerDisplay}) {mut}{UnderlyingType.DebuggerDisplay}";
                 }
             }
@@ -176,7 +196,7 @@ namespace Rebar.Common
             public override NIType RenderNIType()
             {
                 NIType underlyingNIType = UnderlyingType.RenderNIType();
-                return Mutable ? underlyingNIType.CreateMutableReference() : underlyingNIType.CreateImmutableReference();
+                return _mutability.Mutable ? underlyingNIType.CreateMutableReference() : underlyingNIType.CreateImmutableReference();
             }
 
             public override Lifetime Lifetime => LifetimeType.Lifetime;
@@ -230,7 +250,36 @@ namespace Rebar.Common
         }
 
         private sealed class MutabilityTypeVariable : TypeBase
-        {            
+        {
+            private bool? _value;
+
+            public void AndWith(bool value)
+            {
+                if (!_value.HasValue)
+                {
+                    _value = value;
+                }
+                else
+                {
+                    _value = (_value.Value && value);
+                }
+            }
+
+            public bool Mutable
+            {
+                get
+                {
+                    if (_value.HasValue)
+                    {
+                        return _value.Value;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Mutability has not been determined");
+                    }
+                }
+            }
+
             public override string DebuggerDisplay
             {
                 get
@@ -542,6 +591,42 @@ namespace Rebar.Common
             TypeBase typeBase = GetTypeForTypeVariableReference(typeVariableReference);
             return typeBase?.Lifetime ?? Lifetime.Empty;
         }
+
+        public bool TryDecomposeReferenceType(TypeVariableReference type, out TypeVariableReference underlyingType, out TypeVariableReference lifetimeType, out bool mutable)
+        {
+            TypeBase typeBase = GetTypeForTypeVariableReference(type);
+            var referenceType = typeBase as ReferenceType;
+            if (referenceType == null)
+            {
+                underlyingType = lifetimeType = default(TypeVariableReference);
+                mutable = false;
+                return false;
+            }
+            underlyingType = referenceType.UnderlyingType;
+            lifetimeType = referenceType.LifetimeType;
+            mutable = referenceType.Mutable;
+            return true;
+        }
+
+        public void AndWith(TypeVariableReference type, bool value)
+        {
+            var mutabilityType = GetTypeForTypeVariableReference(type) as MutabilityTypeVariable;
+            if (mutabilityType == null)
+            {
+                throw new ArgumentException("Type should be a mutability type");
+            }
+            mutabilityType.AndWith(value);
+        }
+
+        public bool GetMutable(TypeVariableReference type)
+        {
+            var mutabilityType = GetTypeForTypeVariableReference(type) as MutabilityTypeVariable;
+            if (mutabilityType == null)
+            {
+                throw new ArgumentException("Type should be a mutability type");
+            }
+            return mutabilityType.Mutable;
+        }
     }
 
     [DebuggerDisplay("{DebuggerDisplay}")]
@@ -562,5 +647,10 @@ namespace Rebar.Common
         public NIType RenderNIType() => TypeVariableSet.RenderNIType(this);
 
         public Lifetime Lifetime => TypeVariableSet.GetLifetime(this);
+
+        // TODO: these two should hopefully be temporary
+        public void AndWith(bool value) => TypeVariableSet.AndWith(this, value);
+
+        public bool Mutable => TypeVariableSet.GetMutable(this);
     }
 }
