@@ -82,10 +82,11 @@ namespace Rebar.Compiler
         public override MocTransformManager GenerateMocTransformManager(SpecAndQName specAndQName, DfirRoot sourceDfir,
             CompileCancellationToken cancellationToken)
         {
+            TerminalTypeUnificationResults unificationResults = new TerminalTypeUnificationResults();
             List<IDfirTransformBase> semanticAnalysisTransforms = new List<IDfirTransformBase>()
             {
                 new CreateNodeFacadesTransform(),
-                new MergeVariablesAcrossWiresTransform(),
+                new MergeVariablesAcrossWiresTransform(unificationResults),
                 new SetVariableTypesAndLifetimesTransform(),
                 new ValidateVariableUsagesTransform(),
                 new ReflectVariablesToTerminalsTransform(),

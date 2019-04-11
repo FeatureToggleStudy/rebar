@@ -7,6 +7,13 @@ namespace Rebar.Compiler
 {
     internal class MergeVariablesAcrossWiresTransform : VisitorTransformBase
     {
+        private readonly TerminalTypeUnificationResults _typeUnificationResults;
+
+        public MergeVariablesAcrossWiresTransform(TerminalTypeUnificationResults typeUnificationResults)
+        {
+            _typeUnificationResults = typeUnificationResults;
+        }
+
         protected override void VisitBorderNode(BorderNode borderNode)
         {
         }
@@ -27,13 +34,15 @@ namespace Rebar.Compiler
                         nodeVariable = connectedNodeTerminal.GetFacadeVariable();
                     if (wireTerminal.Direction == Direction.Input)
                     {
+                        // TODO: this should be a unification in order to check that the wire type is Copyable
                         wireVariable.MergeInto(nodeVariable);
                     }
                     else
                     {
                         AutoBorrowNodeFacade connectedNodeFacade = AutoBorrowNodeFacade.GetNodeFacade(connectedNodeTerminal.ParentNode);
                         TerminalFacade terminalFacade = connectedNodeFacade[connectedNodeTerminal];
-                        terminalFacade.UnifyWithConnectedWireTypeAsNodeInput(wireVariable);
+                        ITypeUnificationResult unificationResult = _typeUnificationResults.GetTypeUnificationResult(connectedNodeTerminal);
+                        terminalFacade.UnifyWithConnectedWireTypeAsNodeInput(wireVariable, unificationResult);
                     }
                 }
             }
@@ -51,9 +60,11 @@ namespace Rebar.Compiler
                 return;
             }
             TypeVariableSet typeVariableSet = wire.GetTypeVariableSet();
-            foreach (var sinkVariable in wire.SinkTerminals.Skip(1).Select(VariableExtensions.GetFacadeVariable))
+            foreach (var sinkTerminal in wire.SinkTerminals.Skip(1))
             {
-                sinkVariable.UnifyTypeVariableInto(sourceVariable.Value);
+                VariableReference sinkVariable = sinkTerminal.GetFacadeVariable();
+                ITypeUnificationResult unificationResult = _typeUnificationResults.GetTypeUnificationResult(sinkTerminal);
+                sinkVariable.UnifyTypeVariableInto(sourceVariable.Value, unificationResult);
             }
         }
     }

@@ -232,7 +232,7 @@ namespace Rebar.Compiler
                 TrueVariable.SetTypeAndLifetime(typeReference.RenderNIType(), typeReference.Lifetime);
             }
 
-            public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable)
+            public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable, ITypeUnificationResult unificationResult)
             {
                 FacadeVariable.MergeInto(wireFacadeVariable);
 
@@ -252,7 +252,7 @@ namespace Rebar.Compiler
                                 : typeVariableSet.CreateReferenceToLifetimeType(_lazyNewLifetime.Value);
                             // TODO: the mutability of this reference should also depend on the input variable mutability
                             TypeVariableReference mutRef = typeVariableSet.CreateReferenceToReferenceType(true, underlyingType, lifetimeType);
-                            typeVariableSet.Unify(TrueVariable.TypeVariableReference, mutRef);
+                            typeVariableSet.Unify(TrueVariable.TypeVariableReference, mutRef, unificationResult);
                             // TODO: after unifying these two, might be good to remove mutRef--I guess by merging?
                             break;
                         }
@@ -264,7 +264,7 @@ namespace Rebar.Compiler
                                 ? typeVariableSet.CreateReferenceToLifetimeType(_lazyNewLifetime.Value)
                                 : l;
                             TypeVariableReference immRef = typeVariableSet.CreateReferenceToReferenceType(false, underlyingType, lifetimeType);
-                            typeVariableSet.Unify(TrueVariable.TypeVariableReference, immRef);
+                            typeVariableSet.Unify(TrueVariable.TypeVariableReference, immRef, unificationResult);
                             // TODO: after unifying these two, might be good to remove immRef--I guess by merging?
                             break;
                         }
@@ -279,7 +279,7 @@ namespace Rebar.Compiler
                                 : l;
                             bool mutable = otherIsReference ? mutableReference : wireFacadeVariable.Mutable;
                             TypeVariableReference reference = typeVariableSet.CreateReferenceToReferenceType(mutable, underlyingType, lifetimeType);
-                            typeVariableSet.Unify(TrueVariable.TypeVariableReference, reference);
+                            typeVariableSet.Unify(TrueVariable.TypeVariableReference, reference, unificationResult);
                             break;
                         }
                 }

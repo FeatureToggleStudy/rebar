@@ -102,6 +102,7 @@
   <ItemGroup>
     <Compile Include="Common\BoundedLifetimeGraph.cs" />
     <Compile Include="Common\InputReferenceMutability.cs" />
+    <Compile Include="Common\ITypeUnificationResult.cs" />
     <Compile Include="Common\PrimitiveOps.cs" />
     <Compile Include="Common\Signatures.cs" />
     <Compile Include="Common\TypeVariableSet.cs" />
@@ -148,6 +149,7 @@
     <Compile Include="Compiler\SimpleTerminalFacade.cs" />
     <Compile Include="Compiler\TerminalFacade.cs" />
     <Compile Include="Compiler\TerminalId.cs" />
+    <Compile Include="Compiler\TerminalTypeUnificationResults.cs" />
     <Compile Include="Compiler\TerminateLifetimeOutputTerminalFacade.cs" />
     <Compile Include="RebarTarget\Allocator.cs" />
     <Compile Include="RebarTarget\ApplicationCompileHandlerFactory.cs" />

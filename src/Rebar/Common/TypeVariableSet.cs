@@ -391,7 +391,7 @@ namespace Rebar.Common
             _types.Remove(typeToMerge);
         }
 
-        public void Unify(TypeVariableReference toUnify, TypeVariableReference toUnifyWith)
+        public void Unify(TypeVariableReference toUnify, TypeVariableReference toUnifyWith, ITypeUnificationResult unificationResult)
         {
             TypeBase toUnifyTypeBase = GetTypeForTypeVariableReference(toUnify),
                 toUnifyWithTypeBase = GetTypeForTypeVariableReference(toUnifyWith);
@@ -415,7 +415,7 @@ namespace Rebar.Common
             {
                 if (toUnifyConstructor.ConstructorName == toUnifyWithConstructor.ConstructorName)
                 {
-                    Unify(toUnifyConstructor.Argument, toUnifyWithConstructor.Argument);
+                    Unify(toUnifyConstructor.Argument, toUnifyWithConstructor.Argument, unificationResult);
                     MergeTypeVariableIntoTypeVariable(toUnify, toUnifyWith);
                     return;
                 }
@@ -428,8 +428,8 @@ namespace Rebar.Common
             if (toUnifyReference != null && toUnifyWithReference != null)
             {
                 toUnifyReference.UnifyMutability(toUnifyWithReference);
-                Unify(toUnifyReference.UnderlyingType, toUnifyWithReference.UnderlyingType);
-                Unify(toUnifyReference.LifetimeType, toUnifyWithReference.LifetimeType);
+                Unify(toUnifyReference.UnderlyingType, toUnifyWithReference.UnderlyingType, unificationResult);
+                Unify(toUnifyReference.LifetimeType, toUnifyWithReference.LifetimeType, unificationResult);
                 return;
             }
 

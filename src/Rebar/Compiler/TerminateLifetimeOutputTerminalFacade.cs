@@ -26,7 +26,7 @@ namespace Rebar.Compiler
         {
         }
 
-        public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable)
+        public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable, ITypeUnificationResult unificationResult)
         {
             // we're a node output facade; this should never be called.
             throw new NotImplementedException();
