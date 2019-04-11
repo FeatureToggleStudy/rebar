@@ -236,16 +236,6 @@ namespace Rebar.Compiler
             return true;
         }
 
-        public bool VisitSelectReferenceNode(SelectReferenceNode selectReferenceNode)
-        {
-            Terminal refInTerminal1 = selectReferenceNode.Terminals.ElementAt(1),
-                refInTerminal2 = selectReferenceNode.Terminals.ElementAt(2),
-                refOutTerminal = selectReferenceNode.Terminals.ElementAt(4);
-            VariableReference input1Variable = refInTerminal1.GetTrueVariable();
-            refOutTerminal.GetTrueVariable().SetTypeAndLifetime(input1Variable.Type, input1Variable.Lifetime);
-            return true;
-        }
-
         public bool VisitSomeConstructorNode(SomeConstructorNode someConstructorNode)
         {
             VariableReference valueInVariable = someConstructorNode.Terminals.ElementAt(0).GetTrueVariable(),

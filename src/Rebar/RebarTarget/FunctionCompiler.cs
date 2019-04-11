@@ -23,6 +23,7 @@ namespace Rebar.RebarTarget
             _functionalNodeCompilers["ImmutPass"] = CompileNothing;
             _functionalNodeCompilers["MutPass"] = CompileNothing;
             _functionalNodeCompilers["CreateCopy"] = CompileCreateCopy;
+            _functionalNodeCompilers["SelectReference"] = CompileSelectReference;
             _functionalNodeCompilers["Output"] = CompileOutput;
             _functionalNodeCompilers["VectorCreate"] = CompileNothing;
             _functionalNodeCompilers["VectorInsert"] = CompileNothing;
@@ -59,6 +60,32 @@ namespace Rebar.RebarTarget
             compiler.LoadValueAsReference(copyFrom);
             compiler._builder.EmitDerefInteger();
             compiler._builder.EmitStoreInteger();
+        }
+
+        private static void CompileSelectReference(FunctionCompiler compiler, FunctionalNode selectReferenceNode)
+        {
+            LabelBuilder falseLabel = compiler._builder.CreateLabel(),
+                endLabel = compiler._builder.CreateLabel();
+            VariableReference input1 = selectReferenceNode.InputTerminals.ElementAt(1).GetTrueVariable(),
+                input2 = selectReferenceNode.InputTerminals.ElementAt(2).GetTrueVariable(),
+                selector = selectReferenceNode.InputTerminals.ElementAt(0).GetTrueVariable(),
+                selectedReference = selectReferenceNode.OutputTerminals.ElementAt(1).GetTrueVariable();
+            compiler.LoadLocalAllocationReference(selectedReference);
+            compiler.LoadValueAsReference(selector);
+            compiler._builder.EmitDerefInteger();
+            compiler._builder.EmitBranchIfFalse(falseLabel);
+
+            // true
+            compiler.LoadValueAsReference(input1);
+            compiler._builder.EmitBranch(endLabel);
+
+            // false
+            compiler._builder.SetLabel(falseLabel);
+            compiler.LoadValueAsReference(input2);
+
+            // end
+            compiler._builder.SetLabel(endLabel);
+            compiler._builder.EmitStorePointer();
         }
 
         private static void CompileOutput(FunctionCompiler compiler, FunctionalNode outputNode)
@@ -319,34 +346,6 @@ namespace Rebar.RebarTarget
         public bool VisitLockTunnel(LockTunnel lockTunnel)
         {
             throw new NotImplementedException();
-        }
-
-        public bool VisitSelectReferenceNode(SelectReferenceNode selectReferenceNode)
-        {
-            LabelBuilder falseLabel = _builder.CreateLabel(),
-                endLabel = _builder.CreateLabel();
-            VariableReference input1 = selectReferenceNode.InputTerminals.ElementAt(1).GetTrueVariable(),
-                input2 = selectReferenceNode.InputTerminals.ElementAt(2).GetTrueVariable(),
-                selector = selectReferenceNode.InputTerminals.ElementAt(0).GetTrueVariable(),
-                selectedReference = selectReferenceNode.OutputTerminals.ElementAt(1).GetTrueVariable();
-            LoadLocalAllocationReference(selectedReference);
-            LoadValueAsReference(selector);
-            _builder.EmitDerefInteger();
-            _builder.EmitBranchIfFalse(falseLabel);
-
-            // true
-            LoadValueAsReference(input1);
-            _builder.EmitBranch(endLabel);
-
-            // false
-            _builder.SetLabel(falseLabel);
-            LoadValueAsReference(input2);
-            
-            // end
-            _builder.SetLabel(endLabel);
-            _builder.EmitStorePointer();
-
-            return true;
         }
 
         public bool VisitSomeConstructorNode(SomeConstructorNode someConstructorNode)

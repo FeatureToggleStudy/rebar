@@ -181,16 +181,6 @@ namespace Rebar.Compiler
             return true;
         }
 
-        public bool VisitSelectReferenceNode(SelectReferenceNode selectReferenceNode)
-        {
-            VariableUsageValidator validator1 = selectReferenceNode.Terminals[1].GetValidator();
-            VariableUsageValidator validator2 = selectReferenceNode.Terminals[2].GetValidator();
-            validator2.TestSameUnderlyingTypeAs(validator1);
-            VariableUsageValidator selectorValidator = selectReferenceNode.Terminals[0].GetValidator();
-            selectorValidator.TestExpectedUnderlyingType(PFTypes.Boolean);
-            return true;
-        }
-
         public bool VisitSomeConstructorNode(SomeConstructorNode someConstructorNode)
         {
             VariableUsageValidator validator = someConstructorNode.Terminals[0].GetValidator();

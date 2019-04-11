@@ -372,41 +372,6 @@ namespace Rebar.Compiler
             }
         }
 
-        bool IDfirNodeVisitor<bool>.VisitSelectReferenceNode(SelectReferenceNode selectReferenceNode)
-        {
-            Terminal selectorInput = selectReferenceNode.InputTerminals.ElementAt(0),
-                trueInput = selectReferenceNode.InputTerminals.ElementAt(1),
-                falseInput = selectReferenceNode.InputTerminals.ElementAt(2),
-                selectorOutput = selectReferenceNode.OutputTerminals.ElementAt(0),
-                resultOutput = selectReferenceNode.OutputTerminals.ElementAt(1);
-            LifetimeTypeVariableGroup selectorLifetimeGroup = new LifetimeTypeVariableGroup(selectorInput.GetVariableSet()),
-                dataLifetimeGroup = new LifetimeTypeVariableGroup(trueInput.GetVariableSet());
-            _nodeFacade
-                .CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable, selectorLifetimeGroup.LazyNewLifetime)
-                .AddTerminalFacade(selectorInput, selectorOutput);
-            ReferenceInputTerminalLifetimeGroup lifetimeGroup = _nodeFacade
-                .CreateInputLifetimeGroup(InputReferenceMutability.Polymorphic, dataLifetimeGroup.LazyNewLifetime);
-            lifetimeGroup.AddTerminalFacade(trueInput);
-            lifetimeGroup.AddTerminalFacade(falseInput);
-            _nodeFacade[resultOutput] = new SimpleTerminalFacade(resultOutput);
-
-            selectorLifetimeGroup.CreateReferenceTypeForFacade(
-                _nodeFacade[selectorInput],
-                InputReferenceMutability.AllowImmutable,
-                _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Boolean));
-            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-            TypeVariableReference dataMutabilityVariable = _typeVariableSet.CreateReferenceToMutabilityType();
-            TypeVariableReference dataReferenceType = _typeVariableSet.CreateReferenceToPolymorphicReferenceType(
-                dataMutabilityVariable,
-                dataTypeVariable,
-                dataLifetimeGroup.LifetimeType);
-            _nodeFacade[trueInput].FacadeVariable.AdoptTypeVariableReference(dataReferenceType);
-            _nodeFacade[falseInput].FacadeVariable.AdoptTypeVariableReference(dataReferenceType);
-            _nodeFacade[resultOutput].FacadeVariable.AdoptTypeVariableReference(dataReferenceType);
-
-            return true;
-        }
-
         bool IDfirNodeVisitor<bool>.VisitSomeConstructorNode(SomeConstructorNode someConstructorNode)
         {
             Terminal valueInput = someConstructorNode.InputTerminals.ElementAt(0),
