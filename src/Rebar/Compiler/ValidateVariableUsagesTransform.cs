@@ -138,9 +138,8 @@ namespace Rebar.Compiler
             foreach (var inputTerminalPair in functionalNode.InputTerminals.Zip(Signatures.GetSignatureForNIType(functionalNode.Signature).Inputs))
             {
                 Terminal inputTerminal = inputTerminalPair.Key;
+                inputTerminal.TestRequiredTerminalConnected();
                 _typeUnificationResults.SetMessagesOnTerminal(inputTerminal);
-                SignatureTerminal signatureInputTerminal = inputTerminalPair.Value;
-                VariableUsageValidator validator = inputTerminal.GetValidator();
             }
 
             if (functionalNode.RequiredFeatureToggles.Any(feature => !FeatureToggleSupport.IsFeatureEnabled(feature)))
