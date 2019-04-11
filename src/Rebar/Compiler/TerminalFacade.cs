@@ -28,6 +28,6 @@ namespace Rebar.Compiler
 
         public abstract void UpdateFromFacadeInput();
 
-        public abstract void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable, ITypeUnificationResult unificationResult);
+        public abstract void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable, TerminalTypeUnificationResults unificationResults);
     }
 }

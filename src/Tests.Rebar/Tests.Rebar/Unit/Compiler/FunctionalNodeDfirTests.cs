@@ -341,7 +341,7 @@ namespace Tests.Rebar.Unit.Compiler
             Assert.IsTrue(functionalNode.InputTerminals[2].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
         }
 
-        #endregion
+#endregion
 
         private void RunSemanticAnalysisUpToCreateNodeFacades(DfirRoot dfirRoot, NationalInstruments.Compiler.CompileCancellationToken cancellationToken = null)
         {
@@ -350,19 +350,21 @@ namespace Tests.Rebar.Unit.Compiler
             new CreateNodeFacadesTransform().Execute(dfirRoot, cancellationToken);
         }
 
-        private void RunSemanticAnalysisUpToSetVariableTypes(DfirRoot dfirRoot, NationalInstruments.Compiler.CompileCancellationToken cancellationToken = null)
+        private void RunSemanticAnalysisUpToSetVariableTypes(DfirRoot dfirRoot, NationalInstruments.Compiler.CompileCancellationToken cancellationToken = null, TerminalTypeUnificationResults typeUnificationResults = null)
         {
             cancellationToken = cancellationToken ?? new NationalInstruments.Compiler.CompileCancellationToken();
             RunSemanticAnalysisUpToCreateNodeFacades(dfirRoot, cancellationToken);
-            new MergeVariablesAcrossWiresTransform(new TerminalTypeUnificationResults()).Execute(dfirRoot, cancellationToken);
+            typeUnificationResults = typeUnificationResults ?? new TerminalTypeUnificationResults();
+            new MergeVariablesAcrossWiresTransform(typeUnificationResults).Execute(dfirRoot, cancellationToken);
             new SetVariableTypesAndLifetimesTransform().Execute(dfirRoot, cancellationToken);
         }
 
         private void RunSemanticAnalysisUpToValidation(DfirRoot dfirRoot)
         {
             var cancellationToken = new NationalInstruments.Compiler.CompileCancellationToken();
-            RunSemanticAnalysisUpToSetVariableTypes(dfirRoot, cancellationToken);
-            new ValidateVariableUsagesTransform().Execute(dfirRoot, cancellationToken);
+            var typeUnificationResults = new TerminalTypeUnificationResults();
+            RunSemanticAnalysisUpToSetVariableTypes(dfirRoot, cancellationToken, typeUnificationResults);
+            new ValidateVariableUsagesTransform(typeUnificationResults).Execute(dfirRoot, cancellationToken);
         }
 
         private void ConnectConstantToInputTerminal(Terminal inputTerminal, NIType variableType, bool mutable)
