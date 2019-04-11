@@ -405,7 +405,7 @@ namespace Rebar.Common
                     MergeTypeVariableIntoTypeVariable(toUnify, toUnifyWith);
                     return;
                 }
-                // type error
+                unificationResult.SetTypeMismatch();
                 return;
             }
 
@@ -419,7 +419,7 @@ namespace Rebar.Common
                     MergeTypeVariableIntoTypeVariable(toUnify, toUnifyWith);
                     return;
                 }
-                // type error
+                unificationResult.SetTypeMismatch();
                 return;
             }
 

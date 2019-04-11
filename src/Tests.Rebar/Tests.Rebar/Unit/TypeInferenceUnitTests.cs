@@ -38,6 +38,19 @@ namespace Tests.Rebar.Unit
             Assert.IsTrue(typeVariable2.RenderNIType().IsInt32());
         }
 
+        [TestMethod]
+        public void TwoDifferentLiteralTypes_Unify_TypeMismatchReported()
+        {
+            TypeVariableSet typeVariableSet = new TypeVariableSet();
+            TypeVariableReference literalReference1 = typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32),
+                literalReference2 = typeVariableSet.CreateReferenceToLiteralType(PFTypes.Boolean);
+            var testTypeUnificationResult = new TestTypeUnificationResult();
+
+            typeVariableSet.Unify(literalReference2, literalReference1, testTypeUnificationResult);
+
+            Assert.IsTrue(testTypeUnificationResult.TypeMismatch);
+        }
+
         #region Constructor Types
 
         [TestMethod]
@@ -55,16 +68,46 @@ namespace Tests.Rebar.Unit
             Assert.IsTrue(innerTypeVariable.RenderNIType().IsInt32());
         }
 
+        [TestMethod]
+        public void TwoConstructorTypesWithSameConstructorNameAndDifferentInnerTypes_Unify_TypeMismatchReported()
+        {
+            TypeVariableSet typeVariableSet = new TypeVariableSet();
+            TypeVariableReference constructorType1 = typeVariableSet.CreateReferenceToConstructorType("Vector",
+                typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32));
+            TypeVariableReference constructorType2 = typeVariableSet.CreateReferenceToConstructorType("Vector",
+                typeVariableSet.CreateReferenceToLiteralType(PFTypes.Boolean));
+            var typeUnificationResult = new TestTypeUnificationResult();
+
+            typeVariableSet.Unify(constructorType1, constructorType2, typeUnificationResult);
+
+            Assert.IsTrue(typeUnificationResult.TypeMismatch);
+        }
+
+        [TestMethod]
+        public void TwoConstructorTypesWithDifferentConstructorNames_Unify_TypeMismatchReported()
+        {
+            TypeVariableSet typeVariableSet = new TypeVariableSet();
+            TypeVariableReference constructorType1 = typeVariableSet.CreateReferenceToConstructorType("Vector",
+                typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32));
+            TypeVariableReference constructorType2 = typeVariableSet.CreateReferenceToConstructorType("Option",
+                typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32));
+            var typeUnificationResult = new TestTypeUnificationResult();
+
+            typeVariableSet.Unify(constructorType1, constructorType2, typeUnificationResult);
+
+            Assert.IsTrue(typeUnificationResult.TypeMismatch);
+        }
+
         #endregion
     }
 
     internal class TestTypeUnificationResult : ITypeUnificationResult
     {
-        public void SetExpectedMutable()
+        void ITypeUnificationResult.SetExpectedMutable()
         {
         }
 
-        public void SetTypeMismatch()
+        void ITypeUnificationResult.SetTypeMismatch()
         {
             TypeMismatch = true;
         }
