@@ -231,7 +231,21 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(dfirRoot);
 
-            Assert.IsTrue(functionalNode.GetDfirMessages().Any(message => message.Descriptor == Messages.TerminalDoesNotAcceptImmutableType.Descriptor));
+            Assert.IsTrue(functionalNode.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == Messages.TerminalDoesNotAcceptImmutableType.Descriptor));
+        }
+
+        [TestMethod]
+        public void FunctionNodeWithMutableInOutSignatureParameterAndImmutableReferenceWired_ValidateVariableUsages_ErrorCreated()
+        {
+            NIType signatureType = Signatures.MutablePassthroughType;
+            DfirRoot dfirRoot = DfirRoot.Create();
+            FunctionalNode functionalNode = new FunctionalNode(dfirRoot.BlockDiagram, signatureType);
+            ExplicitBorrowNode borrow = ConnectExplicitBorrowToInputTerminal(functionalNode.InputTerminals[0]);
+            ConnectConstantToInputTerminal(borrow.InputTerminals[0], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToValidation(dfirRoot);
+
+            Assert.IsTrue(functionalNode.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == Messages.TerminalDoesNotAcceptImmutableType.Descriptor));
         }
 
         [TestMethod]

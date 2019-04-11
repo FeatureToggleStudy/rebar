@@ -250,12 +250,16 @@ namespace Rebar.Compiler
                             TypeVariableReference lifetimeType = otherIsReference
                                 ? l
                                 : typeVariableSet.CreateReferenceToLifetimeType(_lazyNewLifetime.Value);
-                            // TODO: the mutability of this reference should also depend on the input variable mutability
                             TypeVariableReference mutableReference = typeVariableSet.CreateReferenceToReferenceType(true, underlyingType, lifetimeType);
                             ITypeUnificationResult unificationResult = unificationResults.GetTypeUnificationResult(
                                 Terminal,
                                 TrueVariable.TypeVariableReference,
                                 mutableReference);
+                            bool mutable = otherIsReference ? otherIsMutableReference : wireFacadeVariable.Mutable;
+                            if (!mutable)
+                            {
+                                unificationResult.SetExpectedMutable();
+                            }
                             typeVariableSet.Unify(TrueVariable.TypeVariableReference, mutableReference, unificationResult);
                             // TODO: after unifying these two, might be good to remove mutRef--I guess by merging?
                             break;

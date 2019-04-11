@@ -141,14 +141,8 @@ namespace Rebar.Compiler
                 _typeUnificationResults.SetMessagesOnTerminal(inputTerminal);
                 SignatureTerminal signatureInputTerminal = inputTerminalPair.Value;
                 VariableUsageValidator validator = inputTerminal.GetValidator();
-                if (signatureInputTerminal.SignatureType.IsRebarReferenceType())
-                {
-                    if (signatureInputTerminal.SignatureType.IsMutableReferenceType())
-                    {
-                        validator.TestVariableIsMutableType();
-                    }
-                }
-                else if (!signatureInputTerminal.SignatureType.IsGenericParameter())
+                if (!signatureInputTerminal.SignatureType.IsRebarReferenceType() 
+                    && !signatureInputTerminal.SignatureType.IsGenericParameter())
                 {
                     NIType underlyingType = signatureInputTerminal.SignatureType;
                     validator.TestVariableIsOwnedType();

@@ -71,6 +71,10 @@ namespace Rebar.Compiler
                 NIType actualType = unificationResult.TerminalTypeVariable.RenderNIType();
                 terminal.SetDfirMessage(TerminalUserMessages.CreateTypeConflictMessage(actualType, expectedType));
             }
+            if (unificationResult.ExpectedMutable)
+            {
+                terminal.SetDfirMessage(Messages.TerminalDoesNotAcceptImmutableType);
+            }
         }
     }
 }
