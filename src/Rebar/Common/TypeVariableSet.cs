@@ -460,7 +460,7 @@ namespace Rebar.Common
                 return;
             }
 
-            // type error
+            unificationResult.SetTypeMismatch();
             return;
         }
 

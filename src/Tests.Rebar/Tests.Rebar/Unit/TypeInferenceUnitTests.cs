@@ -51,6 +51,19 @@ namespace Tests.Rebar.Unit
             Assert.IsTrue(testTypeUnificationResult.TypeMismatch);
         }
 
+        [TestMethod]
+        public void LiteralTypeAndConstructorType_Unify_TypeMismatchReported()
+        {
+            TypeVariableSet typeVariableSet = new TypeVariableSet();
+            TypeVariableReference literalReference = typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32),
+                constructorReference = typeVariableSet.CreateReferenceToConstructorType("Vector", literalReference);
+            var testTypeUnificationResult = new TestTypeUnificationResult();
+
+            typeVariableSet.Unify(constructorReference, literalReference, testTypeUnificationResult);
+
+            Assert.IsTrue(testTypeUnificationResult.TypeMismatch);
+        }
+
         #region Constructor Types
 
         [TestMethod]
