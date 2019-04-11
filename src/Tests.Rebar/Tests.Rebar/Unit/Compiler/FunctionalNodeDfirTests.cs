@@ -286,7 +286,7 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(dfirRoot);
 
-            Assert.IsTrue(functionalNode.GetDfirMessages().Any(message => message.Descriptor == Messages.TerminalDoesNotAcceptReference.Descriptor));
+            Assert.IsTrue(functionalNode.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
         }
 
         [TestMethod]
