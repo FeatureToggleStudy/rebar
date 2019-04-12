@@ -64,6 +64,21 @@ namespace Rebar.RebarTarget
             compiler._builder.EmitStoreInteger();
         }
 
+        private static void CompileExchangeValues(FunctionCompiler compiler, FunctionalNode exchangeValuesNode)
+        {
+            VariableReference var1 = exchangeValuesNode.InputTerminals.ElementAt(0).GetTrueVariable(),
+                var2 = exchangeValuesNode.InputTerminals.ElementAt(1).GetTrueVariable();
+            compiler.LoadValueAsReference(var2);
+            compiler.LoadValueAsReference(var1);
+            compiler._builder.EmitDuplicate();
+            compiler._builder.EmitDerefInteger();
+            compiler._builder.EmitSwap();
+            compiler.LoadValueAsReference(var2);
+            compiler._builder.EmitDerefInteger();
+            compiler._builder.EmitStoreInteger();
+            compiler._builder.EmitStoreInteger();
+        }
+
         private static void CompileCreateCopy(FunctionCompiler compiler, FunctionalNode createCopyNode)
         {
             VariableReference copyFrom = createCopyNode.InputTerminals.ElementAt(0).GetTrueVariable(),
@@ -330,22 +345,6 @@ namespace Rebar.RebarTarget
         public bool VisitDropNode(DropNode dropNode)
         {
             throw new NotImplementedException();
-        }
-
-        public bool VisitExchangeValuesNode(ExchangeValuesNode exchangeValuesNode)
-        {
-            VariableReference var1 = exchangeValuesNode.InputTerminals.ElementAt(0).GetTrueVariable(),
-                var2 = exchangeValuesNode.InputTerminals.ElementAt(1).GetTrueVariable();
-            LoadValueAsReference(var2);
-            LoadValueAsReference(var1);
-            _builder.EmitDuplicate();
-            _builder.EmitDerefInteger();
-            _builder.EmitSwap();
-            LoadValueAsReference(var2);
-            _builder.EmitDerefInteger();
-            _builder.EmitStoreInteger();
-            _builder.EmitStoreInteger();
-            return true;
         }
 
         public bool VisitExplicitBorrowNode(ExplicitBorrowNode explicitBorrowNode)

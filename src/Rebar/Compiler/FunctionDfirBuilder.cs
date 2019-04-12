@@ -410,13 +410,6 @@ namespace Rebar.Compiler
             MapTerminalsInOrder(node, terminateLifetimeDfir);
         }
 
-        public void VisitExchangeValuesNode(ExchangeValues exchangeValues)
-        {
-            var exchangeValuesDfir = new ExchangeValuesNode(_currentDiagram);
-            _map.AddMapping(exchangeValues, exchangeValuesDfir);
-            MapTerminalsInOrder(exchangeValues, exchangeValuesDfir);
-        }
-
         public void VisitImmutableBorrowNode(ImmutableBorrowNode immutableBorrowNode)
         {
             var explicitBorrowDfir = new ExplicitBorrowNode(_currentDiagram, BorrowMode.Immutable, 1, true, true);

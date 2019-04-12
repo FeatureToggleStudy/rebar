@@ -9,7 +9,6 @@ namespace Rebar.Compiler.Nodes
         T VisitConstant(Constant constant);
         T VisitCreateCellNode(CreateCellNode createCellNode);
         T VisitDropNode(DropNode dropNode);
-        T VisitExchangeValuesNode(ExchangeValuesNode exchangeValuesNode);
         T VisitExplicitBorrowNode(ExplicitBorrowNode explicitBorrowNode);
         T VisitFunctionalNode(FunctionalNode functionalNode);
         T VisitIterateTunnel(IterateTunnel iterateTunnel);

@@ -84,11 +84,6 @@ namespace Rebar.Compiler
             return true;
         }
 
-        public bool VisitExchangeValuesNode(ExchangeValuesNode exchangeValuesNode)
-        {
-            return true;
-        }
-
         public bool VisitExplicitBorrowNode(ExplicitBorrowNode explicitBorrowNode)
         {
             int inputCount = explicitBorrowNode.InputTerminals.Count;

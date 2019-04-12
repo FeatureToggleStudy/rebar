@@ -11,8 +11,6 @@ namespace Rebar.Compiler
 
         void VisitTerminateLifetimeNode(SourceModel.TerminateLifetime node);
 
-        void VisitExchangeValuesNode(SourceModel.ExchangeValues node);
-
         void VisitImmutableBorrowNode(SourceModel.ImmutableBorrowNode node);
 
         void VisitCreateCellNode(SourceModel.CreateCell node);

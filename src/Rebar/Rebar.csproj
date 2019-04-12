@@ -118,7 +118,6 @@
     <Compile Include="Compiler\Nodes\BorrowTunnel.cs" />
     <Compile Include="Compiler\Nodes\CreateCellNode.cs" />
     <Compile Include="Compiler\Nodes\DropNode.cs" />
-    <Compile Include="Compiler\Nodes\ExchangeValuesNode.cs" />
     <Compile Include="Compiler\Nodes\ExplicitBorrowNode.cs" />
     <Compile Include="Compiler\Nodes\ExplicitUnborrowNode.cs" />
     <Compile Include="Compiler\Nodes\FunctionalNode.cs" />
@@ -230,7 +229,6 @@
     <Compile Include="SourceModel\BorrowTunnel.cs" />
     <Compile Include="SourceModel\CreateCell.cs" />
     <Compile Include="SourceModel\DropNode.cs" />
-    <Compile Include="SourceModel\ExchangeValues.cs" />
     <Compile Include="SourceModel\FunctionalNode.cs" />
     <Compile Include="SourceModel\Functions.cs" />
     <Compile Include="SourceModel\IBeginLifetimeTunnel.cs" />

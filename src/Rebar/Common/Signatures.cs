@@ -84,8 +84,21 @@ namespace Rebar.Common
                 "value");
             AssignType = functionTypeBuilder.CreateType();
 
+            functionTypeBuilder = PFTypes.Factory.DefineFunction("Exchange");
+            tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
+            var tLifetimeParameter = AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife");
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                tDataParameter.CreateMutableReference(tLifetimeParameter),
+                "exchangeeRef1");
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                tDataParameter.CreateMutableReference(tLifetimeParameter),
+                "exchangeeRef2");
+            ExchangeValuesType = functionTypeBuilder.CreateType();
+
             functionTypeBuilder = PFTypes.Factory.DefineFunction("CreateCopy");
-            // TODO: constrain TData to be Copy
+            // TODO: constrain TData to be Copy or Clone
             tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
             AddInputOutputParameter(
                 functionTypeBuilder,
@@ -111,7 +124,7 @@ namespace Rebar.Common
                 functionTypeBuilder,
                 PFTypes.Boolean.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife1")),
                 "selectorRef");
-            var tLifetimeParameter = AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife2");
+            tLifetimeParameter = AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife2");
             var tMutabilityParameter = AddGenericMutabilityTypeParameter(functionTypeBuilder, "TMut");
             var referenceType = tDataParameter.CreatePolymorphicReference(tLifetimeParameter, tMutabilityParameter);
             AddInputParameter(
@@ -190,6 +203,8 @@ namespace Rebar.Common
         public static NIType MutablePassthroughType { get; }
 
         public static NIType AssignType { get; }
+
+        public static NIType ExchangeValuesType { get; }
 
         public static NIType CreateCopyType { get; }
 

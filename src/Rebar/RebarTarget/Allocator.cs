@@ -148,11 +148,6 @@ namespace Rebar.RebarTarget
             return true;
         }
 
-        public bool VisitExchangeValuesNode(ExchangeValuesNode exchangeValuesNode)
-        {
-            return true;
-        }
-
         public bool VisitExplicitBorrowNode(ExplicitBorrowNode explicitBorrowNode)
         {
             foreach (KeyValuePair<Terminal, Terminal> terminalPair in explicitBorrowNode.InputTerminals.Zip(explicitBorrowNode.OutputTerminals))

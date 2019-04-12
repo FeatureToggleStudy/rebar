@@ -125,25 +125,6 @@ namespace Rebar.Compiler
             return true;
         }
 
-        bool IDfirNodeVisitor<bool>.VisitExchangeValuesNode(ExchangeValuesNode exchangeValuesNode)
-        {
-            Terminal input1Terminal = exchangeValuesNode.InputTerminals.ElementAt(0),
-                input2Terminal = exchangeValuesNode.InputTerminals.ElementAt(1),
-                output1Terminal = exchangeValuesNode.OutputTerminals.ElementAt(0),
-                output2Terminal = exchangeValuesNode.OutputTerminals.ElementAt(1);
-            var lifetimeTypeVariableGroup = new LifetimeTypeVariableGroup(input1Terminal.GetVariableSet());
-            ReferenceInputTerminalLifetimeGroup lifetimeGroup = _nodeFacade
-                .CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable, lifetimeTypeVariableGroup.LazyNewLifetime);
-            lifetimeGroup.AddTerminalFacade(input1Terminal, output1Terminal);
-            lifetimeGroup.AddTerminalFacade(input2Terminal, output2Terminal);
-
-            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-            lifetimeTypeVariableGroup.CreateReferenceTypeForFacade(_nodeFacade[input1Terminal], InputReferenceMutability.RequireMutable, dataTypeVariable);
-            lifetimeTypeVariableGroup.CreateReferenceTypeForFacade(_nodeFacade[input2Terminal], InputReferenceMutability.RequireMutable, dataTypeVariable);
-
-            return true;
-        }
-
         bool IDfirNodeVisitor<bool>.VisitExplicitBorrowNode(ExplicitBorrowNode explicitBorrowNode)
         {
             foreach (var terminal in explicitBorrowNode.Terminals)

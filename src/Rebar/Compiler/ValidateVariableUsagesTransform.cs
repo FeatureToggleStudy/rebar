@@ -104,16 +104,6 @@ namespace Rebar.Compiler
             return true;
         }
 
-        public bool VisitExchangeValuesNode(ExchangeValuesNode exchangeValuesNode)
-        {
-            VariableUsageValidator validator1 = exchangeValuesNode.Terminals[0].GetValidator();
-            validator1.TestVariableIsMutableType();
-            VariableUsageValidator validator2 = exchangeValuesNode.Terminals[1].GetValidator();
-            validator2.TestVariableIsMutableType();
-            // TODO: ensure that lifetimes of exchanged values and references are compatible
-            return true;
-        }
-
         public bool VisitExplicitBorrowNode(ExplicitBorrowNode explicitBorrowNode)
         {
             foreach (var inputTerminal in explicitBorrowNode.InputTerminals)

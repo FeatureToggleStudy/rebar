@@ -32,6 +32,26 @@ namespace Rebar.SourceModel
         public override XName XmlElementName => XName.Get(ElementName, Function.ParsableNamespaceName);
     }
 
+    public class ExchangeValues : FunctionalNode
+    {
+        private const string ElementName = "ExchangeValues";
+
+        protected ExchangeValues()
+            : base(Signatures.ExchangeValuesType)
+        {
+        }
+
+        [XmlParserFactoryMethod(ElementName, Function.ParsableNamespaceName)]
+        public static ExchangeValues CreateExchangeValues(IElementCreateInfo elementCreateInfo)
+        {
+            var exchangeValues = new ExchangeValues();
+            exchangeValues.Init(elementCreateInfo);
+            return exchangeValues;
+        }
+
+        public override XName XmlElementName => XName.Get(ElementName, Function.ParsableNamespaceName);
+    }
+
     public class CreateCopyNode : FunctionalNode
     {
         private const string ElementName = "CreateCopyNode";
