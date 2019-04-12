@@ -160,6 +160,29 @@ namespace Rebar.RebarTarget
             compiler._builder.EmitDerefInteger();
             compiler._builder.EmitStoreInteger();
         }
+        
+        private static void CompileSomeConstructor(FunctionCompiler compiler, FunctionalNode someConstructorNode)
+        {
+            VariableReference input = someConstructorNode.InputTerminals.ElementAt(0).GetTrueVariable(),
+                output = someConstructorNode.OutputTerminals.ElementAt(0).GetTrueVariable();
+            compiler.LoadLocalAllocationReference(output);
+            compiler._builder.EmitDuplicate();
+            compiler._builder.EmitLoadIntegerImmediate(1);
+            compiler._builder.EmitStoreInteger();
+            compiler._builder.EmitLoadIntegerImmediate(4);
+            compiler._builder.EmitAdd();
+            if (input.Type.IsRebarReferenceType())
+            {
+                compiler.LoadValueAsReference(input);
+                compiler._builder.EmitStorePointer();
+            }
+            else
+            {
+                compiler.LoadLocalAllocationReference(input);
+                compiler._builder.EmitDerefInteger();
+                compiler._builder.EmitStoreInteger();
+            }
+        }
 
         #endregion
 
@@ -346,30 +369,6 @@ namespace Rebar.RebarTarget
         public bool VisitLockTunnel(LockTunnel lockTunnel)
         {
             throw new NotImplementedException();
-        }
-
-        public bool VisitSomeConstructorNode(SomeConstructorNode someConstructorNode)
-        {
-            VariableReference input = someConstructorNode.InputTerminals.ElementAt(0).GetTrueVariable(),
-                output = someConstructorNode.OutputTerminals.ElementAt(0).GetTrueVariable();
-            LoadLocalAllocationReference(output);
-            _builder.EmitDuplicate();
-            _builder.EmitLoadIntegerImmediate(1);
-            _builder.EmitStoreInteger();
-            _builder.EmitLoadIntegerImmediate(4);
-            _builder.EmitAdd();
-            if (input.Type.IsRebarReferenceType())
-            {
-                LoadValueAsReference(input);
-                _builder.EmitStorePointer();
-            }
-            else
-            {
-                LoadLocalAllocationReference(input);
-                _builder.EmitDerefInteger();
-                _builder.EmitStoreInteger();
-            }
-            return true;
         }
 
         public bool VisitTerminateLifetimeNode(TerminateLifetimeNode terminateLifetimeNode)

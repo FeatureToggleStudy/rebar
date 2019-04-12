@@ -217,12 +217,6 @@ namespace Rebar.RebarTarget
             return true;
         }
 
-        public bool VisitSomeConstructorNode(SomeConstructorNode someConstructorNode)
-        {
-            CreateLocalAllocationForVariable(someConstructorNode.OutputTerminals.ElementAt(0).GetTrueVariable());
-            return true;
-        }
-
         public bool VisitTerminateLifetimeNode(TerminateLifetimeNode terminateLifetimeNode)
         {
             return true;

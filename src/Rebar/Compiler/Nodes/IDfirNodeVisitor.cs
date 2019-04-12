@@ -16,7 +16,6 @@ namespace Rebar.Compiler.Nodes
         T VisitIterateTunnel(IterateTunnel iterateTunnel);
         T VisitLockTunnel(LockTunnel lockTunnel);
         T VisitLoopConditionTunnel(LoopConditionTunnel loopConditionTunnel);
-        T VisitSomeConstructorNode(SomeConstructorNode someConstructorNode);
         T VisitTerminateLifetimeNode(TerminateLifetimeNode terminateLifetimeNode);
         T VisitTerminateLifetimeTunnel(TerminateLifetimeTunnel terminateLifetimeTunnel);
         T VisitTunnel(Tunnel tunnel);

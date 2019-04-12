@@ -372,23 +372,6 @@ namespace Rebar.Compiler
             }
         }
 
-        bool IDfirNodeVisitor<bool>.VisitSomeConstructorNode(SomeConstructorNode someConstructorNode)
-        {
-            Terminal valueInput = someConstructorNode.InputTerminals.ElementAt(0),
-                optionOutput = someConstructorNode.OutputTerminals.ElementAt(0);
-
-            SimpleTerminalFacade inputFacade = new SimpleTerminalFacade(valueInput),
-                outputFacade = new SimpleTerminalFacade(optionOutput);
-            _nodeFacade[valueInput] = inputFacade;
-            _nodeFacade[optionOutput] = outputFacade;
-
-            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-            inputFacade.FacadeVariable.AdoptTypeVariableReference(dataTypeVariable);
-            outputFacade.FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToConstructorType("Option", dataTypeVariable));
-
-            return true;
-        }
-
         bool IDfirNodeVisitor<bool>.VisitTerminateLifetimeNode(TerminateLifetimeNode terminateLifetimeNode)
         {
             foreach (var terminal in terminateLifetimeNode.Terminals)

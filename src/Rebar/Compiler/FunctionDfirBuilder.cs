@@ -438,12 +438,6 @@ namespace Rebar.Compiler
             MapTerminalsInOrder(createCell, createCellDfir);
         }
 
-        public void VisitSomeConstructorNode(SourceModel.SomeConstructorNode someConstructorNode)
-        {
-            var someConstructorNodeDfir = new Nodes.SomeConstructorNode(_currentDiagram);
-            MapTerminalsInOrder(someConstructorNode, someConstructorNodeDfir);
-        }
-
         public void VisitFunction(Function function)
         {
             if (CreatedDfirRoot.Name.IsEmpty)

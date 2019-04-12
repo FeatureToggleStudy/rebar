@@ -456,6 +456,42 @@ namespace Rebar.SourceModel
 
     #endregion
 
+    #region Option
+
+    /// <summary>
+    /// Node that constructs a mutable Some(x) value from an input value x; the output type is Option&lt;T&gt; 
+    /// when the input type is T.
+    /// </summary>
+    public class SomeConstructorNode : FunctionalNode
+    {
+        private const string ElementName = "SomeConstructor";
+
+        protected SomeConstructorNode()
+            : base(Signatures.SomeConstructorType)
+        {
+            Width = StockDiagramGeometries.GridSize * 8;
+        }
+
+        [XmlParserFactoryMethod(ElementName, Function.ParsableNamespaceName)]
+        public static SomeConstructorNode CreateSomeConstructorNode(IElementCreateInfo elementCreateInfo)
+        {
+            var someConstructor = new SomeConstructorNode();
+            someConstructor.Init(elementCreateInfo);
+            return someConstructor;
+        }
+
+        /// <inheritdoc />
+        public override XName XmlElementName => XName.Get(ElementName, Function.ParsableNamespaceName);
+
+        /// <inheritdoc />
+        protected override float MinimumHeight => StockDiagramGeometries.GridSize * 4;
+
+        /// <inheritdoc />
+        public override IEnumerable<string> RequiredFeatureToggles => new[] { RebarFeatureToggles.OptionDataType };
+    }
+
+    #endregion
+
     #region Vector
 
     public class VectorCreate : FunctionalNode

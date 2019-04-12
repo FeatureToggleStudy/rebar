@@ -206,19 +206,6 @@ namespace Rebar.Compiler
             return true;
         }
 
-        public bool VisitSomeConstructorNode(SomeConstructorNode someConstructorNode)
-        {
-            VariableReference valueInVariable = someConstructorNode.Terminals.ElementAt(0).GetTrueVariable(),
-                optionOutVariable = someConstructorNode.Terminals.ElementAt(1).GetTrueVariable();
-            NIType optionUnderlyingType = valueInVariable.Type;
-            Lifetime optionLifetime = valueInVariable.Lifetime;
-
-            optionOutVariable.SetTypeAndLifetime(
-                optionUnderlyingType.CreateOption(),
-                optionLifetime);
-            return true;
-        }
-
         public bool VisitTerminateLifetimeNode(TerminateLifetimeNode terminateLifetimeNode)
         {
             VariableSet variableSet = terminateLifetimeNode.ParentDiagram.GetVariableSet();

@@ -132,7 +132,6 @@
     <Compile Include="Compiler\Nodes\LoopConditionTunnel.cs" />
     <Compile Include="Compiler\Nodes\BorderNode.cs" />
     <Compile Include="Compiler\Nodes\DfirNode.cs" />
-    <Compile Include="Compiler\Nodes\SomeConstructorNode.cs" />
     <Compile Include="Compiler\Nodes\TerminateLifetimeNode.cs" />
     <Compile Include="Compiler\Nodes\TerminateLifetimeTunnel.cs" />
     <Compile Include="Compiler\CreateNodeFacadesTransform.cs" />
@@ -255,7 +254,6 @@
     <Compile Include="SourceModel\CaseStructure.cs" />
     <Compile Include="SourceModel\FlatSequence.cs" />
     <Compile Include="SourceModel\SimpleNode.cs" />
-    <Compile Include="SourceModel\SomeConstructorNode.cs" />
     <Compile Include="SourceModel\TerminateLifetime.cs" />
     <Compile Include="SourceModel\FlatSequenceTerminateLifetimeTunnel.cs" />
     <Compile Include="SourceModel\TerminateLifetimeTunnelGuide.cs" />

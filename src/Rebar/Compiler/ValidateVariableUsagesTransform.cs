@@ -183,12 +183,6 @@ namespace Rebar.Compiler
             return true;
         }
 
-        public bool VisitSomeConstructorNode(SomeConstructorNode someConstructorNode)
-        {
-            VariableUsageValidator validator = someConstructorNode.Terminals[0].GetValidator();
-            return true;
-        }
-
         public bool VisitTerminateLifetimeNode(TerminateLifetimeNode terminateLifetimeNode)
         {
             foreach (var inputTerminal in terminateLifetimeNode.InputTerminals)

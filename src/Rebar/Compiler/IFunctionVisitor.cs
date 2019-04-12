@@ -17,7 +17,5 @@ namespace Rebar.Compiler
         void VisitImmutableBorrowNode(SourceModel.ImmutableBorrowNode node);
 
         void VisitCreateCellNode(SourceModel.CreateCell node);
-
-        void VisitSomeConstructorNode(SourceModel.SomeConstructorNode node);
     }
 }

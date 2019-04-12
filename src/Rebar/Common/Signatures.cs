@@ -131,6 +131,18 @@ namespace Rebar.Common
                 "range");
             RangeType = functionTypeBuilder.CreateType();
 
+            functionTypeBuilder = PFTypes.Factory.DefineFunction("Some");
+            tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
+            AddInputParameter(
+                functionTypeBuilder,
+                tDataParameter,
+                "value");
+            AddOutputParameter(
+                functionTypeBuilder,
+                tDataParameter.CreateOption(),
+                "option");
+            SomeConstructorType = functionTypeBuilder.CreateType();
+
             functionTypeBuilder = PFTypes.Factory.DefineFunction("VectorCreate");
             // TODO
 #if FALSE
@@ -172,6 +184,8 @@ namespace Rebar.Common
         public static NIType SelectReferenceType { get; }
 
         public static NIType RangeType { get; }
+
+        public static NIType SomeConstructorType { get; }
 
         public static NIType VectorCreateType { get; }
 
