@@ -7,34 +7,47 @@ namespace Rebar.Compiler
 {
     internal class MergeVariablesAcrossWiresTransform : VisitorTransformBase
     {
+        private readonly TerminalTypeUnificationResults _typeUnificationResults;
+
+        public MergeVariablesAcrossWiresTransform(TerminalTypeUnificationResults typeUnificationResults)
+        {
+            _typeUnificationResults = typeUnificationResults;
+        }
+
         protected override void VisitBorderNode(BorderNode borderNode)
         {
         }
 
         protected override void VisitNode(Node node)
         {
+            // Unify each node input terminal with its connected source
+            AutoBorrowNodeFacade nodeFacade = AutoBorrowNodeFacade.GetNodeFacade(node);
+            foreach (var nodeTerminal in node.InputTerminals)
+            {
+                var connectedWireTerminal = nodeTerminal.ConnectedTerminal;
+                VariableReference unifyWithVariable = connectedWireTerminal != null
+                    ? connectedWireTerminal.GetFacadeVariable()
+                    : nodeTerminal.GetVariableSet().CreateNewVariableForUnwiredTerminal();
+                nodeFacade[nodeTerminal].UnifyWithConnectedWireTypeAsNodeInput(unifyWithVariable, _typeUnificationResults);
+            }
         }
 
         protected override void VisitWire(Wire wire)
         {
-            // Merge together all connected wire and node terminals
-            foreach (var wireTerminal in wire.Terminals)
+            // Merge the wire's input terminal with its connected source
+            foreach (var wireTerminal in wire.InputTerminals)
             {
                 var connectedNodeTerminal = wireTerminal.ConnectedTerminal;
                 if (connectedNodeTerminal != null)
                 {
-                    if (wireTerminal.Direction == Direction.Input)
-                    {
-                        wireTerminal.GetFacadeVariable().MergeInto(connectedNodeTerminal.GetFacadeVariable());
-                    }
-                    else
-                    {
-                        connectedNodeTerminal.GetFacadeVariable().MergeInto(wireTerminal.GetFacadeVariable());
-                    }
+                    VariableReference wireVariable = wireTerminal.GetFacadeVariable(),
+                        nodeVariable = connectedNodeTerminal.GetFacadeVariable();
+                    // TODO: this should be a unification in order to check that the wire type is Copyable
+                    wireVariable.MergeInto(nodeVariable);
                 }
             }
 
-            // If source is available and there are copied sinks, set source variable type and lifetime on copied sinks
+            // Unify types within a branched wire
             if (!wire.SinkTerminals.HasMoreThan(1))
             {
                 return;
@@ -47,9 +60,9 @@ namespace Rebar.Compiler
                 return;
             }
             TypeVariableSet typeVariableSet = wire.GetTypeVariableSet();
-            foreach (var sinkVariable in wire.SinkTerminals.Skip(1).Select(VariableExtensions.GetFacadeVariable))
+            foreach (var sinkTerminal in wire.SinkTerminals.Skip(1))
             {
-                typeVariableSet.Unify(sinkVariable.TypeVariableReference, sourceVariable.Value.TypeVariableReference);
+                sinkTerminal.GetFacadeVariable().AdoptTypeVariableReference(sourceVariable.Value.TypeVariableReference);
             }
         }
     }

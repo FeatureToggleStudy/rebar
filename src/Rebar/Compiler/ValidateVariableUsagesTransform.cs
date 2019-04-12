@@ -15,6 +15,13 @@ namespace Rebar.Compiler
     /// </summary>
     internal class ValidateVariableUsagesTransform : VisitorTransformBase, IDfirNodeVisitor<bool>
     {
+        private readonly TerminalTypeUnificationResults _typeUnificationResults;
+
+        public ValidateVariableUsagesTransform(TerminalTypeUnificationResults typeUnificationResults)
+        {
+            _typeUnificationResults = typeUnificationResults;
+        }
+
         protected override void VisitNode(Node node)
         {
             this.VisitRebarNode(node);
@@ -131,25 +138,9 @@ namespace Rebar.Compiler
             foreach (var inputTerminalPair in functionalNode.InputTerminals.Zip(Signatures.GetSignatureForNIType(functionalNode.Signature).Inputs))
             {
                 Terminal inputTerminal = inputTerminalPair.Key;
-                SignatureTerminal signatureInputTerminal = inputTerminalPair.Value;
-                VariableUsageValidator validator = inputTerminal.GetValidator();
-                if (signatureInputTerminal.SignatureType.IsRebarReferenceType())
+                if (inputTerminal.TestRequiredTerminalConnected())
                 {
-                    if (signatureInputTerminal.SignatureType.IsMutableReferenceType())
-                    {
-                        validator.TestVariableIsMutableType();
-                    }
-                    NIType underlyingType = signatureInputTerminal.SignatureType.GetReferentType();
-                    if (!underlyingType.IsGenericParameter())
-                    {
-                        validator.TestExpectedUnderlyingType(underlyingType);
-                    }
-                }
-                else if (!signatureInputTerminal.SignatureType.IsGenericParameter())
-                {
-                    NIType underlyingType = signatureInputTerminal.SignatureType;
-                    validator.TestExpectedUnderlyingType(underlyingType);
-                    validator.TestVariableIsOwnedType();
+                    _typeUnificationResults.SetMessagesOnTerminal(inputTerminal);
                 }
             }
 
@@ -189,16 +180,6 @@ namespace Rebar.Compiler
             var validator = new VariableUsageValidator(inputTerminal, true, false);
             validator.TestVariableIsOwnedType();
             validator.TestExpectedUnderlyingType(PFTypes.Boolean);
-            return true;
-        }
-
-        public bool VisitSelectReferenceNode(SelectReferenceNode selectReferenceNode)
-        {
-            VariableUsageValidator validator1 = selectReferenceNode.Terminals[1].GetValidator();
-            VariableUsageValidator validator2 = selectReferenceNode.Terminals[2].GetValidator();
-            validator2.TestSameUnderlyingTypeAs(validator1);
-            VariableUsageValidator selectorValidator = selectReferenceNode.Terminals[0].GetValidator();
-            selectorValidator.TestExpectedUnderlyingType(PFTypes.Boolean);
             return true;
         }
 

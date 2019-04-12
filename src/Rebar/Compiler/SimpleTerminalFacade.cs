@@ -15,7 +15,12 @@ namespace Rebar.Compiler
         {
             bool terminalIsWireFirst = terminal.IsOutput && !(terminal.ParentNode is TerminateLifetimeNode);
             bool mutableVariable = false;
-            if (!(terminal.ParentNode is Wire) && terminal.IsConnected && terminalIsWireFirst)
+            var parentWire = terminal.ParentNode as Wire;
+            if (parentWire != null)
+            {
+                mutableVariable = parentWire.GetWireBeginsMutableVariable();
+            }
+            else if (terminal.IsConnected && terminalIsWireFirst)
             {
                 var connectedWire = (Wire)terminal.ConnectedTerminal.ParentNode;
                 connectedWire.SetIsFirstVariableWire(true);
@@ -31,6 +36,16 @@ namespace Rebar.Compiler
         public override void UpdateFromFacadeInput()
         {
             // Nothing to do here; TrueVariable is already the same as FacadeVariable
+        }
+
+        public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable, TerminalTypeUnificationResults unificationResults)
+        {
+            ITypeUnificationResult unificationResult = unificationResults.GetTypeUnificationResult(
+                Terminal,
+                FacadeVariable.TypeVariableReference,
+                wireFacadeVariable.TypeVariableReference);
+            FacadeVariable.UnifyTypeVariableInto(wireFacadeVariable, unificationResult);
+            FacadeVariable.MergeInto(wireFacadeVariable);
         }
     }
 }

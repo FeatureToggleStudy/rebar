@@ -27,5 +27,7 @@ namespace Rebar.Compiler
         public abstract VariableReference TrueVariable { get; }
 
         public abstract void UpdateFromFacadeInput();
+
+        public abstract void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable, TerminalTypeUnificationResults unificationResults);
     }
 }

@@ -17,7 +17,7 @@ namespace Tests.Rebar.Unit
             TypeVariableReference literalReference = typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32);
             TypeVariableReference typeVariable = typeVariableSet.CreateReferenceToNewTypeVariable();
 
-            typeVariableSet.Unify(typeVariable, literalReference);
+            typeVariableSet.Unify(typeVariable, literalReference, new TestTypeUnificationResult());
 
             Assert.IsTrue(literalReference.RenderNIType().IsInt32());
             Assert.IsTrue(typeVariable.RenderNIType().IsInt32());
@@ -31,11 +31,37 @@ namespace Tests.Rebar.Unit
             TypeVariableReference typeVariable1 = typeVariableSet.CreateReferenceToNewTypeVariable(),
                 typeVariable2 = typeVariableSet.CreateReferenceToNewTypeVariable();
 
-            typeVariableSet.Unify(typeVariable2, typeVariable1);
-            typeVariableSet.Unify(typeVariable1, literalReference);
+            typeVariableSet.Unify(typeVariable2, typeVariable1, new TestTypeUnificationResult());
+            typeVariableSet.Unify(typeVariable1, literalReference, new TestTypeUnificationResult());
 
             Assert.IsTrue(typeVariable1.RenderNIType().IsInt32());
             Assert.IsTrue(typeVariable2.RenderNIType().IsInt32());
+        }
+
+        [TestMethod]
+        public void TwoDifferentLiteralTypes_Unify_TypeMismatchReported()
+        {
+            TypeVariableSet typeVariableSet = new TypeVariableSet();
+            TypeVariableReference literalReference1 = typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32),
+                literalReference2 = typeVariableSet.CreateReferenceToLiteralType(PFTypes.Boolean);
+            var testTypeUnificationResult = new TestTypeUnificationResult();
+
+            typeVariableSet.Unify(literalReference2, literalReference1, testTypeUnificationResult);
+
+            Assert.IsTrue(testTypeUnificationResult.TypeMismatch);
+        }
+
+        [TestMethod]
+        public void LiteralTypeAndConstructorType_Unify_TypeMismatchReported()
+        {
+            TypeVariableSet typeVariableSet = new TypeVariableSet();
+            TypeVariableReference literalReference = typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32),
+                constructorReference = typeVariableSet.CreateReferenceToConstructorType("Vector", literalReference);
+            var testTypeUnificationResult = new TestTypeUnificationResult();
+
+            typeVariableSet.Unify(constructorReference, literalReference, testTypeUnificationResult);
+
+            Assert.IsTrue(testTypeUnificationResult.TypeMismatch);
         }
 
         #region Constructor Types
@@ -50,75 +76,55 @@ namespace Tests.Rebar.Unit
             TypeVariableReference constructorType2 = typeVariableSet.CreateReferenceToConstructorType("Vector",
                 typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32));
 
-            typeVariableSet.Unify(constructorType1, constructorType2);
+            typeVariableSet.Unify(constructorType1, constructorType2, new TestTypeUnificationResult());
 
             Assert.IsTrue(innerTypeVariable.RenderNIType().IsInt32());
         }
 
-        #endregion
-
-        #region Possible Borrow Types
-
         [TestMethod]
-        public void PossibleImmutableBorrowTypeAndLiteralType_Unify_UnifiesTrueVariableTypeWithImmutableReferenceType()
+        public void TwoConstructorTypesWithSameConstructorNameAndDifferentInnerTypes_Unify_TypeMismatchReported()
         {
             TypeVariableSet typeVariableSet = new TypeVariableSet();
-            TypeVariableReference inputTypeReference = typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32);
-            VariableSet variableSet = new VariableSet(typeVariableSet);
-            PossibleBorrowSetup setup = SetupPossibleBorrow(typeVariableSet, variableSet, false);
+            TypeVariableReference constructorType1 = typeVariableSet.CreateReferenceToConstructorType("Vector",
+                typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32));
+            TypeVariableReference constructorType2 = typeVariableSet.CreateReferenceToConstructorType("Vector",
+                typeVariableSet.CreateReferenceToLiteralType(PFTypes.Boolean));
+            var typeUnificationResult = new TestTypeUnificationResult();
 
-            typeVariableSet.Unify(setup.PossibleBorrow, inputTypeReference);
+            typeVariableSet.Unify(constructorType1, constructorType2, typeUnificationResult);
 
-            Assert.IsTrue(setup.UnderlyingTypeVariable.RenderNIType().IsInt32());
-            // TODO: need to check that lifetime variable was unified with borrowLifetime            
+            Assert.IsTrue(typeUnificationResult.TypeMismatch);
         }
 
         [TestMethod]
-        public void PossibleImmutableBorrowTypeAndImmutableReferenceType_Unify_UnifiesTrueVariableTypeWithImmutableReferenceType()
+        public void TwoConstructorTypesWithDifferentConstructorNames_Unify_TypeMismatchReported()
         {
             TypeVariableSet typeVariableSet = new TypeVariableSet();
-            VariableSet variableSet = new VariableSet(typeVariableSet);
-            Lifetime referenceLifetime = variableSet.DefineLifetimeThatIsBoundedByDiagram(Enumerable.Empty<VariableReference>());
-            TypeVariableReference inputTypeReference = typeVariableSet.CreateReferenceToReferenceType(
-                false,
-                typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32),
-                typeVariableSet.CreateReferenceToLifetimeType(referenceLifetime));
-            PossibleBorrowSetup setup = SetupPossibleBorrow(typeVariableSet, variableSet, false);
+            TypeVariableReference constructorType1 = typeVariableSet.CreateReferenceToConstructorType("Vector",
+                typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32));
+            TypeVariableReference constructorType2 = typeVariableSet.CreateReferenceToConstructorType("Option",
+                typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32));
+            var typeUnificationResult = new TestTypeUnificationResult();
 
-            typeVariableSet.Unify(setup.PossibleBorrow, inputTypeReference);
+            typeVariableSet.Unify(constructorType1, constructorType2, typeUnificationResult);
 
-            Assert.IsTrue(setup.UnderlyingTypeVariable.RenderNIType().IsInt32());
-        }
-
-        private class PossibleBorrowSetup
-        {
-            public TypeVariableReference UnderlyingTypeVariable { get; set; }
-
-            public TypeVariableReference LifetimeTypeVariable { get; set; }
-
-            public TypeVariableReference ReferenceType { get; set; }
-
-            public TypeVariableReference PossibleBorrow { get; set; }
-
-            public Lifetime BorrowLifetime { get; set; }
-        }
-
-        private PossibleBorrowSetup SetupPossibleBorrow(TypeVariableSet typeVariableSet, VariableSet variableSet, bool mutableBorrow)
-        {
-            PossibleBorrowSetup possibleBorrowSetup = new PossibleBorrowSetup();
-            possibleBorrowSetup.UnderlyingTypeVariable = typeVariableSet.CreateReferenceToNewTypeVariable();
-            possibleBorrowSetup.LifetimeTypeVariable = typeVariableSet.CreateReferenceToNewTypeVariable();
-            possibleBorrowSetup.ReferenceType = typeVariableSet.CreateReferenceToReferenceType(
-                false, possibleBorrowSetup.UnderlyingTypeVariable, possibleBorrowSetup.LifetimeTypeVariable);
-            VariableReference facadeVariable = variableSet.CreateNewVariable(),
-                trueVariable = variableSet.CreateNewVariable();
-            trueVariable.AdoptTypeVariableReference(possibleBorrowSetup.ReferenceType);
-            possibleBorrowSetup.BorrowLifetime = variableSet.DefineLifetimeThatIsBoundedByDiagram(facadeVariable.ToEnumerable());
-            possibleBorrowSetup.PossibleBorrow = typeVariableSet.CreateReferenceToPossibleBorrowType(
-                false, facadeVariable, trueVariable, new Lazy<Lifetime>(() => possibleBorrowSetup.BorrowLifetime));
-            return possibleBorrowSetup;
+            Assert.IsTrue(typeUnificationResult.TypeMismatch);
         }
 
         #endregion
+    }
+
+    internal class TestTypeUnificationResult : ITypeUnificationResult
+    {
+        void ITypeUnificationResult.SetExpectedMutable()
+        {
+        }
+
+        void ITypeUnificationResult.SetTypeMismatch()
+        {
+            TypeMismatch = true;
+        }
+
+        public bool TypeMismatch { get; private set; }
     }
 }

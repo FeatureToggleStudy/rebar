@@ -410,13 +410,6 @@ namespace Rebar.Compiler
             MapTerminalsInOrder(node, terminateLifetimeDfir);
         }
 
-        public void VisitSelectReferenceNode(SourceModel.SelectReferenceNode selectReferenceNode)
-        {
-            var selectReferenceDfir = new Nodes.SelectReferenceNode(_currentDiagram);
-            _map.AddMapping(selectReferenceNode, selectReferenceDfir);
-            MapTerminalsInOrder(selectReferenceNode, selectReferenceDfir);
-        }
-
         public void VisitAssignNode(SourceModel.AssignNode assignNode)
         {
             var assignDfir = new Nodes.AssignNode(_currentDiagram);

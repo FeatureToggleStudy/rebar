@@ -29,6 +29,28 @@ namespace Rebar.SourceModel
         public override XName XmlElementName => XName.Get(ElementName, Function.ParsableNamespaceName);
     }
 
+    public class SelectReferenceNode : FunctionalNode
+    {
+        private const string ElementName = "SelectReferenceNode";
+
+        protected SelectReferenceNode()
+            : base(Signatures.SelectReferenceType)
+        {
+            Width = StockDiagramGeometries.GridSize * 8;
+        }
+
+        [XmlParserFactoryMethod(ElementName, Function.ParsableNamespaceName)]
+        public static SelectReferenceNode CreateSelectReferenceNode(IElementCreateInfo elementCreateInfo)
+        {
+            var selectReferenceNode = new SelectReferenceNode();
+            selectReferenceNode.Init(elementCreateInfo);
+            return selectReferenceNode;
+        }
+
+        /// <inheritdoc />
+        public override XName XmlElementName => XName.Get(ElementName, Function.ParsableNamespaceName);
+    }
+
     /// <summary>
     /// Testing node that prints a value to the debug output window.
     /// </summary>
@@ -238,6 +260,9 @@ namespace Rebar.SourceModel
             : base(Signatures.DefineMutatingUnaryFunction("Accumulate" + unaryOp.ToString(), unaryOp.GetExpectedInputType()))
         {
         }
+
+        /// <inheritdoc />
+        protected override float MinimumHeight => StockDiagramGeometries.GridSize * 4;
     }
 
     public class AccumulateIncrement : MutatingUnaryPrimitive

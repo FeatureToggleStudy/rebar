@@ -1,7 +1,7 @@
-﻿using NationalInstruments.DataTypes;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System;
 using System.Diagnostics;
+using NationalInstruments.DataTypes;
 
 namespace Rebar.Common
 {
@@ -15,6 +15,8 @@ namespace Rebar.Common
             public abstract string DebuggerDisplay { get; }
 
             public abstract NIType RenderNIType();
+
+            public abstract Lifetime Lifetime { get; }
         }
 
         private sealed class TypeVariable : TypeBase
@@ -32,6 +34,8 @@ namespace Rebar.Common
             {
                 return PFTypes.Void;
             }
+
+            public override Lifetime Lifetime => Lifetime.Empty;
         }
 
         private sealed class LiteralType : TypeBase
@@ -49,6 +53,8 @@ namespace Rebar.Common
             {
                 return Type;
             }
+
+            public override Lifetime Lifetime => Lifetime.Unbounded;
         }
 
         private sealed class ConstructorType : TypeBase
@@ -70,7 +76,7 @@ namespace Rebar.Common
                 NIType argumentNIType = Argument.RenderNIType();
                 switch (ConstructorName)
                 {
-                    case "Vec":
+                    case "Vector":
                         return argumentNIType.CreateVector();
                     case "Iterator":
                         return argumentNIType.CreateIterator();
@@ -82,28 +88,107 @@ namespace Rebar.Common
                         throw new NotSupportedException();
                 }
             }
+
+            public override Lifetime Lifetime => Argument.Lifetime;
         }
 
         private sealed class ReferenceType : TypeBase
         {
+            private abstract class Mutability
+            {
+                public abstract bool Mutable { get; }
+                public abstract void UnifyMutability(Mutability unifyWith);
+            }
+
+            private sealed class ConstantMutability : Mutability
+            {
+                public ConstantMutability(bool mutable)
+                {
+                    Mutable = mutable;
+                }
+
+                public override bool Mutable { get; }
+
+                public override void UnifyMutability(Mutability unifyWith)
+                {
+                    var unifyWithConstant = unifyWith as ConstantMutability;
+                    if (unifyWithConstant != null)
+                    {
+                        if (Mutable != unifyWithConstant.Mutable)
+                        {
+                            // type error
+                        }
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+
+            private sealed class VariableMutability : Mutability
+            {
+                private readonly TypeVariableReference _mutabilityVariable;
+
+                public VariableMutability(TypeVariableReference mutabilityVariable)
+                {
+                    _mutabilityVariable = mutabilityVariable;
+                }
+
+                public override void UnifyMutability(Mutability unifyWith)
+                {
+                    ConstantMutability constant = unifyWith as ConstantMutability;
+                    if (constant != null)
+                    {
+                        _mutabilityVariable.AndWith(constant.Mutable);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+
+                public override bool Mutable
+                {
+                    get
+                    {
+                        return _mutabilityVariable.Mutable;
+                    }
+                }
+            }
+
+            private readonly Mutability _mutability;
+
             public ReferenceType(bool mutable, TypeVariableReference underlyingType, TypeVariableReference lifetimeType)
             {
-                Mutable = mutable;
+                _mutability = new ConstantMutability(mutable);
                 UnderlyingType = underlyingType;
                 LifetimeType = lifetimeType;
             }
 
-            public bool Mutable { get; }
+            public ReferenceType(TypeVariableReference mutability, TypeVariableReference underlyingType, TypeVariableReference lifetimeType)
+            {
+                _mutability = new VariableMutability(mutability);
+                UnderlyingType = underlyingType;
+                LifetimeType = lifetimeType;
+            }
+
+            public bool Mutable => _mutability.Mutable;
 
             public TypeVariableReference UnderlyingType { get; }
 
             public TypeVariableReference LifetimeType { get; }
 
+            public void UnifyMutability(ReferenceType unifyWith)
+            {
+                _mutability.UnifyMutability(unifyWith._mutability);
+            }
+
             public override string DebuggerDisplay
             {
                 get
                 {
-                    string mut = Mutable ? "mut " : string.Empty;
+                    string mut = _mutability.Mutable ? "mut " : string.Empty;
                     return $"& ({LifetimeType.DebuggerDisplay}) {mut}{UnderlyingType.DebuggerDisplay}";
                 }
             }
@@ -111,8 +196,10 @@ namespace Rebar.Common
             public override NIType RenderNIType()
             {
                 NIType underlyingNIType = UnderlyingType.RenderNIType();
-                return Mutable ? underlyingNIType.CreateMutableReference() : underlyingNIType.CreateImmutableReference();
+                return _mutability.Mutable ? underlyingNIType.CreateMutableReference() : underlyingNIType.CreateImmutableReference();
             }
+
+            public override Lifetime Lifetime => LifetimeType.Lifetime;
         }
 
         private sealed class LifetimeTypeContainer : TypeBase
@@ -124,23 +211,27 @@ namespace Rebar.Common
                 _lazyNewLifetime = lazyNewLifetime;
             }
 
-            public Lifetime Lifetime { get; private set; }
+            public Lifetime LifetimeValue { get; private set; }
+
+            public override Lifetime Lifetime => LifetimeValue;
 
             public void AdoptLifetimeIfPossible(Lifetime lifetime)
             {
-                if (Lifetime == null)
+                if (LifetimeValue == null)
                 {
-                    Lifetime = lifetime;
+                    LifetimeValue = lifetime;
                 }
-                else if (Lifetime != lifetime)
+                else if (LifetimeValue != lifetime)
                 {
                     AdoptNewLifetime();
                 }
+                // TODO: instead of using a canned supertype lifetime, it would be good to construct new supertype
+                // lifetimes from whatever we get unified with on the fly
             }
 
             public void AdoptNewLifetime()
             {
-                Lifetime = _lazyNewLifetime.Value;
+                LifetimeValue = _lazyNewLifetime.Value;
             }
 
             public override string DebuggerDisplay
@@ -158,32 +249,50 @@ namespace Rebar.Common
             }
         }
 
-        private sealed class PossibleBorrowType : TypeBase
+        private sealed class MutabilityTypeVariable : TypeBase
         {
-            private readonly Lazy<Lifetime> _lazyNewLifetime;
+            private bool? _value;
 
-            public PossibleBorrowType(bool mutable, VariableReference borrowFrom, VariableReference borrowInto, Lazy<Lifetime> lazyNewLifetime)
+            public void AndWith(bool value)
             {
-                Mutable = mutable;
-                BorrowFrom = borrowFrom;
-                BorrowInto = borrowInto;
-                _lazyNewLifetime = lazyNewLifetime;
+                if (!_value.HasValue)
+                {
+                    _value = value;
+                }
+                else
+                {
+                    _value = (_value.Value && value);
+                }
             }
 
-            public bool Mutable { get; }
-
-            public VariableReference BorrowFrom { get; }
-
-            public VariableReference BorrowInto { get; }
-
-            public Lifetime NewLifetime => _lazyNewLifetime.Value;
+            public bool Mutable
+            {
+                get
+                {
+                    if (_value.HasValue)
+                    {
+                        return _value.Value;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Mutability has not been determined");
+                    }
+                }
+            }
 
             public override string DebuggerDisplay
             {
                 get
                 {
-                    string mutable = Mutable ? "mut" : "imm";
-                    return $"PossibleBorrow {mutable} {BorrowFrom.Id} -> {BorrowInto.Id}";
+                    throw new NotImplementedException();
+                }
+            }
+
+            public override Lifetime Lifetime
+            {
+                get
+                {
+                    throw new NotImplementedException();
                 }
             }
 
@@ -221,6 +330,11 @@ namespace Rebar.Common
             return CreateReferenceToNewType(new ReferenceType(mutable, underlyingType, lifetimeType));
         }
 
+        public TypeVariableReference CreateReferenceToPolymorphicReferenceType(TypeVariableReference mutabilityType, TypeVariableReference underlyingType, TypeVariableReference lifetimeType)
+        {
+            return CreateReferenceToNewType(new ReferenceType(mutabilityType, underlyingType, lifetimeType));
+        }
+
         public TypeVariableReference CreateReferenceToLifetimeType(Lazy<Lifetime> lazyNewLifetime)
         {
             return CreateReferenceToNewType(new LifetimeTypeContainer(lazyNewLifetime));
@@ -233,9 +347,9 @@ namespace Rebar.Common
             return CreateReferenceToNewType(lifetimeTypeContainer);
         }
 
-        public TypeVariableReference CreateReferenceToPossibleBorrowType(bool mutable, VariableReference borrowFrom, VariableReference borrowInto, Lazy<Lifetime> lazyNewLifetime)
+        public TypeVariableReference CreateReferenceToMutabilityType()
         {
-            return CreateReferenceToNewType(new PossibleBorrowType(mutable, borrowFrom, borrowInto, lazyNewLifetime));
+            return CreateReferenceToNewType(new MutabilityTypeVariable());
         }
 
         private TypeVariableReference CreateReferenceToNewType(TypeBase type)
@@ -277,20 +391,10 @@ namespace Rebar.Common
             _types.Remove(typeToMerge);
         }
 
-        public void Unify(TypeVariableReference toUnify, TypeVariableReference toUnifyWith)
+        public void Unify(TypeVariableReference toUnify, TypeVariableReference toUnifyWith, ITypeUnificationResult unificationResult)
         {
             TypeBase toUnifyTypeBase = GetTypeForTypeVariableReference(toUnify),
                 toUnifyWithTypeBase = GetTypeForTypeVariableReference(toUnifyWith);
-            if (toUnifyTypeBase is PossibleBorrowType && !(toUnifyWithTypeBase is TypeVariable))
-            {
-                UnifyPossibleBorrowType(toUnify, toUnifyWith);
-                return;
-            }
-            if (toUnifyWithTypeBase is PossibleBorrowType && !(toUnifyTypeBase is TypeVariable))
-            {
-                UnifyPossibleBorrowType(toUnifyWith, toUnify);
-                return;
-            }
 
             LiteralType toUnifyLiteral = toUnifyTypeBase as LiteralType,
                 toUnifyWithLiteral = toUnifyWithTypeBase as LiteralType;
@@ -301,7 +405,7 @@ namespace Rebar.Common
                     MergeTypeVariableIntoTypeVariable(toUnify, toUnifyWith);
                     return;
                 }
-                // type error
+                unificationResult.SetTypeMismatch();
                 return;
             }
 
@@ -311,11 +415,11 @@ namespace Rebar.Common
             {
                 if (toUnifyConstructor.ConstructorName == toUnifyWithConstructor.ConstructorName)
                 {
-                    Unify(toUnifyConstructor.Argument, toUnifyWithConstructor.Argument);
+                    Unify(toUnifyConstructor.Argument, toUnifyWithConstructor.Argument, unificationResult);
                     MergeTypeVariableIntoTypeVariable(toUnify, toUnifyWith);
                     return;
                 }
-                // type error
+                unificationResult.SetTypeMismatch();
                 return;
             }
 
@@ -323,13 +427,9 @@ namespace Rebar.Common
                 toUnifyWithReference = toUnifyWithTypeBase as ReferenceType;
             if (toUnifyReference != null && toUnifyWithReference != null)
             {
-                if (toUnifyReference.Mutable != toUnifyWithReference.Mutable)
-                {
-                    // type error
-                    return;
-                }
-                Unify(toUnifyReference.UnderlyingType, toUnifyWithReference.UnderlyingType);
-                Unify(toUnifyReference.LifetimeType, toUnifyWithReference.LifetimeType);
+                toUnifyReference.UnifyMutability(toUnifyWithReference);
+                Unify(toUnifyReference.UnderlyingType, toUnifyWithReference.UnderlyingType, unificationResult);
+                Unify(toUnifyReference.LifetimeType, toUnifyWithReference.LifetimeType, unificationResult);
                 return;
             }
 
@@ -338,7 +438,7 @@ namespace Rebar.Common
             if (toUnifyLifetime != null && toUnifyWithLifetime != null)
             {
                 // toUnify is the possible supertype container here
-                toUnifyLifetime.AdoptLifetimeIfPossible(toUnifyWithLifetime.Lifetime);
+                toUnifyLifetime.AdoptLifetimeIfPossible(toUnifyWithLifetime.LifetimeValue);
                 return;
             }
 
@@ -360,67 +460,8 @@ namespace Rebar.Common
                 return;
             }
 
-            // type error
+            unificationResult.SetTypeMismatch();
             return;
-        }
-
-        private void UnifyPossibleBorrowType(TypeVariableReference possibleBorrow, TypeVariableReference other)
-        {
-            PossibleBorrowType possibleBorrowType = (PossibleBorrowType)GetTypeForTypeVariableReference(possibleBorrow);
-            TypeBase otherTypeBase = GetTypeForTypeVariableReference(other);
-            ReferenceType otherReferenceType = otherTypeBase as ReferenceType;
-            if (possibleBorrowType.Mutable)
-            {
-                if (otherReferenceType != null)
-                {
-                    if (otherReferenceType.Mutable)
-                    {
-                        MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
-
-                        possibleBorrowType.BorrowInto.MergeInto(possibleBorrowType.BorrowFrom);
-                        return;
-                    }
-
-                    // type error
-                    return;
-                }
-                MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
-
-                TypeVariableReference mutRef = CreateReferenceToReferenceType(true, other, CreateReferenceToLifetimeType(possibleBorrowType.NewLifetime));
-                Unify(possibleBorrowType.BorrowInto.TypeVariableReference, mutRef);
-                // TODO: after unifying these two, might be good to remove mutRef--I guess by merging?
-                // somehow tell facade associated with possibleBorrowType that a borrow is required
-            }
-            else
-            {
-                TypeVariableReference immRef;
-                if (otherReferenceType != null)
-                {
-                    if (!otherReferenceType.Mutable)
-                    {
-                        MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
-
-                        Unify(possibleBorrowType.BorrowInto.TypeVariableReference, other);
-                        possibleBorrowType.BorrowInto.MergeInto(possibleBorrowType.BorrowFrom);
-                        return;
-                    }
-                    MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
-
-                    immRef = CreateReferenceToReferenceType(false, otherReferenceType.UnderlyingType, CreateReferenceToLifetimeType(possibleBorrowType.NewLifetime));
-                    Unify(possibleBorrowType.BorrowInto.TypeVariableReference, immRef);
-                    // TODO: after unifying these two, might be good to remove immRef--I guess by merging?
-                    // Or should unifying two Constructor types merge them after unifying their Arguments?
-                    // somehow tell facade associated with possibleBorrowType that a borrow is required
-                    return;
-                }
-                MergeTypeVariableIntoTypeVariable(possibleBorrow, other);
-
-                // each of these TODOs should be basically a constant lifetime type of the associated lazy new lifetime
-                immRef = CreateReferenceToReferenceType(false, other, CreateReferenceToLifetimeType(possibleBorrowType.NewLifetime));
-                Unify(possibleBorrowType.BorrowInto.TypeVariableReference, immRef);
-                // TODO: after unifying these two, might be good to remove immRef--I guess by merging?
-                // somehow tell facade associated with possibleBorrowType that a borrow is required
-            }
         }
 
         public string GetDebuggerDisplay(TypeVariableReference typeVariableReference)
@@ -433,6 +474,48 @@ namespace Rebar.Common
         {
             TypeBase typeBase = GetTypeForTypeVariableReference(typeVariableReference);
             return typeBase?.RenderNIType() ?? PFTypes.Void;
+        }
+
+        public Lifetime GetLifetime(TypeVariableReference typeVariableReference)
+        {
+            TypeBase typeBase = GetTypeForTypeVariableReference(typeVariableReference);
+            return typeBase?.Lifetime ?? Lifetime.Empty;
+        }
+
+        public bool TryDecomposeReferenceType(TypeVariableReference type, out TypeVariableReference underlyingType, out TypeVariableReference lifetimeType, out bool mutable)
+        {
+            TypeBase typeBase = GetTypeForTypeVariableReference(type);
+            var referenceType = typeBase as ReferenceType;
+            if (referenceType == null)
+            {
+                underlyingType = lifetimeType = default(TypeVariableReference);
+                mutable = false;
+                return false;
+            }
+            underlyingType = referenceType.UnderlyingType;
+            lifetimeType = referenceType.LifetimeType;
+            mutable = referenceType.Mutable;
+            return true;
+        }
+
+        public void AndWith(TypeVariableReference type, bool value)
+        {
+            var mutabilityType = GetTypeForTypeVariableReference(type) as MutabilityTypeVariable;
+            if (mutabilityType == null)
+            {
+                throw new ArgumentException("Type should be a mutability type");
+            }
+            mutabilityType.AndWith(value);
+        }
+
+        public bool GetMutable(TypeVariableReference type)
+        {
+            var mutabilityType = GetTypeForTypeVariableReference(type) as MutabilityTypeVariable;
+            if (mutabilityType == null)
+            {
+                throw new ArgumentException("Type should be a mutability type");
+            }
+            return mutabilityType.Mutable;
         }
     }
 
@@ -452,5 +535,12 @@ namespace Rebar.Common
         public string DebuggerDisplay => TypeVariableSet.GetDebuggerDisplay(this);
 
         public NIType RenderNIType() => TypeVariableSet.RenderNIType(this);
+
+        public Lifetime Lifetime => TypeVariableSet.GetLifetime(this);
+
+        // TODO: these two should hopefully be temporary
+        public void AndWith(bool value) => TypeVariableSet.AndWith(this, value);
+
+        public bool Mutable => TypeVariableSet.GetMutable(this);
     }
 }

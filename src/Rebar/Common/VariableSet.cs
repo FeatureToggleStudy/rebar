@@ -121,6 +121,13 @@ namespace Rebar.Common
             return new VariableReference(this, id);
         }
 
+        public VariableReference CreateNewVariableForUnwiredTerminal()
+        {
+            VariableReference newVariable = CreateNewVariable();
+            newVariable.AdoptTypeVariableReference(TypeVariableSet.CreateReferenceToLiteralType(PFTypes.Void));
+            return newVariable;
+        }
+
         public IEnumerable<VariableReference> GetUniqueVariableReferences()
         {
             return _variables.Select(GetExistingReferenceForVariable);
@@ -130,13 +137,6 @@ namespace Rebar.Common
         {
             Variable mergeWithVariable = GetVariableForVariableReference(mergeWith),
                 toMergeVariable = GetVariableForVariableReference(toMerge);
-
-            // TODO: eventually shouldn't need this check
-            if (toMergeVariable.TypeVariableReference.TypeVariableSet != null
-                && mergeWithVariable.TypeVariableReference.TypeVariableSet != null)
-            {
-                TypeVariableSet.Unify(toMergeVariable.TypeVariableReference, mergeWithVariable.TypeVariableReference);
-            }
 
             for (int i = 0; i < _variableReferences.Count; ++i)
             {

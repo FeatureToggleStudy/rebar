@@ -102,6 +102,7 @@
   <ItemGroup>
     <Compile Include="Common\BoundedLifetimeGraph.cs" />
     <Compile Include="Common\InputReferenceMutability.cs" />
+    <Compile Include="Common\ITypeUnificationResult.cs" />
     <Compile Include="Common\PrimitiveOps.cs" />
     <Compile Include="Common\Signatures.cs" />
     <Compile Include="Common\TypeVariableSet.cs" />
@@ -131,7 +132,6 @@
     <Compile Include="Compiler\Nodes\LoopConditionTunnel.cs" />
     <Compile Include="Compiler\Nodes\BorderNode.cs" />
     <Compile Include="Compiler\Nodes\DfirNode.cs" />
-    <Compile Include="Compiler\Nodes\SelectReferenceNode.cs" />
     <Compile Include="Compiler\Nodes\SomeConstructorNode.cs" />
     <Compile Include="Compiler\Nodes\TerminateLifetimeNode.cs" />
     <Compile Include="Compiler\Nodes\TerminateLifetimeTunnel.cs" />
@@ -148,6 +148,7 @@
     <Compile Include="Compiler\SimpleTerminalFacade.cs" />
     <Compile Include="Compiler\TerminalFacade.cs" />
     <Compile Include="Compiler\TerminalId.cs" />
+    <Compile Include="Compiler\TerminalTypeUnificationResults.cs" />
     <Compile Include="Compiler\TerminateLifetimeOutputTerminalFacade.cs" />
     <Compile Include="RebarTarget\Allocator.cs" />
     <Compile Include="RebarTarget\ApplicationCompileHandlerFactory.cs" />
@@ -254,7 +255,6 @@
     <Compile Include="SourceModel\CaseStructure.cs" />
     <Compile Include="SourceModel\FlatSequence.cs" />
     <Compile Include="SourceModel\SimpleNode.cs" />
-    <Compile Include="SourceModel\SelectReferenceNode.cs" />
     <Compile Include="SourceModel\SomeConstructorNode.cs" />
     <Compile Include="SourceModel\TerminateLifetime.cs" />
     <Compile Include="SourceModel\FlatSequenceTerminateLifetimeTunnel.cs" />

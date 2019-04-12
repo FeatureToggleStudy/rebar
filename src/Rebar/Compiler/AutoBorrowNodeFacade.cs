@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using NationalInstruments.Dfir;
 using Rebar.Common;
@@ -44,9 +45,9 @@ namespace Rebar.Compiler
             }
         }
 
-        public ReferenceInputTerminalLifetimeGroup CreateInputLifetimeGroup(InputReferenceMutability mutability)
+        public ReferenceInputTerminalLifetimeGroup CreateInputLifetimeGroup(InputReferenceMutability mutability, Lazy<Lifetime> lazyNewLifetime)
         {
-            var lifetimeGroup = new ReferenceInputTerminalLifetimeGroup(this, mutability);
+            var lifetimeGroup = new ReferenceInputTerminalLifetimeGroup(this, mutability, lazyNewLifetime);
             _lifetimeGroups = _lifetimeGroups ?? new List<ReferenceInputTerminalLifetimeGroup>();
             _lifetimeGroups.Add(lifetimeGroup);
             return lifetimeGroup;
