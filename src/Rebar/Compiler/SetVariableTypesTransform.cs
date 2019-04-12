@@ -25,42 +25,12 @@ namespace Rebar.Compiler
 
         protected override void VisitWire(Wire wire)
         {
-#if FALSE
-            // Merge together all connected wire and node terminals
             foreach (var wireTerminal in wire.Terminals)
             {
-                var connectedNodeTerminal = wireTerminal.ConnectedTerminal;
-                if (connectedNodeTerminal != null)
-                {
-                    if (wireTerminal.Direction == Direction.Input)
-                    {
-                        wireTerminal.GetFacadeVariable().MergeInto(connectedNodeTerminal.GetFacadeVariable());
-                    }
-                    else
-                    {
-                        connectedNodeTerminal.GetFacadeVariable().MergeInto(wireTerminal.GetFacadeVariable());
-                    }
-                }
+                VariableReference variable = wireTerminal.GetFacadeVariable();
+                TypeVariableReference typeReference = variable.TypeVariableReference;
+                variable.SetTypeAndLifetime(typeReference.RenderNIType(), typeReference.Lifetime);
             }
-
-            // If source is available and there are copied sinks, set source variable type and lifetime on copied sinks
-            if (!wire.SinkTerminals.HasMoreThan(1))
-            {
-                return;
-            }
-            Terminal sourceTerminal;
-            wire.TryGetSourceTerminal(out sourceTerminal);
-            VariableReference? sourceVariable = sourceTerminal?.GetFacadeVariable();
-            if (sourceVariable == null)
-            {
-                return;
-            }
-            foreach (var sinkVariable in wire.SinkTerminals.Skip(1).Select(VariableExtensions.GetFacadeVariable))
-            {
-                sinkVariable.SetTypeAndLifetime(sourceVariable.Value.Type, sourceVariable.Value.Lifetime);
-                // TODO: need to unify the sink type with the source type?
-            }
-#endif
         }
 
         protected override void VisitBorderNode(NationalInstruments.Dfir.BorderNode borderNode)
@@ -133,7 +103,7 @@ namespace Rebar.Compiler
                 .Select(inputVariable => GetBorrowedOutputType(inputVariable, explicitBorrowNode.BorrowMode, explicitBorrowNode.AlwaysCreateReference));
 
             Lifetime firstLifetime = inputVariables.First().Lifetime;
-            Lifetime outputLifetime = explicitBorrowNode.AlwaysBeginLifetime 
+            Lifetime outputLifetime = explicitBorrowNode.AlwaysBeginLifetime
                 || !((firstLifetime?.IsBounded ?? false) && inputVariables.All(inputVariable => inputVariable.Lifetime == firstLifetime))
                 ? explicitBorrowNode.ParentDiagram.GetVariableSet().DefineLifetimeThatIsBoundedByDiagram(inputVariables)
                 : firstLifetime;
