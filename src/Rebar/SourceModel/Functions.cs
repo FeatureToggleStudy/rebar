@@ -36,6 +36,7 @@ namespace Rebar.SourceModel
         protected SelectReferenceNode()
             : base(Signatures.SelectReferenceType)
         {
+            Width = StockDiagramGeometries.GridSize * 8;
         }
 
         [XmlParserFactoryMethod(ElementName, Function.ParsableNamespaceName)]
