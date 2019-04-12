@@ -62,12 +62,7 @@ namespace Rebar.Compiler
             TypeVariableSet typeVariableSet = wire.GetTypeVariableSet();
             foreach (var sinkTerminal in wire.SinkTerminals.Skip(1))
             {
-                VariableReference sinkVariable = sinkTerminal.GetFacadeVariable();
-                ITypeUnificationResult unificationResult = _typeUnificationResults.GetTypeUnificationResult(
-                    sinkTerminal,
-                    sinkVariable.TypeVariableReference,
-                    sourceVariable.Value.TypeVariableReference);
-                sinkVariable.UnifyTypeVariableInto(sourceVariable.Value, unificationResult);
+                sinkTerminal.GetFacadeVariable().AdoptTypeVariableReference(sourceVariable.Value.TypeVariableReference);
             }
         }
     }

@@ -11,7 +11,7 @@ using Signatures = Rebar.Common.Signatures;
 namespace Tests.Rebar.Unit.Compiler
 {
     [TestClass]
-    public class FunctionalNodeDfirTests
+    public class FunctionalNodeDfirTests : CompilerTestBase
     {
         #region Creation
 
@@ -370,30 +370,6 @@ namespace Tests.Rebar.Unit.Compiler
         }
 
 #endregion
-
-        private void RunSemanticAnalysisUpToCreateNodeFacades(DfirRoot dfirRoot, NationalInstruments.Compiler.CompileCancellationToken cancellationToken = null)
-        {
-            ExecutionOrderSortingVisitor.SortDiagrams(dfirRoot);
-            cancellationToken = cancellationToken ?? new NationalInstruments.Compiler.CompileCancellationToken();
-            new CreateNodeFacadesTransform().Execute(dfirRoot, cancellationToken);
-        }
-
-        private void RunSemanticAnalysisUpToSetVariableTypes(DfirRoot dfirRoot, NationalInstruments.Compiler.CompileCancellationToken cancellationToken = null, TerminalTypeUnificationResults typeUnificationResults = null)
-        {
-            cancellationToken = cancellationToken ?? new NationalInstruments.Compiler.CompileCancellationToken();
-            RunSemanticAnalysisUpToCreateNodeFacades(dfirRoot, cancellationToken);
-            typeUnificationResults = typeUnificationResults ?? new TerminalTypeUnificationResults();
-            new MergeVariablesAcrossWiresTransform(typeUnificationResults).Execute(dfirRoot, cancellationToken);
-            new SetVariableTypesAndLifetimesTransform().Execute(dfirRoot, cancellationToken);
-        }
-
-        private void RunSemanticAnalysisUpToValidation(DfirRoot dfirRoot)
-        {
-            var cancellationToken = new NationalInstruments.Compiler.CompileCancellationToken();
-            var typeUnificationResults = new TerminalTypeUnificationResults();
-            RunSemanticAnalysisUpToSetVariableTypes(dfirRoot, cancellationToken, typeUnificationResults);
-            new ValidateVariableUsagesTransform(typeUnificationResults).Execute(dfirRoot, cancellationToken);
-        }
 
         private void ConnectConstantToInputTerminal(Terminal inputTerminal, NIType variableType, bool mutable)
         {
