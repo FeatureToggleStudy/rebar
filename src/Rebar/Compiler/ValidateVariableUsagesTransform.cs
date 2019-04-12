@@ -138,8 +138,10 @@ namespace Rebar.Compiler
             foreach (var inputTerminalPair in functionalNode.InputTerminals.Zip(Signatures.GetSignatureForNIType(functionalNode.Signature).Inputs))
             {
                 Terminal inputTerminal = inputTerminalPair.Key;
-                inputTerminal.TestRequiredTerminalConnected();
-                _typeUnificationResults.SetMessagesOnTerminal(inputTerminal);
+                if (inputTerminal.TestRequiredTerminalConnected())
+                {
+                    _typeUnificationResults.SetMessagesOnTerminal(inputTerminal);
+                }
             }
 
             if (functionalNode.RequiredFeatureToggles.Any(feature => !FeatureToggleSupport.IsFeatureEnabled(feature)))
@@ -178,16 +180,6 @@ namespace Rebar.Compiler
             var validator = new VariableUsageValidator(inputTerminal, true, false);
             validator.TestVariableIsOwnedType();
             validator.TestExpectedUnderlyingType(PFTypes.Boolean);
-            return true;
-        }
-
-        public bool VisitSelectReferenceNode(SelectReferenceNode selectReferenceNode)
-        {
-            VariableUsageValidator validator1 = selectReferenceNode.Terminals[1].GetValidator();
-            VariableUsageValidator validator2 = selectReferenceNode.Terminals[2].GetValidator();
-            validator2.TestSameUnderlyingTypeAs(validator1);
-            VariableUsageValidator selectorValidator = selectReferenceNode.Terminals[0].GetValidator();
-            selectorValidator.TestExpectedUnderlyingType(PFTypes.Boolean);
             return true;
         }
 

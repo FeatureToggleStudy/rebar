@@ -223,12 +223,6 @@ namespace Rebar.RebarTarget
             return true;
         }
 
-        public bool VisitSelectReferenceNode(SelectReferenceNode selectReferenceNode)
-        {
-            CreateLocalAllocationForVariable(selectReferenceNode.OutputTerminals.ElementAt(1).GetTrueVariable());
-            return true;
-        }
-
         public bool VisitTerminateLifetimeNode(TerminateLifetimeNode terminateLifetimeNode)
         {
             return true;
