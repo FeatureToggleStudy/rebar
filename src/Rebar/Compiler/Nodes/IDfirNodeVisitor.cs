@@ -5,7 +5,6 @@ namespace Rebar.Compiler.Nodes
 {
     internal interface IDfirNodeVisitor<T>
     {
-        T VisitAssignNode(AssignNode assignNode);
         T VisitBorrowTunnel(BorrowTunnel borrowTunnel);
         T VisitConstant(Constant constant);
         T VisitCreateCellNode(CreateCellNode createCellNode);

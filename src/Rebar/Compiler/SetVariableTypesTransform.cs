@@ -41,12 +41,6 @@ namespace Rebar.Compiler
             this.VisitRebarNode(borderNode);
         }
 
-        public bool VisitAssignNode(AssignNode assignNode)
-        {
-            // This node does not create any new variables.
-            return true;
-        }
-
         public bool VisitBorrowTunnel(BorrowTunnel borrowTunnel)
         {
             Terminal inputTerminal = borrowTunnel.Terminals.ElementAt(0),

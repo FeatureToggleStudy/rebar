@@ -22,9 +22,12 @@ namespace Rebar.RebarTarget
             _functionalNodeCompilers = new Dictionary<string, Action<FunctionCompiler, FunctionalNode>>();
             _functionalNodeCompilers["ImmutPass"] = CompileNothing;
             _functionalNodeCompilers["MutPass"] = CompileNothing;
+
+            _functionalNodeCompilers["Assign"] = CompileAssign;
             _functionalNodeCompilers["CreateCopy"] = CompileCreateCopy;
             _functionalNodeCompilers["SelectReference"] = CompileSelectReference;
             _functionalNodeCompilers["Output"] = CompileOutput;
+            _functionalNodeCompilers["SomeConstructor"] = CompileSomeConstructor;
             _functionalNodeCompilers["VectorCreate"] = CompileNothing;
             _functionalNodeCompilers["VectorInsert"] = CompileNothing;
 
@@ -49,6 +52,16 @@ namespace Rebar.RebarTarget
 
         private static void CompileNothing(FunctionCompiler compiler, FunctionalNode noopNode)
         {
+        }
+
+        private static void CompileAssign(FunctionCompiler compiler, FunctionalNode assignNode)
+        {
+            VariableReference assignee = assignNode.InputTerminals.ElementAt(0).GetTrueVariable(),
+                value = assignNode.InputTerminals.ElementAt(1).GetTrueVariable();
+            compiler.LoadValueAsReference(assignee);
+            compiler.LoadLocalAllocationReference(value);
+            compiler._builder.EmitDerefInteger();
+            compiler._builder.EmitStoreInteger();
         }
 
         private static void CompileCreateCopy(FunctionCompiler compiler, FunctionalNode createCopyNode)
@@ -278,17 +291,6 @@ namespace Rebar.RebarTarget
                 default:
                     throw new NotImplementedException();
             }
-        }
-
-        public bool VisitAssignNode(AssignNode assignNode)
-        {
-            VariableReference assignee = assignNode.InputTerminals.ElementAt(0).GetTrueVariable(),
-                value = assignNode.InputTerminals.ElementAt(1).GetTrueVariable();
-            LoadValueAsReference(assignee);
-            LoadLocalAllocationReference(value);
-            _builder.EmitDerefInteger();
-            _builder.EmitStoreInteger();
-            return true;
         }
 
         public bool VisitBorrowTunnel(BorrowTunnel borrowTunnel)

@@ -90,24 +90,6 @@ namespace Rebar.Compiler
             }
         }
 
-        bool IDfirNodeVisitor<bool>.VisitAssignNode(AssignNode assignNode)
-        {
-            Terminal assigneeInput = assignNode.InputTerminals.ElementAt(0),
-                newValueInput = assignNode.InputTerminals.ElementAt(1),
-                assigneeOutput = assignNode.OutputTerminals.ElementAt(0);
-            var lifetimeGroup = new LifetimeTypeVariableGroup(assigneeInput.GetVariableSet());
-            _nodeFacade
-                .CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable, lifetimeGroup.LazyNewLifetime)
-                .AddTerminalFacade(assigneeInput, assigneeOutput);
-            _nodeFacade[newValueInput] = new SimpleTerminalFacade(newValueInput);
-
-            TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-            lifetimeGroup.CreateReferenceTypeForFacade(_nodeFacade[assigneeInput], InputReferenceMutability.RequireMutable, dataTypeVariable);
-            _nodeFacade[newValueInput].FacadeVariable.AdoptTypeVariableReference(dataTypeVariable);
-
-            return true;
-        }
-
         bool IDfirNodeVisitor<bool>.VisitConstant(Constant constant)
         {
             Terminal valueOutput = constant.OutputTerminals.ElementAt(0);

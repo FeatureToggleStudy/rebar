@@ -121,11 +121,6 @@ namespace Rebar.RebarTarget
         // This visitor implementation parallels that of SetVariableTypesTransform:
         // For each variable created by a visited node, this should determine the appropriate ValueSource for that variable.
 
-        public bool VisitAssignNode(AssignNode assignNode)
-        {
-            return true;
-        }
-
         public bool VisitBorrowTunnel(BorrowTunnel borrowTunnel)
         {
             Terminal inputTerminal = borrowTunnel.Terminals.ElementAt(0),

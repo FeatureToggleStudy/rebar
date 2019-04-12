@@ -8,6 +8,30 @@ namespace Rebar.SourceModel
 {
     #region Value manipulation
 
+    /// <summary>
+    /// Node that consumes one variable and assigns its value into another, whose old value is dropped.
+    /// </summary>
+    public class AssignNode : FunctionalNode
+    {
+        private const string ElementName = "AssignNode";
+
+        protected AssignNode()
+            : base(Signatures.AssignType)
+        {
+        }
+
+        [XmlParserFactoryMethod(ElementName, Function.ParsableNamespaceName)]
+        public static AssignNode CreateAssignNode(IElementCreateInfo elementCreateInfo)
+        {
+            var assignNode = new AssignNode();
+            assignNode.Init(elementCreateInfo);
+            return assignNode;
+        }
+
+        /// <inheritdoc />
+        public override XName XmlElementName => XName.Get(ElementName, Function.ParsableNamespaceName);
+    }
+
     public class CreateCopyNode : FunctionalNode
     {
         private const string ElementName = "CreateCopyNode";

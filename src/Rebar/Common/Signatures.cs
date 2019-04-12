@@ -72,6 +72,18 @@ namespace Rebar.Common
                 "valueRef");
             MutablePassthroughType = functionTypeBuilder.CreateType();
 
+            functionTypeBuilder = PFTypes.Factory.DefineFunction("Assign");
+            tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                tDataParameter.CreateMutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife")),
+                "assigneeRef");
+            AddInputParameter(
+                functionTypeBuilder,
+                tDataParameter,
+                "value");
+            AssignType = functionTypeBuilder.CreateType();
+
             functionTypeBuilder = PFTypes.Factory.DefineFunction("CreateCopy");
             // TODO: constrain TData to be Copy
             tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
@@ -176,6 +188,8 @@ namespace Rebar.Common
         public static NIType ImmutablePassthroughType { get; }
 
         public static NIType MutablePassthroughType { get; }
+
+        public static NIType AssignType { get; }
 
         public static NIType CreateCopyType { get; }
 
