@@ -30,6 +30,8 @@ namespace Rebar.RebarTarget
             _functionalNodeCompilers["SomeConstructor"] = CompileSomeConstructor;
             _functionalNodeCompilers["VectorCreate"] = CompileNothing;
             _functionalNodeCompilers["VectorInsert"] = CompileNothing;
+            _functionalNodeCompilers["CreateLockingCell"] = CompileNothing;
+            _functionalNodeCompilers["CreateNonLockingCell"] = CompileNothing;
 
             _functionalNodeCompilers["Increment"] = (_, __) => CompilePureUnaryPrimitive(_, __, UnaryPrimitiveOps.Increment);
             _functionalNodeCompilers["Not"] = (_, __) => CompilePureUnaryPrimitive(_, __, UnaryPrimitiveOps.Not);
@@ -335,11 +337,6 @@ namespace Rebar.RebarTarget
                 _builder.EmitStoreInteger();
             }
             return true;
-        }
-
-        public bool VisitCreateCellNode(CreateCellNode createCellNode)
-        {
-            throw new NotImplementedException();
         }
 
         public bool VisitDropNode(DropNode dropNode)

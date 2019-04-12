@@ -90,13 +90,6 @@ namespace Rebar.Compiler
             return true;
         }
 
-        public bool VisitCreateCellNode(CreateCellNode createCellNode)
-        {
-            VariableUsageValidator validator = createCellNode.Terminals[0].GetValidator();
-            validator.TestVariableIsOwnedType();
-            return true;
-        }
-
         public bool VisitDropNode(DropNode dropNode)
         {
             VariableUsageValidator validator = dropNode.Terminals[0].GetValidator();

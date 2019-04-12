@@ -7,7 +7,6 @@ namespace Rebar.Compiler.Nodes
     {
         T VisitBorrowTunnel(BorrowTunnel borrowTunnel);
         T VisitConstant(Constant constant);
-        T VisitCreateCellNode(CreateCellNode createCellNode);
         T VisitDropNode(DropNode dropNode);
         T VisitExplicitBorrowNode(ExplicitBorrowNode explicitBorrowNode);
         T VisitFunctionalNode(FunctionalNode functionalNode);

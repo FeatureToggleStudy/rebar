@@ -591,6 +591,64 @@ namespace Rebar.SourceModel
 
     #endregion
 
+    #region Cell
+
+    public class CreateLockingCell : FunctionalNode
+    {
+        private const string ElementName = "CreateLockingCell";
+
+        protected CreateLockingCell()
+            : base(Signatures.CreateLockingCellType)
+        {
+        }
+
+        [XmlParserFactoryMethod(ElementName, Function.ParsableNamespaceName)]
+        public static CreateLockingCell CreateCreateLockingCell(IElementCreateInfo elementCreateInfo)
+        {
+            var createLockingCell = new CreateLockingCell();
+            createLockingCell.Init(elementCreateInfo);
+            return createLockingCell;
+        }
+
+        /// <inheritdoc />
+        public override XName XmlElementName => XName.Get(ElementName, Function.ParsableNamespaceName);
+
+        /// <inheritdoc />
+        protected override float MinimumHeight => StockDiagramGeometries.GridSize * 4;
+
+        /// <inheritdoc />
+        public override IEnumerable<string> RequiredFeatureToggles => new[] { RebarFeatureToggles.CellDataType };
+    }
+
+    public class CreateNonLockingCell : FunctionalNode
+    {
+        private const string ElementName = "CreateNonLockingCell";
+
+        protected CreateNonLockingCell()
+            : base(Signatures.CreateNonLockingCellType)
+        {
+        }
+
+        [XmlParserFactoryMethod(ElementName, Function.ParsableNamespaceName)]
+        public static CreateNonLockingCell CreateCreateNonLockingCell(IElementCreateInfo elementCreateInfo)
+        {
+            var createNonLockingCell = new CreateNonLockingCell();
+            createNonLockingCell.Init(elementCreateInfo);
+            return createNonLockingCell;
+        }
+
+        /// <inheritdoc />
+        public override XName XmlElementName => XName.Get(ElementName, Function.ParsableNamespaceName);
+
+        /// <inheritdoc />
+        protected override float MinimumHeight => StockDiagramGeometries.GridSize * 4;
+
+        /// <inheritdoc />
+        public override IEnumerable<string> RequiredFeatureToggles => new[] { RebarFeatureToggles.CellDataType };
+    }
+
+    #endregion
+
     #region Test nodes
 
     public class ImmutablePassthroughNode : FunctionalNode

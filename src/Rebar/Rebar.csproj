@@ -116,7 +116,6 @@
     <Compile Include="Compiler\FunctionSupportedTargetTransform.cs" />
     <Compile Include="Compiler\MergeVariablesAcrossWiresTransform.cs" />
     <Compile Include="Compiler\Nodes\BorrowTunnel.cs" />
-    <Compile Include="Compiler\Nodes\CreateCellNode.cs" />
     <Compile Include="Compiler\Nodes\DropNode.cs" />
     <Compile Include="Compiler\Nodes\ExplicitBorrowNode.cs" />
     <Compile Include="Compiler\Nodes\ExplicitUnborrowNode.cs" />
@@ -227,7 +226,6 @@
     <Compile Include="Common\DataTypes.cs" />
     <Compile Include="Common\BorrowMode.cs" />
     <Compile Include="SourceModel\BorrowTunnel.cs" />
-    <Compile Include="SourceModel\CreateCell.cs" />
     <Compile Include="SourceModel\DropNode.cs" />
     <Compile Include="SourceModel\FunctionalNode.cs" />
     <Compile Include="SourceModel\Functions.cs" />

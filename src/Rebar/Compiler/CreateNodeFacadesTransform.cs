@@ -100,20 +100,6 @@ namespace Rebar.Compiler
             return true;
         }
 
-        bool IDfirNodeVisitor<bool>.VisitCreateCellNode(CreateCellNode createCellNode)
-        {
-            Terminal valueInput = createCellNode.InputTerminals.ElementAt(0),
-                cellOutput = createCellNode.OutputTerminals.ElementAt(0);
-            _nodeFacade[valueInput] = new SimpleTerminalFacade(valueInput);
-            _nodeFacade[cellOutput] = new SimpleTerminalFacade(cellOutput);
-
-            // TODO: this is technically polymorphic in the input mutability, except it takes non-reference types.
-            // Implementing type inference for this would require a type variable that could resolve to NonLockingCell or LockingCell
-            // depending on the mutability variable.
-
-            return true;
-        }
-
         bool IDfirNodeVisitor<bool>.VisitDropNode(DropNode dropNode)
         {
             Terminal valueInput = dropNode.InputTerminals.ElementAt(0);

@@ -196,6 +196,30 @@ namespace Rebar.Common
                 tDataParameter,
                 "element");
             VectorInsertType = functionTypeBuilder.CreateType();
+
+            functionTypeBuilder = PFTypes.Factory.DefineFunction("CreateLockingCell");
+            tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
+            AddInputParameter(
+                functionTypeBuilder,
+                tDataParameter,
+                "value");
+            AddOutputParameter(
+                functionTypeBuilder,
+                tDataParameter.CreateLockingCell(),
+                "cell");
+            CreateLockingCellType = functionTypeBuilder.CreateType();
+
+            functionTypeBuilder = PFTypes.Factory.DefineFunction("CreateNonLockingCell");
+            tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
+            AddInputParameter(
+                functionTypeBuilder,
+                tDataParameter,
+                "value");
+            AddOutputParameter(
+                functionTypeBuilder,
+                tDataParameter.CreateNonLockingCell(),
+                "cell");
+            CreateNonLockingCellType = functionTypeBuilder.CreateType();
         }
 
         public static NIType ImmutablePassthroughType { get; }
@@ -219,6 +243,10 @@ namespace Rebar.Common
         public static NIType VectorCreateType { get; }
 
         public static NIType VectorInsertType { get; }
+
+        public static NIType CreateLockingCellType { get; }
+
+        public static NIType CreateNonLockingCellType { get; }
 
         public static NIType DefinePureUnaryFunction(string name, NIType inputType, NIType outputType)
         {

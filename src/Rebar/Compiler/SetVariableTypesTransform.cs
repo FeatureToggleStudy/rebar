@@ -63,22 +63,6 @@ namespace Rebar.Compiler
             return true;
         }
 
-        public bool VisitCreateCellNode(CreateCellNode createCellNode)
-        {
-            Terminal valueInTerminal = createCellNode.Terminals.ElementAt(0);
-            Terminal cellOutTerminal = createCellNode.Terminals.ElementAt(1);
-            VariableReference inputVariable = valueInTerminal.GetTrueVariable();
-            NIType underlyingType = inputVariable.Type;
-            NIType cellType = inputVariable.Mutable    // TODO: Locking and non-Locking cells should be created
-                // by different nodes
-                ? underlyingType.CreateLockingCell()
-                : underlyingType.CreateNonLockingCell();
-            cellOutTerminal.GetTrueVariable().SetTypeAndLifetime(
-                cellType,
-                Lifetime.Unbounded);
-            return true;
-        }
-
         public bool VisitDropNode(DropNode dropNode)
         {
             return true;

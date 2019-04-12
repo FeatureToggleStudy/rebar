@@ -82,6 +82,8 @@ namespace Rebar.Common
                         return argumentNIType.CreateIterator();
                     case "LockingCell":
                         return argumentNIType.CreateLockingCell();
+                    case "NonLockingCell":
+                        return argumentNIType.CreateNonLockingCell();
                     case "Option":
                         return argumentNIType.CreateOption();
                     default:

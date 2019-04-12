@@ -137,12 +137,6 @@ namespace Rebar.RebarTarget
             return true;
         }
 
-        public bool VisitCreateCellNode(CreateCellNode createCellNode)
-        {
-            CreateLocalAllocationForVariable(createCellNode.OutputTerminals.ElementAt(0).GetTrueVariable());
-            return true;
-        }
-
         public bool VisitDropNode(DropNode dropNode)
         {
             return true;

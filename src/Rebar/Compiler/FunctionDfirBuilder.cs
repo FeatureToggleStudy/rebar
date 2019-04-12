@@ -417,13 +417,6 @@ namespace Rebar.Compiler
             MapTerminalsInOrder(immutableBorrowNode, explicitBorrowDfir);
         }
 
-        public void VisitCreateCellNode(CreateCell createCell)
-        {
-            var createCellDfir = new CreateCellNode(_currentDiagram);
-            _map.AddMapping(createCell, createCellDfir);
-            MapTerminalsInOrder(createCell, createCellDfir);
-        }
-
         public void VisitFunction(Function function)
         {
             if (CreatedDfirRoot.Name.IsEmpty)
