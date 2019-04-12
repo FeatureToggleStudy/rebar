@@ -208,13 +208,27 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToSetVariableTypes(dfirRoot);
 
-            AutoBorrowNodeFacade nodeFacade = AutoBorrowNodeFacade.GetNodeFacade(functionalNode);
             Terminal inputTerminal = functionalNode.InputTerminals[1];
             Lifetime inputLifetime = inputTerminal.GetTrueVariable().Lifetime;
             Terminal outputTerminal = functionalNode.OutputTerminals[1];
             VariableReference outputTerminalVariable = outputTerminal.GetTrueVariable();
             Assert.IsTrue(outputTerminalVariable.Type.IsMutableReferenceType());
             Assert.AreEqual(inputLifetime, outputTerminalVariable.Lifetime);
+        }
+
+        [TestMethod]
+        public void FunctionNodeWithSelectReferenceSignatureAndNoInputsWired_SetVariableTypes_VoidReferenceSetOnOutput()
+        {
+            NIType signatureType = Signatures.SelectReferenceType;
+            DfirRoot dfirRoot = DfirRoot.Create();
+            FunctionalNode functionalNode = new FunctionalNode(dfirRoot.BlockDiagram, signatureType);
+
+            RunSemanticAnalysisUpToSetVariableTypes(dfirRoot);
+
+            Terminal outputTerminal = functionalNode.OutputTerminals[1];
+            NIType outputTerminalType = outputTerminal.GetTrueVariable().Type;
+            Assert.IsTrue(outputTerminalType.IsImmutableReferenceType());
+            Assert.IsTrue(outputTerminalType.GetReferentType().IsVoid());
         }
 
         #endregion

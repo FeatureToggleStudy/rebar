@@ -25,12 +25,10 @@ namespace Rebar.Compiler
             foreach (var nodeTerminal in node.InputTerminals)
             {
                 var connectedWireTerminal = nodeTerminal.ConnectedTerminal;
-                if (connectedWireTerminal != null)
-                {
-                    VariableReference wireVariable = connectedWireTerminal.GetFacadeVariable();
-                    TerminalFacade terminalFacade = nodeFacade[nodeTerminal];
-                    terminalFacade.UnifyWithConnectedWireTypeAsNodeInput(wireVariable, _typeUnificationResults);
-                }
+                VariableReference unifyWithVariable = connectedWireTerminal != null
+                    ? connectedWireTerminal.GetFacadeVariable()
+                    : nodeTerminal.GetVariableSet().CreateNewVariableForUnwiredTerminal();
+                nodeFacade[nodeTerminal].UnifyWithConnectedWireTypeAsNodeInput(unifyWithVariable, _typeUnificationResults);
             }
         }
 

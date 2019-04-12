@@ -214,8 +214,7 @@ namespace Rebar.Common
 
         public static NIType GetUnderlyingTypeFromRebarType(this NIType rebarType)
         {
-            if (rebarType.IsImmutableReferenceType() ||
-                rebarType.IsMutableReferenceType())
+            if (rebarType.IsRebarReferenceType())
             {
                 return rebarType.GetGenericParameters().ElementAt(0);
             }
