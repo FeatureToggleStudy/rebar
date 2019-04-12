@@ -121,6 +121,13 @@ namespace Rebar.Common
             return new VariableReference(this, id);
         }
 
+        public VariableReference CreateNewVariableForUnwiredTerminal()
+        {
+            VariableReference newVariable = CreateNewVariable();
+            newVariable.AdoptTypeVariableReference(TypeVariableSet.CreateReferenceToLiteralType(PFTypes.Void));
+            return newVariable;
+        }
+
         public IEnumerable<VariableReference> GetUniqueVariableReferences()
         {
             return _variables.Select(GetExistingReferenceForVariable);
