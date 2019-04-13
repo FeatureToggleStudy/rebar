@@ -107,23 +107,11 @@ namespace Rebar.Compiler
             // SetTypeAndLifetime for any output parameters based on type parameter substitutions
             foreach (var outputPair in functionalNode.OutputTerminals.Zip(signature.Outputs))
             {
-                SignatureTerminal signatureOutput = outputPair.Value;
-                if (signatureOutput.IsPassthrough)
+                if (outputPair.Value.IsPassthrough)
                 {
                     continue;
                 }
-                Terminal output = outputPair.Key;
-                VariableReference outputVariable = output.GetTrueVariable();
-                NIType outputType = outputVariable.TypeVariableReference.RenderNIType();
-                if (!outputType.IsRebarReferenceType())
-                {
-                    outputVariable.SetTypeAndLifetime(outputType, Lifetime.Unbounded);
-                }
-                else
-                {
-                    Lifetime lifetime = outputVariable.TypeVariableReference.Lifetime;
-                    outputVariable.SetTypeAndLifetime(outputType, lifetime);
-                }
+                SetVariableTypeAndLifetimeFromTypeVariable(outputPair.Key.GetTrueVariable());
             }
             return true;
         }
@@ -311,6 +299,13 @@ namespace Rebar.Compiler
                 PFTypes.Void,
                 Lifetime.Unbounded);
             return true;
+        }
+
+        private void SetVariableTypeAndLifetimeFromTypeVariable(VariableReference variable)
+        {
+            NIType outputType = variable.TypeVariableReference.RenderNIType();
+            Lifetime lifetime = variable.TypeVariableReference.Lifetime;
+            variable.SetTypeAndLifetime(outputType, lifetime);
         }
     }
 }
