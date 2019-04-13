@@ -370,19 +370,5 @@ namespace Tests.Rebar.Unit.Compiler
         }
 
 #endregion
-
-        private void ConnectConstantToInputTerminal(Terminal inputTerminal, NIType variableType, bool mutable)
-        {
-            Constant constant = Constant.Create(inputTerminal.ParentDiagram, variableType.CreateDefaultValue(), variableType);
-            Wire wire = Wire.Create(inputTerminal.ParentDiagram, constant.OutputTerminal, inputTerminal);
-            wire.SetWireBeginsMutableVariable(mutable);
-        }
-
-        private ExplicitBorrowNode ConnectExplicitBorrowToInputTerminal(Terminal inputTerminal)
-        {
-            ExplicitBorrowNode borrow = new ExplicitBorrowNode(inputTerminal.ParentDiagram, BorrowMode.Immutable, 1, true, true);
-            Wire wire = Wire.Create(inputTerminal.ParentDiagram, borrow.OutputTerminals[0], inputTerminal);
-            return borrow;
-        }
     }
 }

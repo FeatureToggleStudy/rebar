@@ -16,17 +16,24 @@ namespace Rebar.Compiler
 
         protected override void VisitBorderNode(BorderNode borderNode)
         {
+            UnifyNodeInputTerminalTypes(borderNode);
         }
 
         protected override void VisitNode(Node node)
         {
-            // Unify each node input terminal with its connected source
+            UnifyNodeInputTerminalTypes(node);
+        }
+
+        private void UnifyNodeInputTerminalTypes(Node node)
+        {
             AutoBorrowNodeFacade nodeFacade = AutoBorrowNodeFacade.GetNodeFacade(node);
             foreach (var nodeTerminal in node.InputTerminals)
             {
                 var connectedWireTerminal = nodeTerminal.ConnectedTerminal;
                 VariableReference unifyWithVariable = connectedWireTerminal != null
+                    // Unify node input terminal with its connected source
                     ? connectedWireTerminal.GetFacadeVariable()
+                    // Unify node input with immutable Void type
                     : nodeTerminal.GetVariableSet().CreateNewVariableForUnwiredTerminal();
                 nodeFacade[nodeTerminal].UnifyWithConnectedWireTypeAsNodeInput(unifyWithVariable, _typeUnificationResults);
             }
