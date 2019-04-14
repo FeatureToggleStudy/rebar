@@ -225,6 +225,13 @@ namespace Rebar.Compiler
             Terminal outputTerminal = tunnel.Direction == Direction.Input ? tunnel.GetInnerTerminal() : tunnel.GetOuterTerminal();
             VariableReference inputVariable = inputTerminal.GetTrueVariable(),
                 outputVariable = outputTerminal.GetTrueVariable();
+
+            if (tunnel.Direction == Direction.Input)
+            {
+                SetVariableTypeAndLifetimeFromTypeVariable(outputVariable);
+                return true;
+            }
+
             var parentFrame = tunnel.ParentStructure as Frame;
             bool executesConditionally = parentFrame != null && DoesFrameExecuteConditionally(parentFrame);
             bool wrapOutputInOption = tunnel.Direction == Direction.Output && executesConditionally;
