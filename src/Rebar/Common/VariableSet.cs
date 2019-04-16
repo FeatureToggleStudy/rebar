@@ -171,19 +171,6 @@ namespace Rebar.Common
             return lifetime;
         }
 
-        public Lifetime ComputeCommonLifetime(Lifetime left, Lifetime right)
-        {
-            if (_boundedLifetimeGraph.DoesOutlast(left, right))
-            {
-                return right;
-            }
-            if (_boundedLifetimeGraph.DoesOutlast(right, left))
-            {
-                return left;
-            }
-            return Lifetime.Empty;
-        }
-
         internal bool GetMutable(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Mutable;
 
         internal NIType GetType(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Type;

@@ -42,7 +42,7 @@ namespace Rebar.Compiler
         {
             ComputeBorrowsFromInput(out _mutableBorrow, out _borrowRequired);
             _borrowLifetime = _borrowRequired
-                ? _facades.First().Terminal.GetVariableSet().DefineLifetimeThatIsBoundedByDiagram(_facades.Select(f => f.FacadeVariable))
+                ? _facades.First().Terminal.DefineLifetimeThatIsBoundedByDiagram(_facades.Select(f => f.FacadeVariable).ToArray())
                 : Lifetime.Empty;
             foreach (var facade in _facades)
             {
