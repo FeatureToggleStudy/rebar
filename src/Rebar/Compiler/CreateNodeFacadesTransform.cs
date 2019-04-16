@@ -13,20 +13,18 @@ namespace Rebar.Compiler
     {
         private AutoBorrowNodeFacade _nodeFacade;
         private TypeVariableSet _typeVariableSet;
-        private LifetimeGraphTree _lifetimeGraphTree;
 
         protected override void VisitDiagram(Diagram diagram)
         {
             _typeVariableSet = _typeVariableSet ?? diagram.DfirRoot.GetTypeVariableSet();
-            _lifetimeGraphTree = _lifetimeGraphTree ?? diagram.DfirRoot.GetLifetimeGraphTree();
             LifetimeGraphIdentifier diagramGraphIdentifier = new LifetimeGraphIdentifier(diagram.UniqueId);
             diagram.SetLifetimeGraphIdentifier(diagramGraphIdentifier);
             Diagram parentDiagram = diagram.ParentNode?.ParentDiagram;
             LifetimeGraphIdentifier parentGraphIdentifier = parentDiagram != null 
                 ? new LifetimeGraphIdentifier(parentDiagram.UniqueId) 
                 : default(LifetimeGraphIdentifier);
-            _lifetimeGraphTree.EstablishLifetimeGraph(diagramGraphIdentifier, parentGraphIdentifier);
-            diagram.SetVariableSet(new VariableSet(_typeVariableSet, _lifetimeGraphTree));
+            diagram.DfirRoot.GetLifetimeGraphTree().EstablishLifetimeGraph(diagramGraphIdentifier, parentGraphIdentifier);
+            diagram.SetVariableSet(new VariableSet(_typeVariableSet));
         }
 
         protected override void VisitWire(Wire wire)
@@ -66,10 +64,12 @@ namespace Rebar.Compiler
             private readonly List<VariableReference> _interruptedVariables = new List<VariableReference>();
 
             private LifetimeTypeVariableGroup(Diagram diagram, VariableSet variableSet)
-            {
+            {                
                 _variableSet = variableSet;
                 _typeVariableSet = variableSet.TypeVariableSet;
-                LazyNewLifetime = new Lazy<Lifetime>(() => _variableSet.LifetimeGraphTree.CreateLifetimeThatIsBoundedByLifetimeGraph(diagram.GetLifetimeGraphIdentifier()));
+                LifetimeGraphTree lifetimeGraphTree = diagram.DfirRoot.GetLifetimeGraphTree();
+                LifetimeGraphIdentifier diagramGraphIdentifier = diagram.GetLifetimeGraphIdentifier();
+                LazyNewLifetime = new Lazy<Lifetime>(() => lifetimeGraphTree.CreateLifetimeThatIsBoundedByLifetimeGraph(diagramGraphIdentifier));
                 LifetimeType = _typeVariableSet.CreateReferenceToLifetimeType(LazyNewLifetime);
             }
 

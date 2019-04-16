@@ -76,19 +76,16 @@ namespace Rebar.Common
         private readonly Dictionary<Lifetime, List<Variable>> _variablesInterruptedByLifetimes = new Dictionary<Lifetime, List<Variable>>();
 
         public VariableSet()
-            : this(null, null)
+            : this(null)
         {
         }
 
-        public VariableSet(TypeVariableSet typeVariableSet, LifetimeGraphTree lifetimeGraphTree)
+        public VariableSet(TypeVariableSet typeVariableSet)
         {
             TypeVariableSet = typeVariableSet;
-            LifetimeGraphTree = lifetimeGraphTree;
         }
 
         public TypeVariableSet TypeVariableSet { get; }
-
-        public LifetimeGraphTree LifetimeGraphTree { get; }
 
         private Variable CreateNewVariable(bool mutableVariable, int firstReferenceIndex)
         {

@@ -93,7 +93,7 @@ namespace Rebar.Compiler
 
         public static Lifetime DefineLifetimeThatIsBoundedByDiagram(this Terminal terminal, params VariableReference[] decomposedVariables)
         {
-            return terminal.GetVariableSet().LifetimeGraphTree.CreateLifetimeThatIsBoundedByLifetimeGraph(terminal.ParentDiagram.GetLifetimeGraphIdentifier());
+            return terminal.DfirRoot.GetLifetimeGraphTree().CreateLifetimeThatIsBoundedByLifetimeGraph(terminal.ParentDiagram.GetLifetimeGraphIdentifier());
         }
 
         public static bool DoesOutlastDiagram(this Lifetime lifetime, Diagram diagram)
