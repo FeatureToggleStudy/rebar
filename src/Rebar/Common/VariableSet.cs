@@ -74,7 +74,6 @@ namespace Rebar.Common
         private readonly List<Variable> _variables = new List<Variable>();
         private readonly List<Variable> _variableReferences = new List<Variable>();
         private readonly Dictionary<Lifetime, List<Variable>> _variablesInterruptedByLifetimes = new Dictionary<Lifetime, List<Variable>>();
-        private readonly BoundedLifetimeGraph _boundedLifetimeGraph = new BoundedLifetimeGraph();
 
         public VariableSet()
             : this(null, null)

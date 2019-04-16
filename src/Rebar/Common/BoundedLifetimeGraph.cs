@@ -8,28 +8,6 @@ namespace Rebar.Common
 {
     internal sealed class LifetimeGraphTree
     {
-        private Dictionary<Diagram, BoundedLifetimeGraph> _diagramGraphs = new Dictionary<Diagram, BoundedLifetimeGraph>();
-
-        public void EstablishLifetimeGraph(Diagram diagram)
-        {
-            _diagramGraphs[diagram] = new BoundedLifetimeGraph();
-        }
-
-        // TODO: don't use DFIR
-        public Lifetime CreateLifetimeThatIsBoundedByDiagram(Diagram diagram)
-        {
-            return _diagramGraphs[diagram].CreateLifetimeThatIsBoundedByDiagram();
-        }
-
-        // TODO: to be used by function types
-        public Lifetime CreateLifetimeThatOutlastsRootDiagram()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    internal class BoundedLifetimeGraph
-    {
         [DebuggerDisplay("{DebuggerDisplay}")]
         private class BoundedLifetime : Lifetime
         {
@@ -51,89 +29,104 @@ namespace Rebar.Common
                 : "Diagram : Lifetime";
         }
 
-        private readonly Dictionary<BoundedLifetime, HashSet<BoundedLifetime>> _lifetimeSupertypes = new Dictionary<BoundedLifetime, HashSet<BoundedLifetime>>();
-
-        public BoundedLifetimeGraph()
+        private class BoundedLifetimeGraph
         {
-            DiagramLifetime = new BoundedLifetime(this);
-        }
+            private readonly Dictionary<BoundedLifetime, HashSet<BoundedLifetime>> _lifetimeSupertypes = new Dictionary<BoundedLifetime, HashSet<BoundedLifetime>>();
 
-        private BoundedLifetime DiagramLifetime { get; }
+            public BoundedLifetimeGraph()
+            {
+                DiagramLifetime = new BoundedLifetime(this);
+            }
 
-        public void SetOutlastsRelationship(Lifetime outlaster, Lifetime outlasted)
-        {
-            BoundedLifetime boundedOutlaster = outlaster as BoundedLifetime, boundedOutlasted = outlasted as BoundedLifetime;
-            if (boundedOutlaster == null || boundedOutlasted == null)
-            {
-                return;
-            }
-            if (IsSubtypeLiftimeOf(boundedOutlasted, boundedOutlaster))
-            {
-                throw new ArgumentException("outlasted already outlasts outlaster");
-            }
-            if (IsSubtypeLiftimeOf(boundedOutlaster, boundedOutlaster))
-            {
-                return;
-            }
-            HashSet<BoundedLifetime> supertypes;
-            if (!_lifetimeSupertypes.TryGetValue(boundedOutlaster, out supertypes))
-            {
-                supertypes = new HashSet<BoundedLifetime>();
-                _lifetimeSupertypes[boundedOutlaster] = supertypes;
-            }
-            supertypes.Add(boundedOutlasted);
-        }
+            public BoundedLifetime DiagramLifetime { get; }
 
-        public Lifetime CreateLifetimeThatOutlastsDiagram()
-        {
-            BoundedLifetime lifetime = new BoundedLifetime(this);
-            SetOutlastsRelationship(lifetime, DiagramLifetime);
-            return lifetime;
-        }
-
-        public Lifetime CreateLifetimeThatIsBoundedByDiagram()
-        {
-            BoundedLifetime lifetime = new BoundedLifetime(this);
-            SetOutlastsRelationship(DiagramLifetime, lifetime);
-            return lifetime;
-        }
-
-        public bool DoesOutlast(Lifetime toCheck, Lifetime comparison)
-        {
-            var boundedToCheck = toCheck as BoundedLifetime;
-            var boundedComparison = comparison as BoundedLifetime;
-            if (boundedToCheck == null && boundedComparison != null)
+            public void SetOutlastsRelationship(Lifetime outlaster, Lifetime outlasted)
             {
-                return DoesUnboundedOutlastBounded(toCheck);
+                BoundedLifetime boundedOutlaster = outlaster as BoundedLifetime, boundedOutlasted = outlasted as BoundedLifetime;
+                if (boundedOutlaster == null || boundedOutlasted == null)
+                {
+                    return;
+                }
+                if (IsSubtypeLiftimeOf(boundedOutlasted, boundedOutlaster))
+                {
+                    throw new ArgumentException("outlasted already outlasts outlaster");
+                }
+                if (IsSubtypeLiftimeOf(boundedOutlaster, boundedOutlaster))
+                {
+                    return;
+                }
+                HashSet<BoundedLifetime> supertypes;
+                if (!_lifetimeSupertypes.TryGetValue(boundedOutlaster, out supertypes))
+                {
+                    supertypes = new HashSet<BoundedLifetime>();
+                    _lifetimeSupertypes[boundedOutlaster] = supertypes;
+                }
+                supertypes.Add(boundedOutlasted);
             }
-            if (boundedToCheck != null && boundedComparison == null)
-            {
-                return DoesUnboundedOutlastBounded(comparison);
-            }
-            if (boundedToCheck != null && boundedToCheck != null)
-            {
-                return IsSubtypeLiftimeOf(boundedToCheck, boundedComparison);
-            }
-            return false;
-        }
 
-        private bool DoesUnboundedOutlastBounded(Lifetime unbounded)
-        {
-            return unbounded == Lifetime.Static || unbounded == Lifetime.Unbounded;
-        }
-
-        private bool IsSubtypeLiftimeOf(BoundedLifetime toCheck, BoundedLifetime comparison)
-        {
-            HashSet<BoundedLifetime> supertypes;
-            if (!_lifetimeSupertypes.TryGetValue(toCheck, out supertypes))
+            public Lifetime CreateLifetimeThatIsBoundedByDiagram()
             {
+                BoundedLifetime lifetime = new BoundedLifetime(this);
+                SetOutlastsRelationship(DiagramLifetime, lifetime);
+                return lifetime;
+            }
+
+            public bool DoesOutlast(Lifetime toCheck, Lifetime comparison)
+            {
+                var boundedToCheck = toCheck as BoundedLifetime;
+                var boundedComparison = comparison as BoundedLifetime;
+                if (boundedToCheck == null && boundedComparison != null)
+                {
+                    return DoesUnboundedOutlastBounded(toCheck);
+                }
+                if (boundedToCheck != null && boundedComparison == null)
+                {
+                    return DoesUnboundedOutlastBounded(comparison);
+                }
+                if (boundedToCheck != null && boundedToCheck != null)
+                {
+                    return IsSubtypeLiftimeOf(boundedToCheck, boundedComparison);
+                }
                 return false;
             }
-            if (supertypes.Contains(comparison))
+
+            private bool DoesUnboundedOutlastBounded(Lifetime unbounded)
             {
-                return true;
+                return unbounded == Lifetime.Static || unbounded == Lifetime.Unbounded;
             }
-            return supertypes.Any(supertype => IsSubtypeLiftimeOf(supertype, comparison));
+
+            private bool IsSubtypeLiftimeOf(BoundedLifetime toCheck, BoundedLifetime comparison)
+            {
+                HashSet<BoundedLifetime> supertypes;
+                if (!_lifetimeSupertypes.TryGetValue(toCheck, out supertypes))
+                {
+                    return false;
+                }
+                if (supertypes.Contains(comparison))
+                {
+                    return true;
+                }
+                return supertypes.Any(supertype => IsSubtypeLiftimeOf(supertype, comparison));
+            }
+        }
+
+        private Dictionary<Diagram, BoundedLifetimeGraph> _diagramGraphs = new Dictionary<Diagram, BoundedLifetimeGraph>();
+
+        public void EstablishLifetimeGraph(Diagram diagram)
+        {
+            _diagramGraphs[diagram] = new BoundedLifetimeGraph();
+        }
+
+        // TODO: don't use DFIR
+        public Lifetime CreateLifetimeThatIsBoundedByDiagram(Diagram diagram)
+        {
+            return _diagramGraphs[diagram].CreateLifetimeThatIsBoundedByDiagram();
+        }
+
+        // TODO: to be used by function types
+        public Lifetime CreateLifetimeThatOutlastsRootDiagram()
+        {
+            throw new NotImplementedException();
         }
     }
 }
