@@ -23,7 +23,7 @@ namespace Rebar.Common
             public override bool IsEmpty => false;
 
             public override bool DoesOutlastLifetimeGraph(LifetimeGraphIdentifier lifetimeGraphIdentifier)
-                => _graphTree.DoesLifetimeOutlastDiagram(this, lifetimeGraphIdentifier);
+                => _graphTree.DoesLifetimeOutlastLifetimeGraph(this, lifetimeGraphIdentifier);
 
             public override bool IsBounded => true;
 
@@ -134,7 +134,7 @@ namespace Rebar.Common
             throw new NotImplementedException();
         }
 
-        private bool DoesLifetimeOutlastDiagram(BoundedLifetime boundedLifetime, LifetimeGraphIdentifier graphIdentifier)
+        private bool DoesLifetimeOutlastLifetimeGraph(BoundedLifetime boundedLifetime, LifetimeGraphIdentifier graphIdentifier)
         {
             BoundedLifetimeGraph boundedLifetimeGraph = boundedLifetime.DiagramGraph;
             BoundedLifetimeGraph diagramGraph = _diagramGraphs[graphIdentifier];
