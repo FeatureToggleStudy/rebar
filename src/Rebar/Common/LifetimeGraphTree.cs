@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using NationalInstruments.Dfir;
 
 namespace Rebar.Common
 {
@@ -23,7 +22,8 @@ namespace Rebar.Common
 
             public override bool IsEmpty => false;
 
-            public override bool DoesOutlastDiagram(Diagram diagram) => _graphTree.DoesLifetimeOutlastDiagram(this, diagram);
+            public override bool DoesOutlastLifetimeGraph(LifetimeGraphIdentifier lifetimeGraphIdentifier)
+                => _graphTree.DoesLifetimeOutlastDiagram(this, lifetimeGraphIdentifier);
 
             public override bool IsBounded => true;
 
@@ -114,47 +114,73 @@ namespace Rebar.Common
             }
         }
 
-        private Dictionary<Diagram, BoundedLifetimeGraph> _diagramGraphs = new Dictionary<Diagram, BoundedLifetimeGraph>();
+        private readonly Dictionary<LifetimeGraphIdentifier, BoundedLifetimeGraph> _diagramGraphs = new Dictionary<LifetimeGraphIdentifier, BoundedLifetimeGraph>();
+        private readonly Dictionary<LifetimeGraphIdentifier, LifetimeGraphIdentifier> _graphParents = new Dictionary<LifetimeGraphIdentifier, LifetimeGraphIdentifier>();
 
-        public void EstablishLifetimeGraph(Diagram diagram)
+        public void EstablishLifetimeGraph(LifetimeGraphIdentifier identifier, LifetimeGraphIdentifier parentIdentifier)
         {
-            _diagramGraphs[diagram] = new BoundedLifetimeGraph(this);
+            _diagramGraphs[identifier] = new BoundedLifetimeGraph(this);
+            _graphParents[identifier] = parentIdentifier;
         }
 
-        // TODO: don't use DFIR
-        public Lifetime CreateLifetimeThatIsBoundedByDiagram(Diagram diagram)
+        public Lifetime CreateLifetimeThatIsBoundedByLifetimeGraph(LifetimeGraphIdentifier graphIdentifier)
         {
-            return _diagramGraphs[diagram].CreateLifetimeThatIsBoundedByDiagram();
+            return _diagramGraphs[graphIdentifier].CreateLifetimeThatIsBoundedByDiagram();
         }
 
-        // TODO: to be used by function types
-        public Lifetime CreateLifetimeThatOutlastsRootDiagram()
+        // TODO: to be used by function parameters
+        public Lifetime CreateLifetimeThatOutlastsRootLifetimeGraph()
         {
             throw new NotImplementedException();
         }
 
-        private bool DoesLifetimeOutlastDiagram(BoundedLifetime boundedLifetime, Diagram diagram)
+        private bool DoesLifetimeOutlastDiagram(BoundedLifetime boundedLifetime, LifetimeGraphIdentifier graphIdentifier)
         {
             BoundedLifetimeGraph boundedLifetimeGraph = boundedLifetime.DiagramGraph;
-            BoundedLifetimeGraph diagramGraph = _diagramGraphs[diagram];
+            BoundedLifetimeGraph diagramGraph = _diagramGraphs[graphIdentifier];
             if (boundedLifetimeGraph == diagramGraph)
             {
                 return boundedLifetimeGraph.DoesOutlast(boundedLifetime, boundedLifetimeGraph.DiagramLifetime);
             }
             else
             {
-                Diagram currentDiagram = diagram.ParentStructure.ParentDiagram;
-                while (currentDiagram != null)
+                LifetimeGraphIdentifier currentGraphIdentifier = graphIdentifier, parentGraphIdentifier;
+                while (_graphParents.TryGetValue(graphIdentifier, out parentGraphIdentifier))
                 {
-                    diagramGraph = _diagramGraphs[currentDiagram];
+                    diagramGraph = _diagramGraphs[currentGraphIdentifier];
                     if (diagramGraph == boundedLifetimeGraph)
                     {
                         return true;
                     }
-                    currentDiagram = currentDiagram.ParentStructure.ParentDiagram;
+                    currentGraphIdentifier = parentGraphIdentifier;
                 }
                 return false;
             }
+        }
+    }
+
+    internal struct LifetimeGraphIdentifier
+    {
+        public LifetimeGraphIdentifier(int id)
+        {
+            Id = id;
+        }
+
+        public int Id { get; }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is LifetimeGraphIdentifier))
+            {
+                return false;
+            }
+            var otherIdentifier = (LifetimeGraphIdentifier)obj;
+            return Id == otherIdentifier.Id;
+        }
+
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
         }
     }
 }

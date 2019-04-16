@@ -19,7 +19,13 @@ namespace Rebar.Compiler
         {
             _typeVariableSet = _typeVariableSet ?? diagram.DfirRoot.GetTypeVariableSet();
             _lifetimeGraphTree = _lifetimeGraphTree ?? diagram.DfirRoot.GetLifetimeGraphTree();
-            _lifetimeGraphTree.EstablishLifetimeGraph(diagram);
+            LifetimeGraphIdentifier diagramGraphIdentifier = new LifetimeGraphIdentifier(diagram.UniqueId);
+            diagram.SetLifetimeGraphIdentifier(diagramGraphIdentifier);
+            Diagram parentDiagram = diagram.ParentNode?.ParentDiagram;
+            LifetimeGraphIdentifier parentGraphIdentifier = parentDiagram != null 
+                ? new LifetimeGraphIdentifier(parentDiagram.UniqueId) 
+                : default(LifetimeGraphIdentifier);
+            _lifetimeGraphTree.EstablishLifetimeGraph(diagramGraphIdentifier, parentGraphIdentifier);
             diagram.SetVariableSet(new VariableSet(_typeVariableSet, _lifetimeGraphTree));
         }
 
@@ -63,7 +69,7 @@ namespace Rebar.Compiler
             {
                 _variableSet = variableSet;
                 _typeVariableSet = variableSet.TypeVariableSet;
-                LazyNewLifetime = new Lazy<Lifetime>(() => _variableSet.LifetimeGraphTree.CreateLifetimeThatIsBoundedByDiagram(diagram));
+                LazyNewLifetime = new Lazy<Lifetime>(() => _variableSet.LifetimeGraphTree.CreateLifetimeThatIsBoundedByLifetimeGraph(diagram.GetLifetimeGraphIdentifier()));
                 LifetimeType = _typeVariableSet.CreateReferenceToLifetimeType(LazyNewLifetime);
             }
 
