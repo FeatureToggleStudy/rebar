@@ -47,11 +47,11 @@ namespace Rebar.Common
                 {
                     return;
                 }
-                if (IsSubtypeLiftimeOf(boundedOutlasted, boundedOutlaster))
+                if (IsSubtypeLifetimeOf(boundedOutlasted, boundedOutlaster))
                 {
                     throw new ArgumentException("outlasted already outlasts outlaster");
                 }
-                if (IsSubtypeLiftimeOf(boundedOutlaster, boundedOutlaster))
+                if (IsSubtypeLifetimeOf(boundedOutlaster, boundedOutlaster))
                 {
                     return;
                 }
@@ -85,7 +85,7 @@ namespace Rebar.Common
                 }
                 if (boundedToCheck != null && boundedToCheck != null)
                 {
-                    return IsSubtypeLiftimeOf(boundedToCheck, boundedComparison);
+                    return IsSubtypeLifetimeOf(boundedToCheck, boundedComparison);
                 }
                 return false;
             }
@@ -95,7 +95,7 @@ namespace Rebar.Common
                 return unbounded == Lifetime.Static || unbounded == Lifetime.Unbounded;
             }
 
-            private bool IsSubtypeLiftimeOf(BoundedLifetime toCheck, BoundedLifetime comparison)
+            private bool IsSubtypeLifetimeOf(BoundedLifetime toCheck, BoundedLifetime comparison)
             {
                 HashSet<BoundedLifetime> supertypes;
                 if (!_lifetimeSupertypes.TryGetValue(toCheck, out supertypes))
@@ -106,7 +106,7 @@ namespace Rebar.Common
                 {
                     return true;
                 }
-                return supertypes.Any(supertype => IsSubtypeLiftimeOf(supertype, comparison));
+                return supertypes.Any(supertype => IsSubtypeLifetimeOf(supertype, comparison));
             }
         }
 
