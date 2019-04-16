@@ -2,9 +2,32 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using NationalInstruments.Dfir;
 
 namespace Rebar.Common
 {
+    internal sealed class LifetimeGraphTree
+    {
+        private Dictionary<Diagram, BoundedLifetimeGraph> _diagramGraphs = new Dictionary<Diagram, BoundedLifetimeGraph>();
+
+        public void EstablishLifetimeGraph(Diagram diagram)
+        {
+            _diagramGraphs[diagram] = new BoundedLifetimeGraph();
+        }
+
+        // TODO: don't use DFIR
+        public Lifetime CreateLifetimeThatIsBoundedByDiagram(Diagram diagram)
+        {
+            return _diagramGraphs[diagram].CreateLifetimeThatIsBoundedByDiagram();
+        }
+
+        // TODO: to be used by function types
+        public Lifetime CreateLifetimeThatOutlastsRootDiagram()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     internal class BoundedLifetimeGraph
     {
         [DebuggerDisplay("{DebuggerDisplay}")]

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NationalInstruments.DataTypes;
+using NationalInstruments.Dfir;
 
 namespace Rebar.Common
 {
@@ -76,16 +77,19 @@ namespace Rebar.Common
         private readonly BoundedLifetimeGraph _boundedLifetimeGraph = new BoundedLifetimeGraph();
 
         public VariableSet()
-            : this(null)
+            : this(null, null)
         {
         }
 
-        public VariableSet(TypeVariableSet typeVariableSet)
+        public VariableSet(TypeVariableSet typeVariableSet, LifetimeGraphTree lifetimeGraphTree)
         {
             TypeVariableSet = typeVariableSet;
+            LifetimeGraphTree = lifetimeGraphTree;
         }
 
         public TypeVariableSet TypeVariableSet { get; }
+
+        public LifetimeGraphTree LifetimeGraphTree { get; }
 
         private Variable CreateNewVariable(bool mutableVariable, int firstReferenceIndex)
         {
@@ -162,13 +166,6 @@ namespace Rebar.Common
         public Lifetime DefineLifetimeThatOutlastsDiagram()
         {
             return _boundedLifetimeGraph.CreateLifetimeThatOutlastsDiagram();
-        }
-
-        public Lifetime DefineLifetimeThatIsBoundedByDiagram(IEnumerable<VariableReference> decomposedVariables)
-        {
-            Lifetime lifetime = _boundedLifetimeGraph.CreateLifetimeThatIsBoundedByDiagram();
-            _variablesInterruptedByLifetimes.Add(lifetime, decomposedVariables.Select(GetVariableForVariableReference).ToList());
-            return lifetime;
         }
 
         internal bool GetMutable(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Mutable;

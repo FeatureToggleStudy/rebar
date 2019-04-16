@@ -13,11 +13,14 @@ namespace Rebar.Compiler
     {
         private AutoBorrowNodeFacade _nodeFacade;
         private TypeVariableSet _typeVariableSet;
+        private LifetimeGraphTree _lifetimeGraphTree;
 
         protected override void VisitDiagram(Diagram diagram)
         {
             _typeVariableSet = _typeVariableSet ?? diagram.DfirRoot.GetTypeVariableSet();
-            diagram.SetVariableSet(new VariableSet(_typeVariableSet));
+            _lifetimeGraphTree = _lifetimeGraphTree ?? diagram.DfirRoot.GetLifetimeGraphTree();
+            _lifetimeGraphTree.EstablishLifetimeGraph(diagram);
+            diagram.SetVariableSet(new VariableSet(_typeVariableSet, _lifetimeGraphTree));
         }
 
         protected override void VisitWire(Wire wire)
@@ -56,12 +59,22 @@ namespace Rebar.Compiler
             private readonly TypeVariableSet _typeVariableSet;
             private readonly List<VariableReference> _interruptedVariables = new List<VariableReference>();
 
-            public LifetimeTypeVariableGroup(VariableSet variableSet)
+            private LifetimeTypeVariableGroup(Diagram diagram, VariableSet variableSet)
             {
                 _variableSet = variableSet;
                 _typeVariableSet = variableSet.TypeVariableSet;
-                LazyNewLifetime = new Lazy<Lifetime>(() => _variableSet.DefineLifetimeThatIsBoundedByDiagram(_interruptedVariables));
+                LazyNewLifetime = new Lazy<Lifetime>(() => _variableSet.LifetimeGraphTree.CreateLifetimeThatIsBoundedByDiagram(diagram));
                 LifetimeType = _typeVariableSet.CreateReferenceToLifetimeType(LazyNewLifetime);
+            }
+
+            public static LifetimeTypeVariableGroup CreateFromTerminal(Terminal terminal)
+            {
+                return new LifetimeTypeVariableGroup(terminal.ParentDiagram, terminal.ParentDiagram.GetVariableSet());
+            }
+
+            public static LifetimeTypeVariableGroup CreateFromNode(Node node)
+            {
+                return new LifetimeTypeVariableGroup(node.ParentDiagram, node.ParentDiagram.GetVariableSet());
             }
 
             public Lazy<Lifetime> LazyNewLifetime { get; }
@@ -162,7 +175,7 @@ namespace Rebar.Compiler
                     {
                         if (genericParameterNIType.IsLifetimeType())
                         {
-                            var group = new LifetimeTypeVariableGroup(functionalNode.ParentDiagram.GetVariableSet());
+                            var group = LifetimeTypeVariableGroup.CreateFromNode(functionalNode);
                             lifetimeVariableGroups[genericParameterNIType] = group;
                             genericTypeParameters[genericParameterNIType] = group.LifetimeType;
                         }
@@ -355,7 +368,7 @@ namespace Rebar.Compiler
         {
             Terminal iteratorInput = iterateTunnel.InputTerminals.ElementAt(0),
                 itemOutput = iterateTunnel.OutputTerminals.ElementAt(0);
-            LifetimeTypeVariableGroup lifetimeTypeVariableGroup = new LifetimeTypeVariableGroup(iteratorInput.GetVariableSet());
+            LifetimeTypeVariableGroup lifetimeTypeVariableGroup = LifetimeTypeVariableGroup.CreateFromTerminal(iteratorInput);
             _nodeFacade
                 .CreateInputLifetimeGroup(InputReferenceMutability.RequireMutable, lifetimeTypeVariableGroup.LazyNewLifetime)
                 .AddTerminalFacade(iteratorInput);
@@ -377,7 +390,7 @@ namespace Rebar.Compiler
         {
             Terminal lockInput = lockTunnel.InputTerminals.ElementAt(0),
                 referenceOutput = lockTunnel.OutputTerminals.ElementAt(0);
-            LifetimeTypeVariableGroup lifetimeTypeVariableGroup = new LifetimeTypeVariableGroup(lockInput.GetVariableSet());
+            LifetimeTypeVariableGroup lifetimeTypeVariableGroup = LifetimeTypeVariableGroup.CreateFromTerminal(lockInput);
             _nodeFacade
                 .CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable, lifetimeTypeVariableGroup.LazyNewLifetime)
                 .AddTerminalFacade(lockInput);

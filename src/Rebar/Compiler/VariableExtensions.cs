@@ -6,11 +6,18 @@ namespace Rebar.Compiler
     internal static class VariableExtensions
     {
         private static readonly AttributeDescriptor _typeVariableSetTokenName = new AttributeDescriptor("Rebar.Compiler.TypeVariableSet", true);
+        private static readonly AttributeDescriptor _lifetimeGraphTreeTokenName = new AttributeDescriptor("Rebar.Compiler.LifetimeGraphTree", true);
         private static readonly AttributeDescriptor _variableSetTokenName = new AttributeDescriptor("Rebar.Compiler.VariableSet", true);
         
         public static TypeVariableSet GetTypeVariableSet(this DfirRoot dfirRoot)
         {
             var token = dfirRoot.GetOrCreateNamedSparseAttributeToken<TypeVariableSet>(_typeVariableSetTokenName);
+            return token.GetAttribute(dfirRoot);
+        }
+
+        public static LifetimeGraphTree GetLifetimeGraphTree(this DfirRoot dfirRoot)
+        {
+            var token = dfirRoot.GetOrCreateNamedSparseAttributeToken<LifetimeGraphTree>(_lifetimeGraphTreeTokenName);
             return token.GetAttribute(dfirRoot);
         }
 
@@ -78,7 +85,7 @@ namespace Rebar.Compiler
 
         public static Lifetime DefineLifetimeThatIsBoundedByDiagram(this Terminal terminal, params VariableReference[] decomposedVariables)
         {
-            return terminal.GetVariableSet().DefineLifetimeThatIsBoundedByDiagram(decomposedVariables);
+            return terminal.GetVariableSet().LifetimeGraphTree.CreateLifetimeThatIsBoundedByDiagram(terminal.ParentDiagram);
         }
     }
 }
