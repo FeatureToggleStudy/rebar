@@ -439,9 +439,9 @@ namespace Rebar.Compiler
             _nodeFacade[valueInput] = new SimpleTerminalFacade(valueInput);
             _nodeFacade[valueOutput] = new SimpleTerminalFacade(valueOutput);
 
-            // TODO: something will need to unify these two variables, with caution for the different lifetimes
-            _nodeFacade[valueInput].FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToNewTypeVariable());
-            _nodeFacade[valueOutput].FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToNewTypeVariable());
+            TypeVariableReference typeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
+            _nodeFacade[valueInput].FacadeVariable.AdoptTypeVariableReference(typeVariable);
+            _nodeFacade[valueOutput].FacadeVariable.AdoptTypeVariableReference(typeVariable);
 
             return true;
         }

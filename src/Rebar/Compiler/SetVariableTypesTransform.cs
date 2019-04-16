@@ -169,7 +169,8 @@ namespace Rebar.Compiler
 
         public bool VisitTerminateLifetimeNode(TerminateLifetimeNode terminateLifetimeNode)
         {
-            VariableSet variableSet = terminateLifetimeNode.ParentDiagram.GetVariableSet();
+            Diagram parentDiagram = terminateLifetimeNode.ParentDiagram;
+            VariableSet variableSet = parentDiagram.GetVariableSet();
             IEnumerable<VariableReference> inputVariables = terminateLifetimeNode.InputTerminals.Select(VariableExtensions.GetTrueVariable);
             IEnumerable<Lifetime> inputLifetimes = inputVariables.Select(v => v.Lifetime).Distinct();
             Lifetime singleLifetime;
@@ -186,7 +187,7 @@ namespace Rebar.Compiler
                 // in CheckVariableUsages below
                 errorState = TerminateLifetimeErrorState.NoError;
             }
-            else if (singleLifetime.DoesOutlastDiagram || !singleLifetime.IsBounded)
+            else if (singleLifetime.DoesOutlastDiagram(parentDiagram) || !singleLifetime.IsBounded)
             {
                 errorState = TerminateLifetimeErrorState.InputLifetimeCannotBeTerminated;
             }

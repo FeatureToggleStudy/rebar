@@ -56,7 +56,7 @@ namespace Tests.Rebar.Unit.Compiler
 
             VariableReference outputVariable = tunnel.OutputTerminals[0].GetTrueVariable();
             Assert.IsTrue(outputVariable.Type.IsImmutableReferenceType());
-            Assert.IsTrue(outputVariable.Lifetime.DoesOutlastDiagram);
+            Assert.IsTrue(outputVariable.Lifetime.DoesOutlastDiagram(frame.Diagram));
         }
 
         [TestMethod]

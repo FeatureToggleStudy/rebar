@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using NationalInstruments.Dfir;
 
 namespace Rebar.Common
 {
@@ -18,7 +19,7 @@ namespace Rebar.Common
 
             public override bool IsEmpty => _isEmpty;
 
-            public override bool DoesOutlastDiagram => !_isEmpty;
+            public override bool DoesOutlastDiagram(Diagram diagram) => !_isEmpty;
 
             public override bool IsBounded => false;
         }
@@ -37,6 +38,7 @@ namespace Rebar.Common
 
         public abstract bool IsBounded { get; }
 
-        public abstract bool DoesOutlastDiagram { get; }
+        // TODO: make this into an extension method? Find some way not to use DFIR
+        public abstract bool DoesOutlastDiagram(Diagram diagram);
     }
 }

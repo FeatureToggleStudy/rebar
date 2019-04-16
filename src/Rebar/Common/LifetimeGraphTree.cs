@@ -11,31 +11,35 @@ namespace Rebar.Common
         [DebuggerDisplay("{DebuggerDisplay}")]
         private class BoundedLifetime : Lifetime
         {
-            private readonly BoundedLifetimeGraph _graph;
+            private readonly LifetimeGraphTree _graphTree;
 
-            public BoundedLifetime(BoundedLifetimeGraph graph)
+            public BoundedLifetime(LifetimeGraphTree graphTree, BoundedLifetimeGraph graph)
             {
-                _graph = graph;
+                _graphTree = graphTree;
+                DiagramGraph = graph;
             }
+
+            public BoundedLifetimeGraph DiagramGraph { get; }
 
             public override bool IsEmpty => false;
 
-            public override bool DoesOutlastDiagram => _graph.DoesOutlast(this, _graph.DiagramLifetime);
+            public override bool DoesOutlastDiagram(Diagram diagram) => _graphTree.DoesLifetimeOutlastDiagram(this, diagram);
 
             public override bool IsBounded => true;
 
-            private string DebuggerDisplay => DoesOutlastDiagram
-                ? "Lifetime : Diagram"
-                : "Diagram : Lifetime";
+            // TODO
+            private string DebuggerDisplay => "BoundedLifetime";
         }
 
         private class BoundedLifetimeGraph
         {
+            private readonly LifetimeGraphTree _graphTree;
             private readonly Dictionary<BoundedLifetime, HashSet<BoundedLifetime>> _lifetimeSupertypes = new Dictionary<BoundedLifetime, HashSet<BoundedLifetime>>();
 
-            public BoundedLifetimeGraph()
+            public BoundedLifetimeGraph(LifetimeGraphTree graphTree)
             {
-                DiagramLifetime = new BoundedLifetime(this);
+                _graphTree = graphTree;
+                DiagramLifetime = new BoundedLifetime(_graphTree, this);
             }
 
             public BoundedLifetime DiagramLifetime { get; }
@@ -66,7 +70,7 @@ namespace Rebar.Common
 
             public Lifetime CreateLifetimeThatIsBoundedByDiagram()
             {
-                BoundedLifetime lifetime = new BoundedLifetime(this);
+                BoundedLifetime lifetime = new BoundedLifetime(_graphTree, this);
                 SetOutlastsRelationship(DiagramLifetime, lifetime);
                 return lifetime;
             }
@@ -114,7 +118,7 @@ namespace Rebar.Common
 
         public void EstablishLifetimeGraph(Diagram diagram)
         {
-            _diagramGraphs[diagram] = new BoundedLifetimeGraph();
+            _diagramGraphs[diagram] = new BoundedLifetimeGraph(this);
         }
 
         // TODO: don't use DFIR
@@ -127,6 +131,30 @@ namespace Rebar.Common
         public Lifetime CreateLifetimeThatOutlastsRootDiagram()
         {
             throw new NotImplementedException();
+        }
+
+        private bool DoesLifetimeOutlastDiagram(BoundedLifetime boundedLifetime, Diagram diagram)
+        {
+            BoundedLifetimeGraph boundedLifetimeGraph = boundedLifetime.DiagramGraph;
+            BoundedLifetimeGraph diagramGraph = _diagramGraphs[diagram];
+            if (boundedLifetimeGraph == diagramGraph)
+            {
+                return boundedLifetimeGraph.DoesOutlast(boundedLifetime, boundedLifetimeGraph.DiagramLifetime);
+            }
+            else
+            {
+                Diagram currentDiagram = diagram.ParentStructure.ParentDiagram;
+                while (currentDiagram != null)
+                {
+                    diagramGraph = _diagramGraphs[currentDiagram];
+                    if (diagramGraph == boundedLifetimeGraph)
+                    {
+                        return true;
+                    }
+                    currentDiagram = currentDiagram.ParentStructure.ParentDiagram;
+                }
+                return false;
+            }
         }
     }
 }
