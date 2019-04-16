@@ -50,7 +50,7 @@ namespace Rebar.Compiler
                 ? outputUnderlyingType.CreateMutableReference()
                 : outputUnderlyingType.CreateImmutableReference();
 
-            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatOutlastsDiagram();
+            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram(inputTerminal.GetTrueVariable());
             outputTerminal.GetTrueVariable().SetTypeAndLifetime(
                 outputType,
                 outputLifetime);
@@ -129,7 +129,7 @@ namespace Rebar.Compiler
             outputTerminal.GetTrueVariable().SetTypeAndLifetime(
                 outputType,
                 outputType.IsRebarReferenceType()
-                    ? outputTerminal.DefineLifetimeThatOutlastsDiagram()
+                    ? outputTerminal.DefineLifetimeThatIsBoundedByDiagram(inputVariable)
                     : Lifetime.Unbounded);
             return true;
         }
@@ -144,7 +144,7 @@ namespace Rebar.Compiler
                 outputUnderlyingType = PFTypes.Void;
             }
 
-            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatOutlastsDiagram();
+            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram(inputTerminal.GetTrueVariable());
             outputTerminal.GetTrueVariable().SetTypeAndLifetime(
                 outputUnderlyingType.CreateMutableReference(),
                 outputLifetime);
@@ -162,7 +162,7 @@ namespace Rebar.Compiler
             }
             NIType outputType = PFTypes.Boolean.CreateMutableReference();
 
-            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatOutlastsDiagram();
+            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram(inputVariable);
             outputTerminal.GetTrueVariable().SetTypeAndLifetime(outputType, outputLifetime);
             return true;
         }
@@ -250,7 +250,7 @@ namespace Rebar.Compiler
             }
             else if (tunnel.Direction == Direction.Input)
             {
-                outputLifetime = outputTerminal.DefineLifetimeThatOutlastsDiagram();
+                outputLifetime = inputLifetime;
             }
             // else if (inputLifetime outlasts inner diagram) { outputLifetime = outer diagram origin of inputLifetime; }
             else
@@ -292,10 +292,7 @@ namespace Rebar.Compiler
             NIType optionValueType;
             if (optionType.TryDestructureOptionType(out optionValueType))
             {
-                Lifetime outputLifetime = inputVariable.Lifetime.IsBounded
-                    // TODO: when necessary, mark this lifetime as being related to the outer diagram lifetime
-                    ? outputTerminal.DefineLifetimeThatOutlastsDiagram()
-                    : inputVariable.Lifetime;
+                Lifetime outputLifetime = inputVariable.Lifetime;
                 outputVariable.SetTypeAndLifetime(
                     optionValueType,
                     outputLifetime);

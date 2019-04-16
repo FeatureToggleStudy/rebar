@@ -78,11 +78,6 @@ namespace Rebar.Compiler
             return new VariableUsageValidator(terminal);
         }
 
-        public static Lifetime DefineLifetimeThatOutlastsDiagram(this Terminal terminal)
-        {
-            return terminal.GetVariableSet().DefineLifetimeThatOutlastsDiagram();
-        }
-
         public static Lifetime DefineLifetimeThatIsBoundedByDiagram(this Terminal terminal, params VariableReference[] decomposedVariables)
         {
             return terminal.GetVariableSet().LifetimeGraphTree.CreateLifetimeThatIsBoundedByDiagram(terminal.ParentDiagram);

@@ -163,11 +163,6 @@ namespace Rebar.Common
             return Enumerable.Empty<VariableReference>();
         }
 
-        public Lifetime DefineLifetimeThatOutlastsDiagram()
-        {
-            return _boundedLifetimeGraph.CreateLifetimeThatOutlastsDiagram();
-        }
-
         internal bool GetMutable(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Mutable;
 
         internal NIType GetType(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Type;
