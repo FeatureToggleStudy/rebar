@@ -25,7 +25,7 @@ namespace Tests.Rebar.Unit.Compiler
             unificationResults = unificationResults ?? new TerminalTypeUnificationResults();
             RunSemanticAnalysisUpToCreateNodeFacades(dfirRoot, cancellationToken);
             new MergeVariablesAcrossWiresTransform(unificationResults).Execute(dfirRoot, cancellationToken);
-            new SetVariableTypesAndLifetimesTransform().Execute(dfirRoot, cancellationToken);
+            new SetVariableTypesAndLifetimesTransform(new LifetimeVariableAssociation()).Execute(dfirRoot, cancellationToken);
         }
 
         protected void RunSemanticAnalysisUpToValidation(DfirRoot dfirRoot)

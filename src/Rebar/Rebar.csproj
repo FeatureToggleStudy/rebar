@@ -103,6 +103,7 @@
     <Compile Include="Common\LifetimeGraphTree.cs" />
     <Compile Include="Common\InputReferenceMutability.cs" />
     <Compile Include="Common\ITypeUnificationResult.cs" />
+    <Compile Include="Common\LifetimeVariableAssociation.cs" />
     <Compile Include="Common\PrimitiveOps.cs" />
     <Compile Include="Common\Signatures.cs" />
     <Compile Include="Common\TypeVariableSet.cs" />

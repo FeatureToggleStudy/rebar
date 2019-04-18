@@ -10,6 +10,7 @@ using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using NationalInstruments.SourceModel;
 using NationalInstruments.SourceModel.Envoys;
+using Rebar.Common;
 using Rebar.Compiler.Nodes;
 using Rebar.SourceModel;
 using Diagram = NationalInstruments.SourceModel.Diagram;
@@ -83,11 +84,12 @@ namespace Rebar.Compiler
             CompileCancellationToken cancellationToken)
         {
             TerminalTypeUnificationResults unificationResults = new TerminalTypeUnificationResults();
+            LifetimeVariableAssociation lifetimeVariableAssocation = new LifetimeVariableAssociation();
             List<IDfirTransformBase> semanticAnalysisTransforms = new List<IDfirTransformBase>()
             {
                 new CreateNodeFacadesTransform(),
                 new MergeVariablesAcrossWiresTransform(unificationResults),
-                new SetVariableTypesAndLifetimesTransform(),
+                new SetVariableTypesAndLifetimesTransform(lifetimeVariableAssocation),
                 new ValidateVariableUsagesTransform(unificationResults),
                 new ReflectVariablesToTerminalsTransform(),
             };
