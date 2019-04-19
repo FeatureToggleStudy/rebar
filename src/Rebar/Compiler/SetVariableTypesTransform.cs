@@ -231,60 +231,9 @@ namespace Rebar.Compiler
 
         public bool VisitTunnel(Tunnel tunnel)
         {
-            Terminal inputTerminal = tunnel.Direction == Direction.Input ? tunnel.GetOuterTerminal() : tunnel.GetInnerTerminal();
             Terminal outputTerminal = tunnel.Direction == Direction.Input ? tunnel.GetInnerTerminal() : tunnel.GetOuterTerminal();
-            VariableReference inputVariable = inputTerminal.GetTrueVariable(),
-                outputVariable = outputTerminal.GetTrueVariable();
-
-            if (tunnel.Direction == Direction.Input)
-            {
-                SetVariableTypeAndLifetimeFromTypeVariable(outputVariable);
-                return true;
-            }
-
-            var parentFrame = tunnel.ParentStructure as Frame;
-            bool executesConditionally = parentFrame != null && DoesFrameExecuteConditionally(parentFrame);
-            bool wrapOutputInOption = tunnel.Direction == Direction.Output && executesConditionally;
-
-            SetVariableTypeAndLifetimeFromTypeVariable(inputVariable);
-            Lifetime outputLifetime = Lifetime.Unbounded;
-            NIType outputType = PFTypes.Void;
-            // if input is unbounded/static, then output is unbounded/static
-            // if input is from outer diagram, then output is a lifetime that outlasts the inner diagram
-            // if input is from inner diagram and outlasts the inner diagram, we should be able to determine 
-            //    which outer diagram lifetime it came from
-            // otherwise, output is empty/error
-            Lifetime inputLifetime = inputVariable.Lifetime;
-            if (!inputLifetime.IsBounded)
-            {
-                outputLifetime = inputLifetime;
-            }
-            else if (tunnel.Direction == Direction.Input)
-            {
-                outputLifetime = inputLifetime;
-            }
-            // else if (inputLifetime outlasts inner diagram) { outputLifetime = outer diagram origin of inputLifetime; }
-            else
-            {
-                outputLifetime = Lifetime.Empty;
-            }
-            outputType = inputVariable.Type;
-
-            // If outputType is already an Option value type, then don't re-wrap it.
-            if (wrapOutputInOption && !outputType.IsOptionType())
-            {
-                outputType = outputType.CreateOption();
-            }
-            outputVariable.SetTypeAndLifetime(
-                outputType,
-                outputLifetime);
+            SetVariableTypeAndLifetimeFromTypeVariable(outputTerminal.GetTrueVariable());
             return true;
-        }
-
-        private bool DoesFrameExecuteConditionally(Frame frame)
-        {
-            // TODO: handle multi-frame flat sequence structures
-            return frame.BorderNodes.OfType<UnwrapOptionTunnel>().Any();
         }
 
         public bool VisitTerminateLifetimeTunnel(TerminateLifetimeTunnel unborrowTunnel)

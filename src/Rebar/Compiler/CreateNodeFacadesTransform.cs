@@ -449,7 +449,7 @@ namespace Rebar.Compiler
             bool executesConditionally = parentFrame != null && DoesFrameExecuteConditionally(parentFrame);
             if (executesConditionally)
             {
-                _nodeFacade[valueInput] = new TunnelTerminalFacade(valueInput);
+                _nodeFacade[valueInput] = new TunnelTerminalFacade(valueInput, _nodeFacade[valueOutput]);
             }
             else
             {

@@ -1,18 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NationalInstruments.Dfir;
+﻿using NationalInstruments.Dfir;
 using Rebar.Common;
 
 namespace Rebar.Compiler
 {
     internal class TunnelTerminalFacade : TerminalFacade
     {
-        public TunnelTerminalFacade(Terminal terminal) : base(terminal)
+        private readonly TerminalFacade _outputTerminalFacade;
+
+        public TunnelTerminalFacade(Terminal terminal, TerminalFacade outputTerminalFacade) : base(terminal)
         {
             TrueVariable = terminal.GetVariableSet().CreateNewVariable();
+            _outputTerminalFacade = outputTerminalFacade;
         }
 
         public override VariableReference FacadeVariable => TrueVariable;
@@ -21,7 +19,22 @@ namespace Rebar.Compiler
 
         public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable, TerminalTypeUnificationResults unificationResults)
         {
-            
+            TrueVariable.MergeInto(wireFacadeVariable);
+            TypeVariableSet typeVariableSet = Terminal.GetTypeVariableSet();
+            string constructorName;
+            TypeVariableReference innerType, optionType;
+            if (typeVariableSet.TryDecomposeConstructorType(TrueVariable.TypeVariableReference, out constructorName, out innerType)
+                && constructorName == "Option")
+            {
+                optionType = TrueVariable.TypeVariableReference;
+            }
+            else
+            {
+                optionType = typeVariableSet.CreateReferenceToConstructorType("Option", TrueVariable.TypeVariableReference);
+            }
+            TypeVariableReference outputTypeReference = _outputTerminalFacade.TrueVariable.TypeVariableReference;
+            ITypeUnificationResult unificationResult = unificationResults.GetTypeUnificationResult(_outputTerminalFacade.Terminal, outputTypeReference, optionType);
+            typeVariableSet.Unify(outputTypeReference, optionType, unificationResult);
         }
 
         public override void UpdateFromFacadeInput()

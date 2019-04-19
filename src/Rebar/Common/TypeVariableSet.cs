@@ -500,6 +500,21 @@ namespace Rebar.Common
             return true;
         }
 
+        public bool TryDecomposeConstructorType(TypeVariableReference type, out string constructorName, out TypeVariableReference argument)
+        {
+            TypeBase typeBase = GetTypeForTypeVariableReference(type);
+            var constructorType = typeBase as ConstructorType;
+            if (constructorType == null)
+            {
+                constructorName = null;
+                argument = default(TypeVariableReference);
+                return false;
+            }
+            constructorName = constructorType.ConstructorName;
+            argument = constructorType.Argument;
+            return true;
+        }
+
         public void AndWith(TypeVariableReference type, bool value)
         {
             var mutabilityType = GetTypeForTypeVariableReference(type) as MutabilityTypeVariable;

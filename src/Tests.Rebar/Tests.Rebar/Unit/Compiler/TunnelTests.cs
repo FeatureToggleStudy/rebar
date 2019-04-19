@@ -60,7 +60,7 @@ namespace Tests.Rebar.Unit.Compiler
         }
 
         [TestMethod]
-        public void FrameOutputTunnelWithReferenceTypeWiredIn_SetVariableTypes_TypeAndEmptyLifetimeSetOnOutputVariable()
+        public void FrameOutputTunnelWithReferenceTypeWiredIn_SetVariableTypes_TypeAndLifetimeSetOnOutputVariable()
         {
             DfirRoot dfirRoot = DfirRoot.Create();
             Frame frame = Frame.Create(dfirRoot.BlockDiagram);
@@ -72,7 +72,8 @@ namespace Tests.Rebar.Unit.Compiler
 
             VariableReference outputVariable = tunnel.OutputTerminals[0].GetTrueVariable();
             Assert.IsTrue(outputVariable.Type.IsImmutableReferenceType());
-            Assert.IsTrue(outputVariable.Lifetime.IsEmpty);
+            Assert.IsFalse(outputVariable.Lifetime.DoesOutlastDiagram(frame.Diagram));
+            // TODO: need a VariableUsageValidation test that an error message is reported here
         }
 
         private Tunnel CreateInputTunnel(Frame frame)
