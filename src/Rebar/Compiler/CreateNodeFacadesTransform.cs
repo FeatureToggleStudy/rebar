@@ -440,14 +440,29 @@ namespace Rebar.Compiler
         {
             Terminal valueInput = tunnel.InputTerminals.ElementAt(0),
                 valueOutput = tunnel.OutputTerminals.ElementAt(0);
-            _nodeFacade[valueInput] = new SimpleTerminalFacade(valueInput);
-            _nodeFacade[valueOutput] = new SimpleTerminalFacade(valueOutput);
 
+            _nodeFacade[valueOutput] = new SimpleTerminalFacade(valueOutput);
             TypeVariableReference typeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-            _nodeFacade[valueInput].FacadeVariable.AdoptTypeVariableReference(typeVariable);
             _nodeFacade[valueOutput].FacadeVariable.AdoptTypeVariableReference(typeVariable);
 
+            var parentFrame = tunnel.ParentStructure as Frame;
+            bool executesConditionally = parentFrame != null && DoesFrameExecuteConditionally(parentFrame);
+            if (executesConditionally)
+            {
+                _nodeFacade[valueInput] = new TunnelTerminalFacade(valueInput);
+            }
+            else
+            {
+                _nodeFacade[valueInput] = new SimpleTerminalFacade(valueInput);
+                _nodeFacade[valueInput].FacadeVariable.AdoptTypeVariableReference(typeVariable);
+            }
             return true;
+        }
+
+        private bool DoesFrameExecuteConditionally(Frame frame)
+        {
+            // TODO: handle multi-frame flat sequence structures
+            return frame.BorderNodes.OfType<UnwrapOptionTunnel>().Any();
         }
 
         bool IDfirNodeVisitor<bool>.VisitTerminateLifetimeTunnel(TerminateLifetimeTunnel terminateLifetimeTunnel)

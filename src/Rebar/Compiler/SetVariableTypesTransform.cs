@@ -246,6 +246,7 @@ namespace Rebar.Compiler
             bool executesConditionally = parentFrame != null && DoesFrameExecuteConditionally(parentFrame);
             bool wrapOutputInOption = tunnel.Direction == Direction.Output && executesConditionally;
 
+            SetVariableTypeAndLifetimeFromTypeVariable(inputVariable);
             Lifetime outputLifetime = Lifetime.Unbounded;
             NIType outputType = PFTypes.Void;
             // if input is unbounded/static, then output is unbounded/static
