@@ -294,24 +294,9 @@ namespace Rebar.Compiler
 
         public bool VisitUnwrapOptionTunnel(UnwrapOptionTunnel unwrapOptionTunnel)
         {
-            Terminal inputTerminal = unwrapOptionTunnel.Direction == Direction.Input ? unwrapOptionTunnel.GetOuterTerminal(0) : unwrapOptionTunnel.GetInnerTerminal(0, 0);
             Terminal outputTerminal = unwrapOptionTunnel.Direction == Direction.Input ? unwrapOptionTunnel.GetInnerTerminal(0, 0) : unwrapOptionTunnel.GetOuterTerminal(0);
-            VariableReference inputVariable = inputTerminal.GetTrueVariable(),
-                outputVariable = outputTerminal.GetTrueVariable();
-            NIType optionType = inputVariable.Type;
-            NIType optionValueType;
-            if (optionType.TryDestructureOptionType(out optionValueType))
-            {
-                Lifetime outputLifetime = inputVariable.Lifetime;
-                outputVariable.SetTypeAndLifetime(
-                    optionValueType,
-                    outputLifetime);
-                return true;
-            }
-
-            outputVariable.SetTypeAndLifetime(
-                PFTypes.Void,
-                Lifetime.Unbounded);
+            VariableReference outputVariable = outputTerminal.GetTrueVariable();
+            SetVariableTypeAndLifetimeFromTypeVariable(outputVariable);
             return true;
         }
 

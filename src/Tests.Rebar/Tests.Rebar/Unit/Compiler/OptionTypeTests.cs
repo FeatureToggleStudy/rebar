@@ -1,0 +1,59 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NationalInstruments.Compiler.SemanticAnalysis;
+using NationalInstruments.DataTypes;
+using NationalInstruments.Dfir;
+using Rebar.Common;
+using Rebar.Compiler;
+using Rebar.Compiler.Nodes;
+
+namespace Tests.Rebar.Unit.Compiler
+{
+    [TestClass]
+    public class OptionTypeTests : CompilerTestBase
+    {
+        [TestMethod]
+        public void UnwrapOptionTunnelWithOptionTypeWired_SetVariableTypes_OutputTerminalIsInnerType()
+        {
+            DfirRoot function = DfirRoot.Create();
+            Frame frame = Frame.Create(function.BlockDiagram);
+            UnwrapOptionTunnel unwrapOption = CreateUnwrapOptionTunnel(frame);
+            FunctionalNode someConstructor = ConnectSomeConstructorToInputTerminal(unwrapOption.InputTerminals[0]);
+            ConnectConstantToInputTerminal(someConstructor.InputTerminals[0], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToSetVariableTypes(function);
+
+            VariableReference unwrapVariable = unwrapOption.OutputTerminals[0].GetTrueVariable();
+            Assert.IsTrue(unwrapVariable.Type.IsInt32());
+        }
+
+        [TestMethod]
+        public void UnwrapOptionTunnelWithNonOptionTypeWired_ValidateVariableUsages_TypeMismatchErrorCreated()
+        {
+            DfirRoot function = DfirRoot.Create();
+            Frame frame = Frame.Create(function.BlockDiagram);
+            UnwrapOptionTunnel unwrapOption = CreateUnwrapOptionTunnel(frame);
+            ConnectConstantToInputTerminal(unwrapOption.InputTerminals[0], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToValidation(function);
+
+            Assert.IsTrue(unwrapOption.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+        }
+
+        private static UnwrapOptionTunnel CreateUnwrapOptionTunnel(Frame frame)
+        {
+            return new UnwrapOptionTunnel(frame);
+        }
+
+        internal static FunctionalNode ConnectSomeConstructorToInputTerminal(Terminal inputTerminal)
+        {
+            FunctionalNode someConstructor = new FunctionalNode(inputTerminal.ParentDiagram, Signatures.SomeConstructorType);
+            Wire wire = Wire.Create(inputTerminal.ParentDiagram, someConstructor.OutputTerminals[0], inputTerminal);
+            return someConstructor;
+        }
+    }
+}

@@ -67,6 +67,7 @@
     <Compile Include="Unit\Compiler\IterateTunnelTests.cs" />
     <Compile Include="Unit\Compiler\LockTunnelTests.cs" />
     <Compile Include="Unit\Compiler\LoopConditionTunnelTests.cs" />
+    <Compile Include="Unit\Compiler\OptionTypeTests.cs" />
     <Compile Include="Unit\Compiler\TunnelTests.cs" />
     <Compile Include="Unit\Compiler\WireTests.cs" />
     <Compile Include="Unit\TypeInferenceUnitTests.cs" />

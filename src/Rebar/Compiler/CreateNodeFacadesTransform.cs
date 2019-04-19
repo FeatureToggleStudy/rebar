@@ -464,16 +464,15 @@ namespace Rebar.Compiler
 
         bool IDfirNodeVisitor<bool>.VisitUnwrapOptionTunnel(UnwrapOptionTunnel unwrapOptionTunnel)
         {
-            Terminal optionInput = unwrapOptionTunnel.InputTerminals.ElementAt(0),
-                unwrappedOutput = unwrapOptionTunnel.OutputTerminals.ElementAt(0);
+            Terminal optionInput = unwrapOptionTunnel.InputTerminals[0],
+                unwrappedOutput = unwrapOptionTunnel.OutputTerminals[0];
             _nodeFacade[optionInput] = new SimpleTerminalFacade(optionInput);
             _nodeFacade[unwrappedOutput] = new SimpleTerminalFacade(unwrappedOutput);
 
-            // TODO: something will need to unify the two type variables, with caustion for the different lifetimes
-            _nodeFacade[optionInput].FacadeVariable.AdoptTypeVariableReference(_typeVariableSet
-                .CreateReferenceToConstructorType("Option", _typeVariableSet.CreateReferenceToNewTypeVariable()));
-            _nodeFacade[unwrappedOutput].FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToNewTypeVariable());
-
+            TypeVariableReference innerTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
+            _nodeFacade[optionInput].FacadeVariable.AdoptTypeVariableReference(
+                _typeVariableSet.CreateReferenceToConstructorType("Option", innerTypeVariable));
+            _nodeFacade[unwrappedOutput].FacadeVariable.AdoptTypeVariableReference(innerTypeVariable);
             return true;
         }
     }
