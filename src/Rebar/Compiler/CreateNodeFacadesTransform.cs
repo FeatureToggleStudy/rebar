@@ -378,10 +378,7 @@ namespace Rebar.Compiler
                 .AddTerminalFacade(iteratorInput);
             _nodeFacade[itemOutput] = new SimpleTerminalFacade(itemOutput);
 
-            // TODO: this is going to mess up pretty hard on iterators with reference Item types--like slices
-            // the Item type in the inner diagram will need to have an inner diagram lifetime
-            // &'a mut Iterator -> Item
-            // TODO: itemType should be a variable
+            // TODO: iteratorType should be an Iterator trait constraint, related to itemType
             TypeVariableReference itemType = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32);
             TypeVariableReference iteratorType = _typeVariableSet.CreateReferenceToConstructorType("Iterator", itemType);
             lifetimeTypeVariableGroup.CreateReferenceTypeForFacade(_nodeFacade[iteratorInput], InputReferenceMutability.RequireMutable, iteratorType);

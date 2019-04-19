@@ -130,25 +130,7 @@ namespace Rebar.Compiler
 
         public bool VisitIterateTunnel(IterateTunnel iterateTunnel)
         {
-            VariableReference inputVariable = iterateTunnel.Terminals.ElementAt(0).GetTrueVariable();
-            NIType outputType;
-            NIType inputType = inputVariable.Type.GetReferentType();
-            if (!inputType.TryDestructureIteratorType(out outputType))
-            {
-                outputType = PFTypes.Void;
-            }
-            Terminal outputTerminal = iterateTunnel.Terminals.ElementAt(1);
-            Lifetime outputLifetime;
-            if (outputType.IsRebarReferenceType())
-            {
-                outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram();
-                _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputVariable, outputLifetime);
-            }
-            else
-            {
-                outputLifetime = Lifetime.Unbounded;
-            }
-            outputTerminal.GetTrueVariable().SetTypeAndLifetime(outputType, outputLifetime);
+            SetVariableTypeAndLifetimeFromTypeVariable(iterateTunnel.OutputTerminals[0].GetTrueVariable());
             return true;
         }
 

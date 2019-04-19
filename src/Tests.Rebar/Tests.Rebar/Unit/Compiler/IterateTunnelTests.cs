@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using Rebar.Common;
@@ -13,23 +11,21 @@ namespace Tests.Rebar.Unit.Compiler
     [TestClass]
     public class IterateTunnelTests : CompilerTestBase
     {
-#if FALSE
         [TestMethod]
-        public void IterateTunnelWithIterableTypeWired_SetVariableTypes_OutputLifetimeIsBoundedAndDoesNotOutlastDiagram()
+        public void IterateTunnelWithRangeIteratorTypeWired_SetVariableTypes_OutputIsInt32()
         {
             DfirRoot function = DfirRoot.Create();
             Loop loop = new Loop(function.BlockDiagram);
             var iterateTunnel = CreateIterateTunnel(loop);
-            // ConnectConstantToInputTerminal(iterateTunnel.InputTerminals[0], PFTypes.Int32, false);
+            ConnectRangeWithIntegerInputsToInputTerminal(iterateTunnel.InputTerminals[0]);
 
             RunSemanticAnalysisUpToSetVariableTypes(function);
 
-            VariableReference borrowOutputVariable = iterateTunnel.OutputTerminals[0].GetTrueVariable();
-            Lifetime lifetime = borrowOutputVariable.Lifetime;
-            Assert.IsTrue(lifetime.IsBounded);
-            Assert.IsFalse(lifetime.DoesOutlastDiagram(loop.Diagrams[0]));
+            VariableReference iterateOutputVariable = iterateTunnel.OutputTerminals[0].GetTrueVariable();
+            Assert.IsTrue(iterateOutputVariable.Type.IsInt32());
         }
 
+#if FALSE
         [TestMethod]
         public void IterateTunnelWithIterableTypeWired_SetVariableTypes_OutputLifetimeHasCorrectInterruptedVariables()
         {
@@ -57,6 +53,16 @@ namespace Tests.Rebar.Unit.Compiler
             iterateTunnel.TerminateLifetimeTunnel = terminateLifetimeDfir;
             terminateLifetimeDfir.BeginLifetimeTunnel = iterateTunnel;
             return iterateTunnel;
+        }
+
+        private static FunctionalNode ConnectRangeWithIntegerInputsToInputTerminal(Terminal inputTerminal)
+        {
+            FunctionalNode range = new FunctionalNode(inputTerminal.ParentDiagram, Signatures.RangeType);
+            ConnectConstantToInputTerminal(range.InputTerminals[0], PFTypes.Int32, false);
+            ConnectConstantToInputTerminal(range.InputTerminals[1], PFTypes.Int32, false);
+            Wire wire = Wire.Create(inputTerminal.ParentDiagram, range.OutputTerminals[0], inputTerminal);
+            wire.SetWireBeginsMutableVariable(true);
+            return range;
         }
     }
 }
