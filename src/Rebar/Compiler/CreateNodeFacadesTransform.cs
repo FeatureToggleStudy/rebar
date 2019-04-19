@@ -141,8 +141,7 @@ namespace Rebar.Compiler
             {
                 bool mutable = explicitBorrowNode.BorrowMode == BorrowMode.Mutable;
                 VariableSet variableSet = explicitBorrowNode.ParentDiagram.GetVariableSet();
-                IEnumerable<VariableReference> decomposedVariables = explicitBorrowNode.InputTerminals.Select(VariableExtensions.GetFacadeVariable);
-                Lifetime borrowLifetime = explicitBorrowNode.OutputTerminals.First().DefineLifetimeThatIsBoundedByDiagram(decomposedVariables.ToArray());
+                Lifetime borrowLifetime = explicitBorrowNode.OutputTerminals.First().DefineLifetimeThatIsBoundedByDiagram();
                 TypeVariableReference borrowLifetimeType = _typeVariableSet.CreateReferenceToLifetimeType(borrowLifetime);
 
                 foreach (var terminalPair in explicitBorrowNode.InputTerminals.Zip(explicitBorrowNode.OutputTerminals))
@@ -359,7 +358,7 @@ namespace Rebar.Compiler
 
             // T -> &'a (mode) T
             TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-            Lifetime innerLifetime = borrowOutput.DefineLifetimeThatIsBoundedByDiagram(valueInput.GetFacadeVariable());
+            Lifetime innerLifetime = borrowOutput.DefineLifetimeThatIsBoundedByDiagram();
             TypeVariableReference referenceType = _typeVariableSet.CreateReferenceToReferenceType(
                 borrowTunnel.BorrowMode == BorrowMode.Mutable,
                 dataTypeVariable,
@@ -408,7 +407,7 @@ namespace Rebar.Compiler
                 _nodeFacade[lockInput],
                 InputReferenceMutability.AllowImmutable,
                 lockType);
-            Lifetime innerLifetime = referenceOutput.DefineLifetimeThatIsBoundedByDiagram(lockInput.GetTrueVariable());
+            Lifetime innerLifetime = referenceOutput.DefineLifetimeThatIsBoundedByDiagram();
             TypeVariableReference referenceType = _typeVariableSet.CreateReferenceToReferenceType(
                 false,
                 lockType,
@@ -428,7 +427,7 @@ namespace Rebar.Compiler
 
             TypeVariableReference boolType = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Boolean);
             _nodeFacade[loopConditionInput].FacadeVariable.AdoptTypeVariableReference(boolType);
-            Lifetime innerLifetime = loopConditionOutput.DefineLifetimeThatIsBoundedByDiagram(loopConditionInput.GetTrueVariable());
+            Lifetime innerLifetime = loopConditionOutput.DefineLifetimeThatIsBoundedByDiagram();
             TypeVariableReference boolReferenceType = _typeVariableSet.CreateReferenceToReferenceType(
                 true,
                 boolType,

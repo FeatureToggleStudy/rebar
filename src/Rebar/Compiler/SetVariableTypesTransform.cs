@@ -57,7 +57,7 @@ namespace Rebar.Compiler
                 ? outputUnderlyingType.CreateMutableReference()
                 : outputUnderlyingType.CreateImmutableReference();
 
-            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram(inputTerminal.GetTrueVariable());
+            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram();
             outputTerminal.GetTrueVariable().SetTypeAndLifetime(
                 outputType,
                 outputLifetime);
@@ -88,7 +88,7 @@ namespace Rebar.Compiler
             if (explicitBorrowNode.AlwaysBeginLifetime
                 || !((firstLifetime?.IsBounded ?? false) && inputVariables.All(inputVariable => inputVariable.Lifetime == firstLifetime)))
             {
-                outputLifetime = explicitBorrowNode.OutputTerminals.First().DefineLifetimeThatIsBoundedByDiagram(inputVariables.ToArray());
+                outputLifetime = explicitBorrowNode.OutputTerminals.First().DefineLifetimeThatIsBoundedByDiagram();
                 inputVariables.ForEach(v => _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(v, outputLifetime));
             }
             else
@@ -148,7 +148,7 @@ namespace Rebar.Compiler
             Lifetime outputLifetime;
             if (outputType.IsRebarReferenceType())
             {
-                outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram(inputVariable);
+                outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram();
                 _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputVariable, outputLifetime);
             }
             else
@@ -169,7 +169,7 @@ namespace Rebar.Compiler
                 outputUnderlyingType = PFTypes.Void;
             }
 
-            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram(inputTerminal.GetTrueVariable());
+            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram();
             _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputTerminal.GetTrueVariable(), outputLifetime);
             outputTerminal.GetTrueVariable().SetTypeAndLifetime(
                 outputUnderlyingType.CreateMutableReference(),
@@ -188,7 +188,7 @@ namespace Rebar.Compiler
             }
             NIType outputType = PFTypes.Boolean.CreateMutableReference();
 
-            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram(inputVariable);
+            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram();
             _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputVariable, outputLifetime);
             outputTerminal.GetTrueVariable().SetTypeAndLifetime(outputType, outputLifetime);
             return true;
