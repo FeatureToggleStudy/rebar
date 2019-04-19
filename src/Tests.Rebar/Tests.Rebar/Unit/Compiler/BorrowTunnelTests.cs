@@ -13,7 +13,7 @@ namespace Tests.Rebar.Unit.Compiler
     public class BorrowTunnelTests : CompilerTestBase
     {
         [TestMethod]
-        public void BorrowTunnel_SetVariableTypes_OutputLifetimeIsBoundedAndDoesNotOutlastDiagram()
+        public void BorrowTunnelWithImmutableMode_SetVariableTypes_OutputLifetimeIsBoundedAndDoesNotOutlastDiagram()
         {
             DfirRoot function = DfirRoot.Create();
             Frame frame = Frame.Create(function.BlockDiagram);
@@ -23,6 +23,24 @@ namespace Tests.Rebar.Unit.Compiler
             RunSemanticAnalysisUpToSetVariableTypes(function);
 
             VariableReference borrowOutputVariable = borrowTunnel.OutputTerminals[0].GetTrueVariable();
+            Assert.IsTrue(borrowOutputVariable.Type.IsImmutableReferenceType());
+            Lifetime lifetime = borrowOutputVariable.Lifetime;
+            Assert.IsTrue(lifetime.IsBounded);
+            Assert.IsFalse(lifetime.DoesOutlastDiagram(frame.Diagram));
+        }
+
+        [TestMethod]
+        public void BorrowTunnelWithMutableModeAndMutableVariableWired_SetVariableTypes_OutputReferenceIsMutable()
+        {
+            DfirRoot function = DfirRoot.Create();
+            Frame frame = Frame.Create(function.BlockDiagram);
+            var borrowTunnel = CreateBorrowTunnel(frame, BorrowMode.Mutable);
+            ConnectConstantToInputTerminal(borrowTunnel.InputTerminals[0], PFTypes.Int32, true);
+
+            RunSemanticAnalysisUpToSetVariableTypes(function);
+
+            VariableReference borrowOutputVariable = borrowTunnel.OutputTerminals[0].GetTrueVariable();
+            Assert.IsTrue(borrowOutputVariable.Type.IsMutableReferenceType());
             Lifetime lifetime = borrowOutputVariable.Lifetime;
             Assert.IsTrue(lifetime.IsBounded);
             Assert.IsFalse(lifetime.DoesOutlastDiagram(frame.Diagram));

@@ -52,16 +52,9 @@ namespace Rebar.Compiler
         {
             Terminal inputTerminal = borrowTunnel.Terminals.ElementAt(0),
                 outputTerminal = borrowTunnel.Terminals.ElementAt(1);
-            NIType outputUnderlyingType = inputTerminal.GetTrueVariable().Type;
-            NIType outputType = borrowTunnel.BorrowMode == BorrowMode.Mutable
-                ? outputUnderlyingType.CreateMutableReference()
-                : outputUnderlyingType.CreateImmutableReference();
-
-            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram();
-            outputTerminal.GetTrueVariable().SetTypeAndLifetime(
-                outputType,
-                outputLifetime);
-            _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputTerminal.GetTrueVariable(), outputLifetime);
+            VariableReference outputVariable = outputTerminal.GetTrueVariable();
+            SetVariableTypeAndLifetimeFromTypeVariable(outputVariable);
+            _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputTerminal.GetTrueVariable(), outputVariable.Lifetime);
             return true;
         }
 
