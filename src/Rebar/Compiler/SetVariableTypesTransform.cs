@@ -60,7 +60,7 @@ namespace Rebar.Compiler
 
         public bool VisitConstant(Constant constant)
         {
-            constant.OutputTerminal.GetTrueVariable().SetTypeAndLifetime(constant.DataType, Lifetime.Unbounded);
+            SetVariableTypeAndLifetimeFromTypeVariable(constant.OutputTerminal.GetTrueVariable());
             return true;
         }
 

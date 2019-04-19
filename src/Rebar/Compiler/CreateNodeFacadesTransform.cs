@@ -115,7 +115,6 @@ namespace Rebar.Compiler
             _nodeFacade[valueOutput] = new SimpleTerminalFacade(valueOutput);
 
             _nodeFacade[valueOutput].FacadeVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToLiteralType(constant.DataType));
-
             return true;
         }
 
