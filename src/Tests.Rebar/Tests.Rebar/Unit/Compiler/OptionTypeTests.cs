@@ -44,6 +44,23 @@ namespace Tests.Rebar.Unit.Compiler
             Assert.IsTrue(unwrapOption.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
         }
 
+        [TestMethod]
+        public void OutputTunnelOnFrameWithUnwrapOptionTunnel_SetVariableTypes_OutputTerminalIsOptionType()
+        {
+            DfirRoot function = DfirRoot.Create();
+            Frame frame = Frame.Create(function.BlockDiagram);
+            UnwrapOptionTunnel unwrapOption = CreateUnwrapOptionTunnel(frame);
+            Tunnel outputTunnel = frame.CreateTunnel(Direction.Output, TunnelMode.LastValue, PFTypes.Void, PFTypes.Void);
+            ConnectConstantToInputTerminal(outputTunnel.InputTerminals[0], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToSetVariableTypes(function);
+
+            VariableReference outputVariable = outputTunnel.OutputTerminals[0].GetTrueVariable();
+            NIType innerType;
+            Assert.IsTrue(outputVariable.Type.TryDestructureOptionType(out innerType));
+            Assert.IsTrue(innerType.IsInt32());
+        }
+
         private static UnwrapOptionTunnel CreateUnwrapOptionTunnel(Frame frame)
         {
             return new UnwrapOptionTunnel(frame);
