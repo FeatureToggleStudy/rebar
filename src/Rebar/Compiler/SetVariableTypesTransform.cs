@@ -35,8 +35,7 @@ namespace Rebar.Compiler
             foreach (var wireTerminal in wire.Terminals)
             {
                 VariableReference variable = wireTerminal.GetFacadeVariable();
-                TypeVariableReference typeReference = variable.TypeVariableReference;
-                variable.SetTypeAndLifetime(typeReference.RenderNIType(), typeReference.Lifetime);
+                SetVariableTypeAndLifetimeFromTypeVariable(variable);
             }
         }
 
