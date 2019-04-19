@@ -73,7 +73,6 @@ namespace Rebar.Common
 
         private readonly List<Variable> _variables = new List<Variable>();
         private readonly List<Variable> _variableReferences = new List<Variable>();
-        private readonly Dictionary<Lifetime, List<Variable>> _variablesInterruptedByLifetimes = new Dictionary<Lifetime, List<Variable>>();
 
         public VariableSet()
             : this(null)
@@ -146,17 +145,6 @@ namespace Rebar.Common
                 }
             }
             _variables.Remove(toMergeVariable);
-        }
-
-        public IEnumerable<VariableReference> GetVariablesInterruptedByLifetime(Lifetime lifetime)
-        {
-            List<Variable> variables;
-            if (_variablesInterruptedByLifetimes.TryGetValue(lifetime, out variables))
-            {
-                // TODO: create new reference indices for these variables?
-                return variables.Select(GetExistingReferenceForVariable);
-            }
-            return Enumerable.Empty<VariableReference>();
         }
 
         internal bool GetMutable(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Mutable;
