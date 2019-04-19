@@ -119,6 +119,10 @@ namespace Rebar.Compiler
         public bool VisitFunctionalNode(FunctionalNode functionalNode)
         {
             Signature signature = Signatures.GetSignatureForNIType(functionalNode.Signature);
+            // For any input reference parameters that were auto-borrowed, set interrupted variables for their borrow lifetime
+            AutoBorrowNodeFacade facade = AutoBorrowNodeFacade.GetNodeFacade(functionalNode);
+            facade.SetLifetimeInterruptedVariables(_lifetimeVariableAssociation);
+
             // SetTypeAndLifetime for any output parameters based on type parameter substitutions
             foreach (var outputPair in functionalNode.OutputTerminals.Zip(signature.Outputs))
             {

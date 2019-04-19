@@ -16,16 +16,18 @@ namespace Tests.Rebar.Unit.Compiler
             new CreateNodeFacadesTransform().Execute(dfirRoot, cancellationToken);
         }
 
-        protected void RunSemanticAnalysisUpToSetVariableTypes(
+        internal void RunSemanticAnalysisUpToSetVariableTypes(
             DfirRoot dfirRoot, 
             CompileCancellationToken cancellationToken = null,
-            TerminalTypeUnificationResults unificationResults = null)
+            TerminalTypeUnificationResults unificationResults = null,
+            LifetimeVariableAssociation lifetimeVariableAssociation = null)
         {
             cancellationToken = cancellationToken ?? new CompileCancellationToken();
             unificationResults = unificationResults ?? new TerminalTypeUnificationResults();
+            lifetimeVariableAssociation = lifetimeVariableAssociation ?? new LifetimeVariableAssociation();
             RunSemanticAnalysisUpToCreateNodeFacades(dfirRoot, cancellationToken);
             new MergeVariablesAcrossWiresTransform(unificationResults).Execute(dfirRoot, cancellationToken);
-            new SetVariableTypesAndLifetimesTransform(new LifetimeVariableAssociation()).Execute(dfirRoot, cancellationToken);
+            new SetVariableTypesAndLifetimesTransform(lifetimeVariableAssociation).Execute(dfirRoot, cancellationToken);
         }
 
         protected void RunSemanticAnalysisUpToValidation(DfirRoot dfirRoot)

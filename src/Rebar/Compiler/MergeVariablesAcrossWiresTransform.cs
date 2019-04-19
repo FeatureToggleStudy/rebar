@@ -16,6 +16,10 @@ namespace Rebar.Compiler
 
         protected override void VisitBorderNode(BorderNode borderNode)
         {
+            if (borderNode is Nodes.TerminateLifetimeTunnel)
+            {
+                return;
+            }
             UnifyNodeInputTerminalTypes(borderNode);
         }
 

@@ -72,6 +72,17 @@ namespace Rebar.Compiler
             }
         }
 
+        public void SetLifetimeInterruptedVariables(LifetimeVariableAssociation lifetimeVariableAssociation)
+        {
+            if (_lifetimeGroups != null)
+            {
+                foreach (var lifetimeGroup in _lifetimeGroups)
+                {
+                    lifetimeGroup.SetInterruptedVariables(lifetimeVariableAssociation);
+                }
+            }
+        }
+
         public void CreateBorrowAndTerminateLifetimeNodes()
         {
             if (_lifetimeGroups != null)

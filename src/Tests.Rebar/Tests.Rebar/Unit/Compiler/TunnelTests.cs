@@ -77,7 +77,7 @@ namespace Tests.Rebar.Unit.Compiler
 
         private Tunnel CreateInputTunnel(Frame frame)
         {
-            return frame.CreateTunnel(Direction.Input, TunnelMode.LastValue, PFTypes.Void,PFTypes.Void);
+            return frame.CreateTunnel(Direction.Input, TunnelMode.LastValue, PFTypes.Void, PFTypes.Void);
         }
 
         private Tunnel CreateOutputTunnel(Frame frame)

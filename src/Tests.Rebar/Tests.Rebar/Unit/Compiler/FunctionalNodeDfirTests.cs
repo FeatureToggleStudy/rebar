@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NationalInstruments.Compiler.SemanticAnalysis;
 using NationalInstruments.DataTypes;
@@ -109,6 +110,25 @@ namespace Tests.Rebar.Unit.Compiler
         #endregion
 
         #region SetVariableTypes
+
+        [TestMethod]
+        public void FunctionNodeWithImmutableInOutParameter_SetVariableTypes_TrueVariableLifetimeInterruptsCorrectTypes()
+        {
+            NIType signatureType = Signatures.ImmutablePassthroughType;
+            DfirRoot dfirRoot = DfirRoot.Create();
+            FunctionalNode functionalNode = new FunctionalNode(dfirRoot.BlockDiagram, signatureType);
+            ConnectConstantToInputTerminal(functionalNode.InputTerminals[0], PFTypes.Int32, false);
+            var lifetimeVariableAssociation = new LifetimeVariableAssociation();
+
+            RunSemanticAnalysisUpToSetVariableTypes(dfirRoot, null, null, lifetimeVariableAssociation);
+
+            Lifetime lifetime = functionalNode.InputTerminals[0].GetTrueVariable().Lifetime;
+            Assert.IsTrue(lifetime.IsBounded);
+            VariableReference inputVariable = functionalNode.InputTerminals[0].GetFacadeVariable();
+            IEnumerable<VariableReference> interruptedVariables = lifetimeVariableAssociation.GetVariablesInterruptedByLifetime(lifetime);
+            Assert.AreEqual(1, interruptedVariables.Count());
+            Assert.AreEqual(inputVariable, interruptedVariables.First());
+        }
 
         [TestMethod]
         public void FunctionNodeWithOutParameterAndInOutParameterLinkedByType_SetVariableTypes_TypePropagatedToOutput()
