@@ -163,17 +163,10 @@ namespace Rebar.Compiler
         {
             Terminal inputTerminal = lockTunnel.Terminals.ElementAt(0),
                 outputTerminal = lockTunnel.Terminals.ElementAt(1);
-            NIType outputUnderlyingType;
-            if (!inputTerminal.GetTrueVariable().Type.GetReferentType().TryDestructureLockingCellType(out outputUnderlyingType))
-            {
-                outputUnderlyingType = PFTypes.Void;
-            }
 
-            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram();
-            _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputTerminal.GetTrueVariable(), outputLifetime);
-            outputTerminal.GetTrueVariable().SetTypeAndLifetime(
-                outputUnderlyingType.CreateMutableReference(),
-                outputLifetime);
+            VariableReference outputVariable = outputTerminal.GetTrueVariable();
+            SetVariableTypeAndLifetimeFromTypeVariable(outputVariable);
+            _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputTerminal.GetTrueVariable(), outputVariable.Lifetime);
             return true;
         }
 

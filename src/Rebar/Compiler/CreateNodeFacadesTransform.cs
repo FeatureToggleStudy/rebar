@@ -409,7 +409,7 @@ namespace Rebar.Compiler
                 lockType);
             Lifetime innerLifetime = referenceOutput.DefineLifetimeThatIsBoundedByDiagram();
             TypeVariableReference referenceType = _typeVariableSet.CreateReferenceToReferenceType(
-                false,
+                true,
                 lockType,
                 _typeVariableSet.CreateReferenceToLifetimeType(innerLifetime));
             _nodeFacade[referenceOutput].FacadeVariable.AdoptTypeVariableReference(referenceType);
