@@ -45,13 +45,31 @@ namespace Tests.Rebar.Unit.Compiler
         }
 
         [TestMethod]
-        public void OutputTunnelOnFrameWithUnwrapOptionTunnel_SetVariableTypes_OutputTerminalIsOptionType()
+        public void OutputTunnelOnFrameWithUnwrapOptionTunnelWithNonOptionInput_SetVariableTypes_OutputTerminalIsOptionType()
         {
             DfirRoot function = DfirRoot.Create();
             Frame frame = Frame.Create(function.BlockDiagram);
             UnwrapOptionTunnel unwrapOption = CreateUnwrapOptionTunnel(frame);
             Tunnel outputTunnel = frame.CreateTunnel(Direction.Output, TunnelMode.LastValue, PFTypes.Void, PFTypes.Void);
             ConnectConstantToInputTerminal(outputTunnel.InputTerminals[0], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToSetVariableTypes(function);
+
+            VariableReference outputVariable = outputTunnel.OutputTerminals[0].GetTrueVariable();
+            NIType innerType;
+            Assert.IsTrue(outputVariable.Type.TryDestructureOptionType(out innerType));
+            Assert.IsTrue(innerType.IsInt32());
+        }
+
+        [TestMethod]
+        public void OutputTunnelOnFrameWithUnwrapOptionTunnelWithOptionInput_SetVariableTypes_OutputTerminalTypeIsNotRewrapped()
+        {
+            DfirRoot function = DfirRoot.Create();
+            Frame frame = Frame.Create(function.BlockDiagram);
+            UnwrapOptionTunnel unwrapOption = CreateUnwrapOptionTunnel(frame);
+            Tunnel outputTunnel = frame.CreateTunnel(Direction.Output, TunnelMode.LastValue, PFTypes.Void, PFTypes.Void);
+            FunctionalNode someConstructor = ConnectSomeConstructorToInputTerminal(outputTunnel.InputTerminals[0]);
+            ConnectConstantToInputTerminal(someConstructor.InputTerminals[0], PFTypes.Int32, false);
 
             RunSemanticAnalysisUpToSetVariableTypes(function);
 
