@@ -175,15 +175,11 @@ namespace Rebar.Compiler
             Terminal inputTerminal = loopConditionTunnel.Terminals.ElementAt(0),
                 outputTerminal = loopConditionTunnel.Terminals.ElementAt(1);
             VariableReference inputVariable = inputTerminal.GetTrueVariable();
-            if (!inputTerminal.IsConnected)
-            {
-                inputVariable.SetTypeAndLifetime(PFTypes.Boolean, Lifetime.Unbounded);
-            }
-            NIType outputType = PFTypes.Boolean.CreateMutableReference();
+            SetVariableTypeAndLifetimeFromTypeVariable(inputVariable);
 
-            Lifetime outputLifetime = outputTerminal.DefineLifetimeThatIsBoundedByDiagram();
-            _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputVariable, outputLifetime);
-            outputTerminal.GetTrueVariable().SetTypeAndLifetime(outputType, outputLifetime);
+            VariableReference outputVariable = outputTerminal.GetTrueVariable();
+            SetVariableTypeAndLifetimeFromTypeVariable(outputVariable);
+            _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputVariable, outputVariable.Lifetime);
             return true;
         }
 

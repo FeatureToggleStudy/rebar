@@ -20,7 +20,22 @@ namespace Rebar.Compiler
             {
                 return;
             }
-            UnifyNodeInputTerminalTypes(borderNode);
+            var loopCondition = borderNode as Nodes.LoopConditionTunnel;
+            if (loopCondition != null)
+            {
+                Terminal nodeTerminal = loopCondition.InputTerminals[0];
+                var connectedWireTerminal = nodeTerminal.ConnectedTerminal;
+                if (connectedWireTerminal != null)
+                {
+                    // Unify node input terminal with its connected source
+                    AutoBorrowNodeFacade nodeFacade = AutoBorrowNodeFacade.GetNodeFacade(loopCondition);
+                    nodeFacade[nodeTerminal].UnifyWithConnectedWireTypeAsNodeInput(connectedWireTerminal.GetFacadeVariable(), _typeUnificationResults);
+                }                
+            }
+            else
+            {
+                UnifyNodeInputTerminalTypes(borderNode);
+            }
         }
 
         protected override void VisitNode(Node node)
