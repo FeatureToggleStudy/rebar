@@ -142,6 +142,7 @@ namespace Rebar.Compiler
             if (inputLifetimes.HasMoreThan(1))
             {
                 errorState = TerminateLifetimeErrorState.InputLifetimesNotUnique;
+                singleLifetime = inputLifetimes.First();
             }
             else if ((singleLifetime = inputLifetimes.FirstOrDefault()) == null)
             {
@@ -172,12 +173,18 @@ namespace Rebar.Compiler
             }
             terminateLifetimeNode.ErrorState = errorState;
 
-            var decomposedVariablesConcat = decomposedVariables.Concat(Enumerable.Repeat<VariableReference>(new VariableReference(), int.MaxValue));
-            foreach (var outputTerminalPair in terminateLifetimeNode.OutputTerminals.Zip(decomposedVariablesConcat))
+            if (terminateLifetimeNode.ErrorState != TerminateLifetimeErrorState.InputLifetimeCannotBeTerminated)
             {
-                Terminal outputTerminal = outputTerminalPair.Key;
-                VariableReference decomposedVariable = outputTerminalPair.Value;
-                outputTerminal.GetFacadeVariable().MergeInto(decomposedVariable);
+                var decomposedVariablesConcat = decomposedVariables.Concat(Enumerable.Repeat<VariableReference>(new VariableReference(), int.MaxValue));
+                foreach (var outputTerminalPair in terminateLifetimeNode.OutputTerminals.Zip(decomposedVariablesConcat))
+                {
+                    Terminal outputTerminal = outputTerminalPair.Key;
+                    VariableReference decomposedVariable = outputTerminalPair.Value;
+                    if (decomposedVariable.IsValid)
+                    {
+                        outputTerminal.GetFacadeVariable().MergeInto(decomposedVariable);
+                    }
+                }
             }
             return true;
         }

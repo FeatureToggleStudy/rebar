@@ -341,6 +341,7 @@ namespace Rebar.Compiler
             {
                 // TODO: when updating terminals during SA, also update the TerminalFacades
                 _nodeFacade[terminal] = new SimpleTerminalFacade(terminal);
+                _nodeFacade[terminal].TrueVariable.AdoptTypeVariableReference(_typeVariableSet.CreateReferenceToNewTypeVariable());
             }
             return true;
         }

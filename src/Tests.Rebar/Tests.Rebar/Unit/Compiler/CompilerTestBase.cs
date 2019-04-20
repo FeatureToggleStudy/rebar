@@ -51,5 +51,14 @@ namespace Tests.Rebar.Unit.Compiler
             Wire wire = Wire.Create(inputTerminal.ParentDiagram, borrow.OutputTerminals[0], inputTerminal);
             return borrow;
         }
+
+        internal static BorrowTunnel CreateBorrowTunnel(Structure structure, BorrowMode borrowMode)
+        {
+            var borrowTunnel = new BorrowTunnel(structure, borrowMode);
+            var terminateLifetimeDfir = new TerminateLifetimeTunnel(structure);
+            borrowTunnel.TerminateLifetimeTunnel = terminateLifetimeDfir;
+            terminateLifetimeDfir.BeginLifetimeTunnel = borrowTunnel;
+            return borrowTunnel;
+        }
     }
 }

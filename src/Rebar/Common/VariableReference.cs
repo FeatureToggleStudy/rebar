@@ -37,6 +37,8 @@ namespace Rebar.Common
             ReferenceIndex = referenceIndex;
         }
 
+        public bool IsValid => _variableSet != null;
+
         public int ReferenceIndex { get; }
 
         public int Id => _variableSet?.GetId(this) ?? 0;
@@ -56,6 +58,11 @@ namespace Rebar.Common
                 throw new ArgumentException("Attempting to merge into a variable in a different set.");
             }
             _variableSet.MergeVariables(this, intoVariable);
+        }
+
+        public bool ReferencesSame(VariableReference other)
+        {
+            return _variableSet.ReferenceSameVariable(this, other);
         }
 
         internal TypeVariableReference TypeVariableReference => _variableSet.GetTypeVariableReference(this);

@@ -64,14 +64,5 @@ namespace Tests.Rebar.Unit.Compiler
             Assert.AreEqual(1, interruptedVariables.Count());
             Assert.AreEqual(borrowInputVariable, interruptedVariables.First());
         }
-
-        private static BorrowTunnel CreateBorrowTunnel(Structure structure, BorrowMode borrowMode)
-        {
-            var borrowTunnel = new BorrowTunnel(structure, borrowMode);
-            var terminateLifetimeDfir = new TerminateLifetimeTunnel(structure);
-            borrowTunnel.TerminateLifetimeTunnel = terminateLifetimeDfir;
-            terminateLifetimeDfir.BeginLifetimeTunnel = borrowTunnel;
-            return borrowTunnel;
-        }
     }
 }
