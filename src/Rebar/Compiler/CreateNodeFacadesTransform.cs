@@ -154,12 +154,9 @@ namespace Rebar.Compiler
             }
             else
             {
+                // TODO
                 throw new NotImplementedException();
             }
-            // ...uh
-            // If AlwaysCreateReference is false, then I guess we want PossiblyBorrow variables for each input, and reference
-            // variables for each output that use the common lifetime variable
-            // If AlwaysCreateReference is true, then 
 
             return true;
         }

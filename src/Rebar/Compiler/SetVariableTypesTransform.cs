@@ -70,42 +70,14 @@ namespace Rebar.Compiler
 
         public bool VisitExplicitBorrowNode(ExplicitBorrowNode explicitBorrowNode)
         {
-            int inputCount = explicitBorrowNode.InputTerminals.Count;
+            foreach (Terminal outputTerminal in explicitBorrowNode.OutputTerminals)
+            {
+                SetVariableTypeAndLifetimeFromTypeVariable(outputTerminal.GetTrueVariable());
+            }
+            Lifetime outputLifetime = explicitBorrowNode.OutputTerminals[0].GetTrueVariable().Lifetime;
             IEnumerable<VariableReference> inputVariables = explicitBorrowNode.InputTerminals.Select(VariableExtensions.GetTrueVariable);
-            IEnumerable<NIType> outputTypes = inputVariables
-                .Select(inputVariable => GetBorrowedOutputType(inputVariable, explicitBorrowNode.BorrowMode, explicitBorrowNode.AlwaysCreateReference));
-
-            Lifetime firstLifetime = inputVariables.First().Lifetime;
-            Lifetime outputLifetime;
-            if (explicitBorrowNode.AlwaysBeginLifetime
-                || !((firstLifetime?.IsBounded ?? false) && inputVariables.All(inputVariable => inputVariable.Lifetime == firstLifetime)))
-            {
-                outputLifetime = explicitBorrowNode.OutputTerminals.First().DefineLifetimeThatIsBoundedByDiagram();
-                inputVariables.ForEach(v => _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(v, outputLifetime));
-            }
-            else
-            {
-                outputLifetime = firstLifetime;
-            }
-
-            // TODO: when necessary, mark the output lifetime as being a supertype of any of the bounded input lifetimes
-            foreach (var pair in explicitBorrowNode.OutputTerminals.Zip(outputTypes))
-            {
-                Terminal outputTerminal = pair.Key;
-                NIType outputType = pair.Value;
-                outputTerminal.GetTrueVariable().SetTypeAndLifetime(outputType, outputLifetime);
-            }
+            inputVariables.ForEach(v => _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(v, outputLifetime));
             return true;
-        }
-
-        private NIType GetBorrowedOutputType(VariableReference inputVariable, BorrowMode borrowMode, bool alwaysCreateReference)
-        {
-            NIType outputUnderlyingType = alwaysCreateReference
-                ? inputVariable.Type
-                : (inputVariable.Type.GetTypeOrReferentType());
-            return borrowMode == BorrowMode.Immutable
-                ? outputUnderlyingType.CreateImmutableReference()
-                : outputUnderlyingType.CreateMutableReference();
         }
 
         public bool VisitFunctionalNode(FunctionalNode functionalNode)
