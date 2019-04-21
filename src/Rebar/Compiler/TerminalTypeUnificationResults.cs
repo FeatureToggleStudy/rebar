@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using NationalInstruments.Compiler.SemanticAnalysis;
 using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
@@ -28,6 +29,7 @@ namespace Rebar.Compiler
         private class TerminalTypeUnificationResult : ITypeUnificationResult
         {
             private readonly TerminalUnificationResult _unificationResult;
+            private List<CopyConstraint> _failedConstraints;
 
             public TerminalTypeUnificationResult(TerminalUnificationResult unificationResult)
             {
@@ -43,6 +45,14 @@ namespace Rebar.Compiler
             {
                 _unificationResult.TypeMismatch = true;
             }
+
+            public void AddFailedTypeConstraint(CopyConstraint constraint)
+            {
+                _failedConstraints = _failedConstraints ?? new List<CopyConstraint>();
+                _failedConstraints.Add(constraint);
+            }
+
+            public IEnumerable<CopyConstraint> FailedConstraints => _failedConstraints ?? Enumerable.Empty<CopyConstraint>();
         }
 
         private Dictionary<Terminal, TerminalUnificationResult> _unificationResults = new Dictionary<Terminal, TerminalUnificationResult>();

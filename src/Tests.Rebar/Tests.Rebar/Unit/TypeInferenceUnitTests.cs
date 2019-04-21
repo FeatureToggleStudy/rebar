@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NationalInstruments;
@@ -112,6 +113,27 @@ namespace Tests.Rebar.Unit
         }
 
         #endregion
+
+        #region Type Constraints
+
+        [TestMethod]
+        public void TypeVariableWithCopyConstraintAndNonCopyableType_Unify_FailedConstraintReported()
+        {
+            TypeVariableSet typeVariableSet = new TypeVariableSet();
+            TypeVariableReference literalReference = typeVariableSet.CreateReferenceToReferenceType(
+                true, 
+                typeVariableSet.CreateReferenceToLiteralType(PFTypes.Int32),
+                typeVariableSet.CreateReferenceToLifetimeType(Lifetime.Static));
+            var constraint = new CopyConstraint();
+            TypeVariableReference typeVariable = typeVariableSet.CreateReferenceToNewTypeVariable(constraint.ToEnumerable());
+            var testTypeUnificationResult = new TestTypeUnificationResult();
+
+            typeVariableSet.Unify(typeVariable, literalReference, testTypeUnificationResult);
+
+            Assert.IsTrue(testTypeUnificationResult.FailedConstraints.Contains(constraint));
+        }
+
+        #endregion
     }
 
     internal class TestTypeUnificationResult : ITypeUnificationResult
@@ -125,6 +147,13 @@ namespace Tests.Rebar.Unit
             TypeMismatch = true;
         }
 
+        void ITypeUnificationResult.AddFailedTypeConstraint(CopyConstraint constraint)
+        {
+            FailedConstraints.Add(constraint);
+        }
+
         public bool TypeMismatch { get; private set; }
+
+        public List<CopyConstraint> FailedConstraints { get; } = new List<CopyConstraint>();
     }
 }
