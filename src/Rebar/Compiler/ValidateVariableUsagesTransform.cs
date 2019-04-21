@@ -33,7 +33,7 @@ namespace Rebar.Compiler
             if (wire.TryGetSourceTerminal(out sourceTerminal))
             {
                 VariableReference sourceVariable = sourceTerminal.GetFacadeVariable();
-                if (wire.SinkTerminals.HasMoreThan(1) && !WireTypeMayFork(sourceVariable.Type))
+                if (wire.SinkTerminals.HasMoreThan(1) && !sourceVariable.Type.WireTypeMayFork())
                 {
                     wire.SetDfirMessage(Messages.WireCannotFork);
                 }
@@ -46,27 +46,6 @@ namespace Rebar.Compiler
             {
                 wire.SetDfirMessage(WireSpecificUserMessages.NoSource);
             }
-        }
-
-        internal static bool WireTypeMayFork(NIType wireType)
-        {
-            if (wireType.IsImmutableReferenceType())
-            {
-                return true;
-            }
-
-            if (wireType.IsNumeric() || wireType.IsBoolean())
-            {
-                return true;
-            }
-
-            NIType optionValueType;
-            if (wireType.TryDestructureOptionType(out optionValueType))
-            {
-                return WireTypeMayFork(optionValueType);
-            }
-
-            return false;
         }
 
         protected override void VisitBorderNode(NationalInstruments.Dfir.BorderNode borderNode)

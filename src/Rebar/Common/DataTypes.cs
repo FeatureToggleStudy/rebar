@@ -300,5 +300,26 @@ namespace Rebar.Common
             itemType = type.GetGenericParameters().ElementAt(0);
             return true;
         }
+
+        internal static bool WireTypeMayFork(this NIType wireType)
+        {
+            if (wireType.IsImmutableReferenceType())
+            {
+                return true;
+            }
+
+            if (wireType.IsNumeric() || wireType.IsBoolean())
+            {
+                return true;
+            }
+
+            NIType optionValueType;
+            if (wireType.TryDestructureOptionType(out optionValueType))
+            {
+                return WireTypeMayFork(optionValueType);
+            }
+
+            return false;
+        }
     }
 }
