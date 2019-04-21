@@ -22,10 +22,6 @@ namespace Rebar.Compiler
 
         public TerminalFacade InputFacade { get; }
 
-        public override void UpdateFromFacadeInput()
-        {
-        }
-
         public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable, TerminalTypeUnificationResults unificationResults)
         {
             // we're a node output facade; this should never be called.

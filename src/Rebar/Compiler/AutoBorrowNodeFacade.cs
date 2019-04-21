@@ -55,21 +55,6 @@ namespace Rebar.Compiler
 
         public void UpdateInputsFromFacadeTypes()
         {
-            if (_lifetimeGroups != null)
-            {
-                foreach (var lifetimeGroup in _lifetimeGroups)
-                {
-                    lifetimeGroup.UpdateFacadesFromInput();
-                }
-            }
-            if (_terminalFacades != null)
-            {
-                // TODO: need better way to distinguish which facades were not handled by lifetime groups
-                foreach (TerminalFacade inputTerminalFacade in _terminalFacades.Values.Where(f => f.Terminal.IsInput).OfType<SimpleTerminalFacade>())
-                {
-                    inputTerminalFacade.UpdateFromFacadeInput();
-                }
-            }
         }
 
         public void SetLifetimeInterruptedVariables(LifetimeVariableAssociation lifetimeVariableAssociation)

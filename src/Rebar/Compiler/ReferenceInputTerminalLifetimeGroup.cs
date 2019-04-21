@@ -45,14 +45,6 @@ namespace Rebar.Compiler
             }
         }
 
-        public void UpdateFacadesFromInput()
-        {
-            foreach (var facade in _facades)
-            {
-                facade.UpdateFromFacadeInput();
-            }
-        }
-
         public void SetInterruptedVariables(LifetimeVariableAssociation lifetimeVariableAssociation)
         {
             if (_borrowRequired)
@@ -62,58 +54,6 @@ namespace Rebar.Compiler
                     lifetimeVariableAssociation.AddVariableInterruptedByLifetime(facade.FacadeVariable, BorrowLifetime);
                 }
             }
-        }
-
-        private bool VariablesAllMutableReferencesInSameLifetime(IEnumerable<VariableReference> variables)
-        {
-            Lifetime firstLifetime = variables.FirstOrDefault().Lifetime ?? Lifetime.Empty;
-            return variables.All(v => v.Type.IsMutableReferenceType() && v.Lifetime == firstLifetime);
-        }
-
-        private bool VariablesAllImmutableReferencesInSameLifetime(IEnumerable<VariableReference> variables)
-        {
-            Lifetime firstLifetime = variables.FirstOrDefault().Lifetime ?? Lifetime.Empty;
-            return variables.All(v => v.Type.IsImmutableReferenceType() && v.Lifetime == firstLifetime);
-        }
-
-        private void ComputeBorrowsFromInput(out bool outputIsMutableReference, out bool beginNewLifetime)
-        {
-            VariableReference[] variables = _facades.Select(f => f.FacadeVariable).ToArray();
-            // 1. If all inputs are mutable references with the same bounded lifetime, then
-            // output a mutable reference in that lifetime
-            Lifetime firstLifetime = variables[0].Lifetime ?? Lifetime.Empty;
-            if ((_mutability == InputReferenceMutability.RequireMutable || _mutability == InputReferenceMutability.Polymorphic)
-                && VariablesAllMutableReferencesInSameLifetime(variables))
-            {
-                outputIsMutableReference = true;
-                beginNewLifetime = false;
-                return;
-            }
-
-            // 2. If all inputs can be borrowed into mutable references, then output a mutable
-            // reference in a new diagram-bounded lifetime
-            if (_mutability == InputReferenceMutability.RequireMutable
-                || (_mutability == InputReferenceMutability.Polymorphic
-                    && variables.All(v => v.Type.IsMutableReferenceType() || v.Mutable)))
-            {
-                outputIsMutableReference = true;
-                beginNewLifetime = true;
-                return;
-            }
-
-            // 3. If all inputs are immutable references with the same bounded lifetime, then
-            // output an immutable reference in that lifetime
-            if (VariablesAllImmutableReferencesInSameLifetime(variables))
-            {
-                outputIsMutableReference = false;
-                beginNewLifetime = false;
-                return;
-            }
-
-            // 4. Otherwise, output an immutable reference in a new diagram-bounded lifetime.
-            outputIsMutableReference = false;
-            beginNewLifetime = true;
-            return;
         }
 
         public void CreateBorrowAndTerminateLifetimeNodes()
@@ -230,12 +170,6 @@ namespace Rebar.Compiler
             public override VariableReference FacadeVariable { get; }
 
             public override VariableReference TrueVariable { get; }
-
-            public override void UpdateFromFacadeInput()
-            {
-                // TypeVariableReference typeReference = TrueVariable.TypeVariableReference;
-                // TrueVariable.SetTypeAndLifetime(typeReference.RenderNIType(), typeReference.Lifetime);
-            }
 
             public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable, TerminalTypeUnificationResults unificationResults)
             {

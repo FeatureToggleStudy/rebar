@@ -23,9 +23,6 @@ namespace Rebar.Compiler
 
         protected override void VisitNode(Node node)
         {
-            AutoBorrowNodeFacade nodeFacade = AutoBorrowNodeFacade.GetNodeFacade(node);
-            nodeFacade.UpdateInputsFromFacadeTypes();
-
             this.VisitRebarNode(node);
         }
 
@@ -35,9 +32,6 @@ namespace Rebar.Compiler
 
         protected override void VisitBorderNode(NationalInstruments.Dfir.BorderNode borderNode)
         {
-            AutoBorrowNodeFacade nodeFacade = AutoBorrowNodeFacade.GetNodeFacade(borderNode);
-            nodeFacade.UpdateInputsFromFacadeTypes();
-
             this.VisitRebarNode(borderNode);
         }
 

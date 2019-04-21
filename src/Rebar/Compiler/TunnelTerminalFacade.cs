@@ -36,9 +36,5 @@ namespace Rebar.Compiler
             ITypeUnificationResult unificationResult = unificationResults.GetTypeUnificationResult(_outputTerminalFacade.Terminal, outputTypeReference, optionType);
             typeVariableSet.Unify(outputTypeReference, optionType, unificationResult);
         }
-
-        public override void UpdateFromFacadeInput()
-        {
-        }
     }
 }
