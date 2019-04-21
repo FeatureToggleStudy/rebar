@@ -233,8 +233,8 @@ namespace Rebar.Compiler
 
             public override void UpdateFromFacadeInput()
             {
-                TypeVariableReference typeReference = TrueVariable.TypeVariableReference;
-                TrueVariable.SetTypeAndLifetime(typeReference.RenderNIType(), typeReference.Lifetime);
+                // TypeVariableReference typeReference = TrueVariable.TypeVariableReference;
+                // TrueVariable.SetTypeAndLifetime(typeReference.RenderNIType(), typeReference.Lifetime);
             }
 
             public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable, TerminalTypeUnificationResults unificationResults)

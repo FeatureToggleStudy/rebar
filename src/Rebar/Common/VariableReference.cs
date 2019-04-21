@@ -45,11 +45,9 @@ namespace Rebar.Common
 
         public bool Mutable => _variableSet?.GetMutable(this) ?? false;
 
-        public NIType Type => _variableSet?.GetType(this) ?? NIType.Unset;
+        public NIType Type => TypeVariableReference.RenderNIType();
 
-        internal Lifetime Lifetime => _variableSet?.GetLifetime(this);
-
-        internal void SetTypeAndLifetime(NIType type, Lifetime lifetime) => _variableSet?.SetTypeAndLifetime(this, type, lifetime);
+        internal Lifetime Lifetime => TypeVariableReference.Lifetime;
 
         public void MergeInto(VariableReference intoVariable)
         {

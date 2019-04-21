@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using NationalInstruments;
-using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using Rebar.Common;
 using Rebar.Compiler.Nodes;
@@ -32,11 +31,6 @@ namespace Rebar.Compiler
 
         protected override void VisitWire(Wire wire)
         {
-            foreach (var wireTerminal in wire.Terminals)
-            {
-                VariableReference variable = wireTerminal.GetFacadeVariable();
-                SetVariableTypeAndLifetimeFromTypeVariable(variable);
-            }
         }
 
         protected override void VisitBorderNode(NationalInstruments.Dfir.BorderNode borderNode)
@@ -52,14 +46,12 @@ namespace Rebar.Compiler
             Terminal inputTerminal = borrowTunnel.Terminals.ElementAt(0),
                 outputTerminal = borrowTunnel.Terminals.ElementAt(1);
             VariableReference outputVariable = outputTerminal.GetTrueVariable();
-            SetVariableTypeAndLifetimeFromTypeVariable(outputVariable);
             _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputTerminal.GetTrueVariable(), outputVariable.Lifetime);
             return true;
         }
 
         public bool VisitConstant(Constant constant)
         {
-            SetVariableTypeAndLifetimeFromTypeVariable(constant.OutputTerminal.GetTrueVariable());
             return true;
         }
 
@@ -70,10 +62,6 @@ namespace Rebar.Compiler
 
         public bool VisitExplicitBorrowNode(ExplicitBorrowNode explicitBorrowNode)
         {
-            foreach (Terminal outputTerminal in explicitBorrowNode.OutputTerminals)
-            {
-                SetVariableTypeAndLifetimeFromTypeVariable(outputTerminal.GetTrueVariable());
-            }
             Lifetime outputLifetime = explicitBorrowNode.OutputTerminals[0].GetTrueVariable().Lifetime;
             IEnumerable<VariableReference> inputVariables = explicitBorrowNode.InputTerminals.Select(VariableExtensions.GetTrueVariable);
             inputVariables.ForEach(v => _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(v, outputLifetime));
@@ -86,22 +74,11 @@ namespace Rebar.Compiler
             // For any input reference parameters that were auto-borrowed, set interrupted variables for their borrow lifetime
             AutoBorrowNodeFacade facade = AutoBorrowNodeFacade.GetNodeFacade(functionalNode);
             facade.SetLifetimeInterruptedVariables(_lifetimeVariableAssociation);
-
-            // SetTypeAndLifetime for any output parameters based on type parameter substitutions
-            foreach (var outputPair in functionalNode.OutputTerminals.Zip(signature.Outputs))
-            {
-                if (outputPair.Value.IsPassthrough)
-                {
-                    continue;
-                }
-                SetVariableTypeAndLifetimeFromTypeVariable(outputPair.Key.GetTrueVariable());
-            }
             return true;
         }
 
         public bool VisitIterateTunnel(IterateTunnel iterateTunnel)
         {
-            SetVariableTypeAndLifetimeFromTypeVariable(iterateTunnel.OutputTerminals[0].GetTrueVariable());
             return true;
         }
 
@@ -111,7 +88,6 @@ namespace Rebar.Compiler
                 outputTerminal = lockTunnel.Terminals.ElementAt(1);
 
             VariableReference outputVariable = outputTerminal.GetTrueVariable();
-            SetVariableTypeAndLifetimeFromTypeVariable(outputVariable);
             _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputTerminal.GetTrueVariable(), outputVariable.Lifetime);
             return true;
         }
@@ -121,10 +97,7 @@ namespace Rebar.Compiler
             Terminal inputTerminal = loopConditionTunnel.Terminals.ElementAt(0),
                 outputTerminal = loopConditionTunnel.Terminals.ElementAt(1);
             VariableReference inputVariable = inputTerminal.GetTrueVariable();
-            SetVariableTypeAndLifetimeFromTypeVariable(inputVariable);
-
             VariableReference outputVariable = outputTerminal.GetTrueVariable();
-            SetVariableTypeAndLifetimeFromTypeVariable(outputVariable);
             _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputVariable, outputVariable.Lifetime);
             return true;
         }
@@ -139,6 +112,20 @@ namespace Rebar.Compiler
 
             IEnumerable<VariableReference> decomposedVariables = Enumerable.Empty<VariableReference>();
             TerminateLifetimeErrorState errorState = TerminateLifetimeErrorState.NoError;
+            // TerminateLifetimeTerminalFacade:
+            // to update each terminal:
+            // If we are in NoError state and haven't seen a lifetime yet or have a common lifetime:
+            //   If input lifetime is non-null, bounded, and does not outlast parent diagram
+            //      If we have a common lifetime and it matches input lifetime
+            //         Keep going
+            //      If we don't have a common lifetime
+            //         Set common lifetime to input lifetime
+            //      Else set state to NonUniqueLifetime
+            //   Else if we have a common lifetime
+            //      Set state to NonUniqueLifetime
+            //   Else
+            //      Set state to CannotTerminateLifetime
+            //
             if (inputLifetimes.HasMoreThan(1))
             {
                 errorState = TerminateLifetimeErrorState.InputLifetimesNotUnique;
@@ -191,8 +178,6 @@ namespace Rebar.Compiler
 
         public bool VisitTunnel(Tunnel tunnel)
         {
-            Terminal outputTerminal = tunnel.Direction == Direction.Input ? tunnel.GetInnerTerminal() : tunnel.GetOuterTerminal();
-            SetVariableTypeAndLifetimeFromTypeVariable(outputTerminal.GetTrueVariable());
             return true;
         }
 
@@ -204,17 +189,7 @@ namespace Rebar.Compiler
 
         public bool VisitUnwrapOptionTunnel(UnwrapOptionTunnel unwrapOptionTunnel)
         {
-            Terminal outputTerminal = unwrapOptionTunnel.Direction == Direction.Input ? unwrapOptionTunnel.GetInnerTerminal(0, 0) : unwrapOptionTunnel.GetOuterTerminal(0);
-            VariableReference outputVariable = outputTerminal.GetTrueVariable();
-            SetVariableTypeAndLifetimeFromTypeVariable(outputVariable);
             return true;
-        }
-
-        private void SetVariableTypeAndLifetimeFromTypeVariable(VariableReference variable)
-        {
-            NIType outputType = variable.TypeVariableReference.RenderNIType();
-            Lifetime lifetime = variable.TypeVariableReference.Lifetime;
-            variable.SetTypeAndLifetime(outputType, lifetime);
         }
     }
 }
