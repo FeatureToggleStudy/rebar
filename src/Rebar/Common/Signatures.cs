@@ -169,15 +169,10 @@ namespace Rebar.Common
             SomeConstructorType = functionTypeBuilder.CreateType();
 
             functionTypeBuilder = PFTypes.Factory.DefineFunction("VectorCreate");
-            // TODO
-#if FALSE
-            genericTypeParameters = functionTypeBuilder.MakeGenericParameters(
-                "TData");
-            tDataParameter = genericTypeParameters.ElementAt(0).CreateType();
-#endif
+            tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
             AddOutputParameter(
                 functionTypeBuilder,
-                PFTypes.Int32.CreateVector(),
+                tDataParameter.CreateVector(),
                 "valueRef");
             VectorCreateType = functionTypeBuilder.CreateType();
 
