@@ -68,7 +68,11 @@ namespace Rebar.Compiler
                 {
                     VariableReference wireVariable = wireTerminal.GetFacadeVariable(),
                         nodeVariable = connectedNodeTerminal.GetFacadeVariable();
-                    // TODO: this should be a unification in order to check that the wire type is Copyable
+                    ITypeUnificationResult unificationResult = _typeUnificationResults.GetTypeUnificationResult(
+                        wireTerminal,
+                        wireVariable.TypeVariableReference,
+                        nodeVariable.TypeVariableReference);
+                    wireVariable.UnifyTypeVariableInto(nodeVariable, unificationResult);
                     wireVariable.MergeInto(nodeVariable);
                 }
             }

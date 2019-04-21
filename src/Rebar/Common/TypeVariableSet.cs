@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
 using System.Diagnostics;
+using System.Linq;
 using NationalInstruments.DataTypes;
 
 namespace Rebar.Common
@@ -21,9 +22,12 @@ namespace Rebar.Common
 
         private sealed class TypeVariable : TypeBase
         {
-            public TypeVariable(int id)
+            private readonly CopyConstraint[] _constraints;
+
+            public TypeVariable(int id, IEnumerable<CopyConstraint> constraints)
             {
                 Id = id;
+                _constraints = constraints.ToArray();
             }
 
             public int Id { get; }
@@ -318,8 +322,13 @@ namespace Rebar.Common
 
         public TypeVariableReference CreateReferenceToNewTypeVariable()
         {
+            return CreateReferenceToNewTypeVariable(Enumerable.Empty<CopyConstraint>());
+        }
+
+        public TypeVariableReference CreateReferenceToNewTypeVariable(IEnumerable<CopyConstraint> constraints)
+        {
             int id = _currentTypeVariable++;
-            return CreateReferenceToNewType(new TypeVariable(id));
+            return CreateReferenceToNewType(new TypeVariable(id, constraints));
         }
 
         public TypeVariableReference CreateReferenceToConstructorType(string constructorName, TypeVariableReference argument)
@@ -559,5 +568,10 @@ namespace Rebar.Common
         public void AndWith(bool value) => TypeVariableSet.AndWith(this, value);
 
         public bool Mutable => TypeVariableSet.GetMutable(this);
+    }
+
+    internal class CopyConstraint
+    {
+
     }
 }

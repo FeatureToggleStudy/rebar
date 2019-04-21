@@ -39,6 +39,16 @@ namespace Rebar.Compiler
                 sourceWireTerminal = null;
             if (wire.TryGetSourceTerminal(out sourceWireTerminal) && firstSinkWireTerminal != null)
             {
+                TypeVariableReference sourceTypeVariable;
+                if (wire.SinkTerminals.HasMoreThan(1))
+                {
+                    sourceTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable(new CopyConstraint[] { new CopyConstraint() });
+                }
+                else
+                {
+                    sourceTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
+                }
+                sourceWireTerminal.GetFacadeVariable().AdoptTypeVariableReference(sourceTypeVariable);
                 firstSinkWireTerminal.GetFacadeVariable().MergeInto(sourceWireTerminal.GetFacadeVariable());
             }
         }
