@@ -32,11 +32,8 @@ namespace Rebar.Compiler
             Terminal sourceTerminal;
             if (wire.TryGetSourceTerminal(out sourceTerminal))
             {
+                _typeUnificationResults.SetMessagesOnTerminal(sourceTerminal);
                 VariableReference sourceVariable = sourceTerminal.GetFacadeVariable();
-                if (wire.SinkTerminals.HasMoreThan(1) && !sourceVariable.Type.WireTypeMayFork())
-                {
-                    wire.SetDfirMessage(Messages.WireCannotFork);
-                }
                 if (wire.Terminals.Any(t => !t.IsConnected))
                 {
                     wire.SetDfirMessage(WireSpecificUserMessages.LooseEnds);
