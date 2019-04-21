@@ -32,6 +32,8 @@ namespace Rebar.Common
 
             public int Id { get; }
 
+            public IEnumerable<CopyConstraint> Constraints => _constraints;
+
             public override string DebuggerDisplay => $"T${Id}";
 
             public override NIType RenderNIType()
@@ -457,22 +459,33 @@ namespace Rebar.Common
                 toUnifyWithTypeVariable = toUnifyWithTypeBase as TypeVariable;
             if (toUnifyTypeVariable != null && toUnifyWithTypeVariable != null)
             {
+                // TODO: toUnifyWith should get all the constraints from toUnify
                 MergeTypeVariableIntoTypeVariable(toUnify, toUnifyWith);
                 return;
             }
             if (toUnifyTypeVariable != null)
             {
-                MergeTypeVariableIntoTypeVariable(toUnify, toUnifyWith);
+                UnifyTypeVariableWithNonTypeVariable(toUnify, toUnifyWith, unificationResult);
                 return;
             }
             if (toUnifyWithTypeVariable != null)
             {
-                MergeTypeVariableIntoTypeVariable(toUnifyWith, toUnify);
+                UnifyTypeVariableWithNonTypeVariable(toUnifyWith, toUnify, unificationResult);
                 return;
             }
 
             unificationResult.SetTypeMismatch();
             return;
+        }
+
+        private void UnifyTypeVariableWithNonTypeVariable(TypeVariableReference typeVariable, TypeVariableReference nonTypeVariable, ITypeUnificationResult unificationResult)
+        {
+            var t = (TypeVariable)GetTypeForTypeVariableReference(typeVariable);
+            foreach (CopyConstraint constraint in t.Constraints)
+            {
+                constraint.ValidateConstraintForType(nonTypeVariable, unificationResult);
+            }
+            MergeTypeVariableIntoTypeVariable(typeVariable, nonTypeVariable);
         }
 
         public string GetDebuggerDisplay(TypeVariableReference typeVariableReference)
@@ -572,6 +585,13 @@ namespace Rebar.Common
 
     internal class CopyConstraint
     {
-
+        public void ValidateConstraintForType(TypeVariableReference type, ITypeUnificationResult unificationResult)
+        {
+            // TODO: probably not great to render an NIType at this stage
+            if (!type.RenderNIType().WireTypeMayFork())
+            {
+                unificationResult.AddFailedTypeConstraint(this);
+            }
+        }
     }
 }
