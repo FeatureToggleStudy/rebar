@@ -22,7 +22,7 @@ namespace Rebar.Common
 
         private sealed class TypeVariable : TypeBase
         {
-            private readonly CopyConstraint[] _constraints;
+            private CopyConstraint[] _constraints;
 
             public TypeVariable(int id, IEnumerable<CopyConstraint> constraints)
             {
@@ -33,6 +33,11 @@ namespace Rebar.Common
             public int Id { get; }
 
             public IEnumerable<CopyConstraint> Constraints => _constraints;
+
+            public void AdoptConstraintsFromVariable(TypeVariable other)
+            {
+                _constraints = _constraints.Concat(other._constraints).ToArray();
+            }
 
             public override string DebuggerDisplay => $"T${Id}";
 
@@ -459,7 +464,7 @@ namespace Rebar.Common
                 toUnifyWithTypeVariable = toUnifyWithTypeBase as TypeVariable;
             if (toUnifyTypeVariable != null && toUnifyWithTypeVariable != null)
             {
-                // TODO: toUnifyWith should get all the constraints from toUnify
+                toUnifyWithTypeVariable.AdoptConstraintsFromVariable(toUnifyTypeVariable);
                 MergeTypeVariableIntoTypeVariable(toUnify, toUnifyWith);
                 return;
             }
