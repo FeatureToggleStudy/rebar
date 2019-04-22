@@ -147,13 +147,13 @@ namespace Tests.Rebar.Unit
             TypeMismatch = true;
         }
 
-        void ITypeUnificationResult.AddFailedTypeConstraint(CopyConstraint constraint)
+        void ITypeUnificationResult.AddFailedTypeConstraint(Constraint constraint)
         {
             FailedConstraints.Add(constraint);
         }
 
         public bool TypeMismatch { get; private set; }
 
-        public List<CopyConstraint> FailedConstraints { get; } = new List<CopyConstraint>();
+        public List<Constraint> FailedConstraints { get; } = new List<Constraint>();
     }
 }

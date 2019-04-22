@@ -6,6 +6,6 @@
 
         void SetExpectedMutable();
 
-        void AddFailedTypeConstraint(CopyConstraint constraint);
+        void AddFailedTypeConstraint(Constraint constraint);
     }
 }

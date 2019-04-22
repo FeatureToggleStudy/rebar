@@ -22,9 +22,9 @@ namespace Rebar.Common
 
         private sealed class TypeVariable : TypeBase
         {
-            private CopyConstraint[] _constraints;
+            private Constraint[] _constraints;
 
-            public TypeVariable(int id, IEnumerable<CopyConstraint> constraints)
+            public TypeVariable(int id, IEnumerable<Constraint> constraints)
             {
                 Id = id;
                 _constraints = constraints.ToArray();
@@ -32,7 +32,7 @@ namespace Rebar.Common
 
             public int Id { get; }
 
-            public IEnumerable<CopyConstraint> Constraints => _constraints;
+            public IEnumerable<Constraint> Constraints => _constraints;
 
             public void AdoptConstraintsFromVariable(TypeVariable other)
             {
@@ -329,10 +329,10 @@ namespace Rebar.Common
 
         public TypeVariableReference CreateReferenceToNewTypeVariable()
         {
-            return CreateReferenceToNewTypeVariable(Enumerable.Empty<CopyConstraint>());
+            return CreateReferenceToNewTypeVariable(Enumerable.Empty<Constraint>());
         }
 
-        public TypeVariableReference CreateReferenceToNewTypeVariable(IEnumerable<CopyConstraint> constraints)
+        public TypeVariableReference CreateReferenceToNewTypeVariable(IEnumerable<Constraint> constraints)
         {
             int id = _currentTypeVariable++;
             return CreateReferenceToNewType(new TypeVariable(id, constraints));
@@ -486,7 +486,7 @@ namespace Rebar.Common
         private void UnifyTypeVariableWithNonTypeVariable(TypeVariableReference typeVariable, TypeVariableReference nonTypeVariable, ITypeUnificationResult unificationResult)
         {
             var t = (TypeVariable)GetTypeForTypeVariableReference(typeVariable);
-            foreach (CopyConstraint constraint in t.Constraints)
+            foreach (Constraint constraint in t.Constraints)
             {
                 constraint.ValidateConstraintForType(nonTypeVariable, unificationResult);
             }
@@ -588,9 +588,14 @@ namespace Rebar.Common
         public bool Mutable => TypeVariableSet.GetMutable(this);
     }
 
-    internal class CopyConstraint
+    internal abstract class Constraint
     {
-        public void ValidateConstraintForType(TypeVariableReference type, ITypeUnificationResult unificationResult)
+        public abstract void ValidateConstraintForType(TypeVariableReference type, ITypeUnificationResult unificationResult);
+    }
+
+    internal class CopyConstraint : Constraint
+    {
+        public override void ValidateConstraintForType(TypeVariableReference type, ITypeUnificationResult unificationResult)
         {
             // TODO: probably not great to render an NIType at this stage
             if (!type.RenderNIType().WireTypeMayFork())

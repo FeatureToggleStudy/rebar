@@ -42,7 +42,7 @@ namespace Rebar.Compiler
                 TypeVariableReference sourceTypeVariable;
                 if (wire.SinkTerminals.HasMoreThan(1))
                 {
-                    sourceTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable(new CopyConstraint[] { new CopyConstraint() });
+                    sourceTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable(new Constraint[] { new CopyConstraint() });
                 }
                 else
                 {

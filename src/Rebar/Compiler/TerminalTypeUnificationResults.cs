@@ -25,7 +25,7 @@ namespace Rebar.Compiler
 
             public bool ExpectedMutable { get; set; }
 
-            public List<CopyConstraint> FailedConstraints { get; set; }
+            public List<Constraint> FailedConstraints { get; set; }
         }
 
         private class TerminalTypeUnificationResult : ITypeUnificationResult
@@ -47,9 +47,9 @@ namespace Rebar.Compiler
                 _unificationResult.TypeMismatch = true;
             }
 
-            public void AddFailedTypeConstraint(CopyConstraint constraint)
+            public void AddFailedTypeConstraint(Constraint constraint)
             {
-                _unificationResult.FailedConstraints = _unificationResult.FailedConstraints ?? new List<CopyConstraint>();
+                _unificationResult.FailedConstraints = _unificationResult.FailedConstraints ?? new List<Constraint>();
                 _unificationResult.FailedConstraints.Add(constraint);
             }
         }
@@ -84,9 +84,12 @@ namespace Rebar.Compiler
             {
                 terminal.SetDfirMessage(Messages.TerminalDoesNotAcceptImmutableType);
             }
-            if (unificationResult.FailedConstraints != null && unificationResult.FailedConstraints.OfType<CopyConstraint>().Any())
+            if (unificationResult.FailedConstraints != null)
             {
-                terminal.ParentNode.SetDfirMessage(Messages.WireCannotFork);
+                if (unificationResult.FailedConstraints.OfType<Constraint>().Any())
+                {
+                    terminal.ParentNode.SetDfirMessage(Messages.WireCannotFork);
+                }
             }
         }
     }
