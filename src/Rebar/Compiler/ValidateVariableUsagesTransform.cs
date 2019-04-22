@@ -1,7 +1,5 @@
 ﻿using System.Linq;
-using NationalInstruments;
 using NationalInstruments.Compiler.SemanticAnalysis;
-using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using NationalInstruments.FeatureToggles;
 using Rebar.Common;
@@ -53,7 +51,7 @@ namespace Rebar.Compiler
         public bool VisitBorrowTunnel(BorrowTunnel borrowTunnel)
         {
             var validator = borrowTunnel.Terminals[0].GetValidator();
-            if (borrowTunnel.BorrowMode == Common.BorrowMode.Mutable)
+            if (borrowTunnel.BorrowMode == BorrowMode.Mutable)
             {
                 validator.TestVariableIsMutableType();
             }
@@ -135,6 +133,7 @@ namespace Rebar.Compiler
 
         public bool VisitTunnel(Tunnel tunnel)
         {
+            tunnel.InputTerminals[0].TestRequiredTerminalConnected();
             return true;
         }
 
