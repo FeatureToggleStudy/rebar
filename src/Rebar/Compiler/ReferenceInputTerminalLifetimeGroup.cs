@@ -18,14 +18,18 @@ namespace Rebar.Compiler
         public ReferenceInputTerminalLifetimeGroup(
             AutoBorrowNodeFacade nodeFacade,
             InputReferenceMutability mutability,
-            Lazy<Lifetime> lazyNewLifetime)
+            Lazy<Lifetime> lazyNewLifetime,
+            TypeVariableReference lifetimeType)
         {
             _nodeFacade = nodeFacade;
             _mutability = mutability;
             _lazyBorrowLifetime = lazyNewLifetime;
+            LifetimeType = lifetimeType;
         }
 
         private Lifetime BorrowLifetime => _lazyBorrowLifetime.Value;
+
+        private TypeVariableReference LifetimeType;
 
         private void SetBorrowRequired(bool mutableBorrow)
         {
@@ -33,9 +37,30 @@ namespace Rebar.Compiler
             _mutableBorrow = mutableBorrow;
         }
 
-        public void AddTerminalFacade(Terminal inputTerminal, Terminal terminateLifetimeOutputTerminal = null)
+        public void AddTerminalFacade(Terminal inputTerminal, TypeVariableReference referentTypeReference, TypeVariableReference mutabilityTypeReference, Terminal terminateLifetimeOutputTerminal = null)
         {
-            var terminalFacade = new ReferenceInputTerminalFacade(inputTerminal, _mutability, this);
+            TypeVariableReference referenceType;
+            TypeVariableSet typeVariableSet = inputTerminal.GetTypeVariableSet();
+            if (_mutability == InputReferenceMutability.Polymorphic)
+            {
+                referenceType = typeVariableSet.CreateReferenceToPolymorphicReferenceType(
+                    mutabilityTypeReference,
+                    referentTypeReference,
+                    LifetimeType);
+            }
+            else
+            {
+                referenceType = typeVariableSet.CreateReferenceToReferenceType(
+                    (_mutability != InputReferenceMutability.AllowImmutable),
+                    referentTypeReference,
+                    LifetimeType);
+            }
+            if (_lazyBorrowLifetime.IsValueCreated)
+            {
+                throw new InvalidOperationException("Cannot add borrowed variables after creating new lifetime.");
+            }
+
+            var terminalFacade = new ReferenceInputTerminalFacade(inputTerminal, _mutability, this, referenceType);
             _nodeFacade[inputTerminal] = terminalFacade;
             _facades.Add(terminalFacade);
             if (terminateLifetimeOutputTerminal != null)
@@ -155,7 +180,11 @@ namespace Rebar.Compiler
             private readonly InputReferenceMutability _mutability;
             private readonly ReferenceInputTerminalLifetimeGroup _group;
 
-            public ReferenceInputTerminalFacade(Terminal terminal, InputReferenceMutability mutability, ReferenceInputTerminalLifetimeGroup group)
+            public ReferenceInputTerminalFacade(
+                Terminal terminal, 
+                InputReferenceMutability mutability, 
+                ReferenceInputTerminalLifetimeGroup group,
+                TypeVariableReference referenceTypeReference)
                 : base(terminal)
             {
                 _mutability = mutability;
@@ -163,6 +192,7 @@ namespace Rebar.Compiler
                 _variableSet = terminal.GetVariableSet();
                 FacadeVariable = _variableSet.CreateNewVariable();
                 TrueVariable = _variableSet.CreateNewVariable();
+                TrueVariable.AdoptTypeVariableReference(referenceTypeReference);
             }
 
             public override VariableReference FacadeVariable { get; }
