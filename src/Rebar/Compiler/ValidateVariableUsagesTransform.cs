@@ -146,14 +146,7 @@ namespace Rebar.Compiler
 
         public bool VisitUnwrapOptionTunnel(UnwrapOptionTunnel unwrapOptionTunnel)
         {
-            if (unwrapOptionTunnel.Direction != Direction.Input)
-            {
-                // TODO: report an error; this tunnel can only be an input
-                return true;
-            }
-            VariableUsageValidator validator = unwrapOptionTunnel.GetOuterTerminal(0).GetValidator();
-            validator.TestVariableIsOwnedType();
-            validator.TestUnderlyingType(t => t.IsOptionType(), PFTypes.Void.CreateOption());
+            ValidateRequiredInputTerminal(unwrapOptionTunnel.InputTerminals[0]);
             return true;
         }
 

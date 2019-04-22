@@ -32,7 +32,7 @@ namespace Tests.Rebar.Unit.Compiler
         }
 
         [TestMethod]
-        public void UnwrapOptionTunnelWithNonOptionTypeWired_ValidateVariableUsages_TypeMismatchErrorCreated()
+        public void UnwrapOptionTunnelWithNonOptionTypeWired_ValidateVariableUsages_TypeConflictErrorCreated()
         {
             DfirRoot function = DfirRoot.Create();
             Frame frame = Frame.Create(function.BlockDiagram);
