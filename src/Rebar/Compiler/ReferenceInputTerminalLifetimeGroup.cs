@@ -61,7 +61,6 @@ namespace Rebar.Compiler
             if (_borrowRequired)
             {
                 Node parentNode = _facades.First().Terminal.ParentNode;
-                NationalInstruments.Dfir.BorderNode parentBorderNode = parentNode as NationalInstruments.Dfir.BorderNode;
                 BorrowMode borrowMode = _mutableBorrow ? BorrowMode.Mutable : BorrowMode.Immutable;
                 int borrowInputCount = _facades.Count;
                 Diagram inputParentDiagram = _facades.First().Terminal.ParentDiagram;
@@ -69,14 +68,13 @@ namespace Rebar.Compiler
                 AutoBorrowNodeFacade borrowNodeFacade = AutoBorrowNodeFacade.GetNodeFacade(explicitBorrow);
                 foreach (var terminal in explicitBorrow.Terminals)
                 {
-                    borrowNodeFacade[terminal] = new SimpleTerminalFacade(terminal);
+                    borrowNodeFacade[terminal] = new SimpleTerminalFacade(terminal, default(TypeVariableReference));
                 }
 
                 int index = 0;
                 foreach (var facade in _facades)
                 {
                     Terminal input = facade.Terminal;
-                    Terminal borrowOutput = explicitBorrow.OutputTerminals.ElementAt(index);
                     InsertBorrowAheadOfTerminal(input, explicitBorrow, index);
                     ++index;
                 }
@@ -98,7 +96,7 @@ namespace Rebar.Compiler
                     AutoBorrowNodeFacade terminateLifetimeFacade = AutoBorrowNodeFacade.GetNodeFacade(terminateLifetime);
                     foreach (var terminal in terminateLifetime.Terminals)
                     {
-                        terminateLifetimeFacade[terminal] = new SimpleTerminalFacade(terminal);
+                        terminateLifetimeFacade[terminal] = new SimpleTerminalFacade(terminal, default(TypeVariableReference));
                     }
 
                     index = 0;

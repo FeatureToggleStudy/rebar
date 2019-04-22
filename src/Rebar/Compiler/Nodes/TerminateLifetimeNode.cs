@@ -52,7 +52,7 @@ namespace Rebar.Compiler.Nodes
                 for (; currentInputTerminalCount < inputTerminalCount; ++currentInputTerminalCount)
                 {
                     var terminal = CreateTerminal(Direction.Input, immutableReferenceType, "inner lifetime");
-                    nodeFacade[terminal] = new SimpleTerminalFacade(terminal);
+                    nodeFacade[terminal] = new SimpleTerminalFacade(terminal, terminal.GetTypeVariableSet().CreateReferenceToNewTypeVariable());
                     MoveTerminalToIndex(terminal, currentInputTerminalCount);
                 }
             }
@@ -77,7 +77,7 @@ namespace Rebar.Compiler.Nodes
                 for (; currentOutputTerminalCount < outputTerminalCount; ++currentOutputTerminalCount)
                 {
                     var terminal = CreateTerminal(Direction.Output, immutableReferenceType, "outer lifetime");
-                    nodeFacade[terminal] = new SimpleTerminalFacade(terminal);
+                    nodeFacade[terminal] = new SimpleTerminalFacade(terminal, terminal.GetTypeVariableSet().CreateReferenceToNewTypeVariable());
                 }
             }
             else if (currentOutputTerminalCount > outputTerminalCount)
