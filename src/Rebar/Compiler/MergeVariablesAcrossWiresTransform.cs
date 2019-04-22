@@ -76,24 +76,6 @@ namespace Rebar.Compiler
                     wireVariable.MergeInto(nodeVariable);
                 }
             }
-
-            // Unify types within a branched wire
-            if (!wire.SinkTerminals.HasMoreThan(1))
-            {
-                return;
-            }
-            Terminal sourceTerminal;
-            wire.TryGetSourceTerminal(out sourceTerminal);
-            VariableReference? sourceVariable = sourceTerminal?.GetFacadeVariable();
-            if (sourceVariable == null)
-            {
-                return;
-            }
-            TypeVariableSet typeVariableSet = wire.GetTypeVariableSet();
-            foreach (var sinkTerminal in wire.SinkTerminals.Skip(1))
-            {
-                sinkTerminal.GetFacadeVariable().AdoptTypeVariableReference(sourceVariable.Value.TypeVariableReference);
-            }
         }
     }
 }

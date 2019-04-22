@@ -29,27 +29,20 @@ namespace Rebar.Compiler
 
         protected override void VisitWire(Wire wire)
         {
+            TypeVariableReference wireTypeVariable;
+            var constraints = new List<Constraint>();
+            if (wire.SinkTerminals.HasMoreThan(1))
+            {
+                constraints.Add(new CopyConstraint());
+            }
+            wireTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable(constraints);
+
             AutoBorrowNodeFacade wireFacade = AutoBorrowNodeFacade.GetNodeFacade(wire);
             foreach (var terminal in wire.Terminals)
             {
-                wireFacade[terminal] = new SimpleTerminalFacade(terminal);
-            }
-
-            Terminal firstSinkWireTerminal = wire.SinkTerminals.FirstOrDefault(),
-                sourceWireTerminal = null;
-            if (wire.TryGetSourceTerminal(out sourceWireTerminal) && firstSinkWireTerminal != null)
-            {
-                TypeVariableReference sourceTypeVariable;
-                if (wire.SinkTerminals.HasMoreThan(1))
-                {
-                    sourceTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable(new Constraint[] { new CopyConstraint() });
-                }
-                else
-                {
-                    sourceTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-                }
-                sourceWireTerminal.GetFacadeVariable().AdoptTypeVariableReference(sourceTypeVariable);
-                firstSinkWireTerminal.GetFacadeVariable().MergeInto(sourceWireTerminal.GetFacadeVariable());
+                var facade = new SimpleTerminalFacade(terminal);
+                facade.FacadeVariable.AdoptTypeVariableReference(wireTypeVariable);
+                wireFacade[terminal] = facade;
             }
         }
 
