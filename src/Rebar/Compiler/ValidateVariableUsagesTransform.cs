@@ -107,10 +107,7 @@ namespace Rebar.Compiler
 
         public bool VisitLoopConditionTunnel(LoopConditionTunnel loopConditionTunnel)
         {
-            Terminal inputTerminal = loopConditionTunnel.InputTerminals.ElementAt(0);
-            var validator = new VariableUsageValidator(inputTerminal, true, false);
-            validator.TestVariableIsOwnedType();
-            validator.TestExpectedUnderlyingType(PFTypes.Boolean);
+            ValidateOptionalInputTerminal(loopConditionTunnel.InputTerminals[0]);
             return true;
         }
 
@@ -166,6 +163,11 @@ namespace Rebar.Compiler
             {
                 _typeUnificationResults.SetMessagesOnTerminal(inputTerminal);
             }
+        }
+
+        private void ValidateOptionalInputTerminal(Terminal inputTerminal)
+        {
+            _typeUnificationResults.SetMessagesOnTerminal(inputTerminal);
         }
     }
 }

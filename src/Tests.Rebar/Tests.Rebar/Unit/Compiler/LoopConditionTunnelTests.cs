@@ -43,7 +43,7 @@ namespace Tests.Rebar.Unit.Compiler
         }
 
         [TestMethod]
-        public void BorrowTunnel_SetVariableTypes_OutputLifetimeHasCorrectInterruptedVariables()
+        public void LoopConditionTunnel_SetVariableTypes_OutputLifetimeHasCorrectInterruptedVariables()
         {
             DfirRoot function = DfirRoot.Create();
             Loop loop = new Loop(function.BlockDiagram);
@@ -58,6 +58,33 @@ namespace Tests.Rebar.Unit.Compiler
             IEnumerable<VariableReference> interruptedVariables = lifetimeAssociation.GetVariablesInterruptedByLifetime(lifetime);
             Assert.AreEqual(1, interruptedVariables.Count());
             Assert.AreEqual(loopConditionInputVariable, interruptedVariables.First());
+        }
+
+        [TestMethod]
+        public void LoopConditionTunnelWithNonBooleanInput_ValidateVariableUsage_TypeConflictErrorReported()
+        {
+            DfirRoot function = DfirRoot.Create();
+            Loop loop = new Loop(function.BlockDiagram);
+            LoopConditionTunnel loopConditionTunnel = CreateLoopConditionTunnel(loop);
+            ConnectConstantToInputTerminal(loopConditionTunnel.InputTerminals[0], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToValidation(function);
+
+            AssertTerminalHasTypeConflictMessage(loopConditionTunnel.InputTerminals[0]);
+        }
+
+        [TestMethod]
+        public void LoopConditionTunnelWithBooleanReferenceInput_ValidateVariableUsage_TypeConflictErrorReported()
+        {
+            DfirRoot function = DfirRoot.Create();
+            Loop loop = new Loop(function.BlockDiagram);
+            LoopConditionTunnel loopConditionTunnel = CreateLoopConditionTunnel(loop);
+            ExplicitBorrowNode borrow = ConnectExplicitBorrowToInputTerminal(loopConditionTunnel.InputTerminals[0]);
+            ConnectConstantToInputTerminal(borrow.InputTerminals[0], PFTypes.Boolean, false);
+
+            RunSemanticAnalysisUpToValidation(function);
+
+            AssertTerminalHasTypeConflictMessage(loopConditionTunnel.InputTerminals[0]);
         }
 
         private static LoopConditionTunnel CreateLoopConditionTunnel(Loop loop)
