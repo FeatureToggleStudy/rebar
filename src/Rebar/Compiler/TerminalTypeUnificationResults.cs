@@ -90,6 +90,10 @@ namespace Rebar.Compiler
                 {
                     terminal.ParentNode.SetDfirMessage(Messages.WireCannotFork);
                 }
+                if (unificationResult.FailedConstraints.OfType<OutlastsLifetimeGraphConstraint>().Any())
+                {
+                    terminal.SetDfirMessage(Messages.WiredReferenceDoesNotLiveLongEnough);
+                }
             }
         }
     }

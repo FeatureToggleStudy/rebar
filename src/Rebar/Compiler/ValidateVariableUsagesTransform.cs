@@ -133,7 +133,7 @@ namespace Rebar.Compiler
 
         public bool VisitTunnel(Tunnel tunnel)
         {
-            tunnel.InputTerminals[0].TestRequiredTerminalConnected();
+            ValidateRequiredInputTerminal(tunnel.InputTerminals[0]);
             return true;
         }
 

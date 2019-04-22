@@ -604,4 +604,22 @@ namespace Rebar.Common
             }
         }
     }
+
+    internal class OutlastsLifetimeGraphConstraint : Constraint
+    {
+        private readonly LifetimeGraphIdentifier _lifetimeGraph;
+
+        public OutlastsLifetimeGraphConstraint(LifetimeGraphIdentifier lifetimeGraph)
+        {
+            _lifetimeGraph = lifetimeGraph;
+        }
+
+        public override void ValidateConstraintForType(TypeVariableReference type, ITypeUnificationResult unificationResult)
+        {
+            if (!type.Lifetime.DoesOutlastLifetimeGraph(_lifetimeGraph))
+            {
+                unificationResult.AddFailedTypeConstraint(this);
+            }
+        }
+    }
 }
