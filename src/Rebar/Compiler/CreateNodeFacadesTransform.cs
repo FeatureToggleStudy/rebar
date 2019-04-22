@@ -447,13 +447,13 @@ namespace Rebar.Compiler
                 valueOutput = tunnel.OutputTerminals.ElementAt(0);
 
             _nodeFacade[valueOutput] = new SimpleTerminalFacade(valueOutput);
+            TypeVariableReference typeVariable;
 
             var parentFrame = tunnel.ParentStructure as Frame;
             bool executesConditionally = parentFrame != null && DoesFrameExecuteConditionally(parentFrame);
-            if (executesConditionally)
+            if (executesConditionally && tunnel.Direction == Direction.Output)
             {
-                TypeVariableReference typeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-                _nodeFacade[valueOutput].FacadeVariable.AdoptTypeVariableReference(typeVariable);
+                typeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
                 _nodeFacade[valueInput] = new TunnelTerminalFacade(valueInput, _nodeFacade[valueOutput]);
             }
             else
@@ -465,11 +465,11 @@ namespace Rebar.Compiler
                     LifetimeGraphIdentifier parentLifetimeGraph = valueInput.ParentDiagram.GetLifetimeGraphIdentifier();
                     constraints.Add(new OutlastsLifetimeGraphConstraint(parentLifetimeGraph));
                 }
-                TypeVariableReference typeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable(constraints);
-                _nodeFacade[valueOutput].FacadeVariable.AdoptTypeVariableReference(typeVariable);
+                typeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable(constraints);
                 _nodeFacade[valueInput] = new SimpleTerminalFacade(valueInput);
                 _nodeFacade[valueInput].FacadeVariable.AdoptTypeVariableReference(typeVariable);
             }
+            _nodeFacade[valueOutput].FacadeVariable.AdoptTypeVariableReference(typeVariable);
             return true;
         }
 

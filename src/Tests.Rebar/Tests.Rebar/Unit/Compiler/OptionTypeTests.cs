@@ -45,6 +45,22 @@ namespace Tests.Rebar.Unit.Compiler
         }
 
         [TestMethod]
+        public void OutputTunnelWithInnerDiagramReferenceTypeInputOnFrameWithUnwrapOptionTunnel_ValidateVariableUsages_ErrorReported()
+        {
+            DfirRoot function = DfirRoot.Create();
+            Frame frame = Frame.Create(function.BlockDiagram);
+            UnwrapOptionTunnel unwrapOption = CreateUnwrapOptionTunnel(frame);
+            Tunnel outputTunnel = frame.CreateTunnel(Direction.Output, TunnelMode.LastValue, PFTypes.Void, PFTypes.Void);
+            FunctionalNode someConstructor = ConnectSomeConstructorToInputTerminal(outputTunnel.InputTerminals[0]);
+            ExplicitBorrowNode borrow = ConnectExplicitBorrowToInputTerminal(someConstructor.InputTerminals[0]);
+            ConnectConstantToInputTerminal(borrow.InputTerminals[0], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToValidation(function);
+
+            Assert.IsTrue(outputTunnel.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == Messages.WiredReferenceDoesNotLiveLongEnough.Descriptor));
+        }
+
+        [TestMethod]
         public void OutputTunnelOnFrameWithUnwrapOptionTunnelWithNonOptionInput_SetVariableTypes_OutputTerminalIsOptionType()
         {
             DfirRoot function = DfirRoot.Create();
