@@ -320,7 +320,7 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(dfirRoot);
 
-            Assert.IsTrue(functionalNode.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+            AssertTerminalHasTypeConflictMessage(functionalNode.InputTerminals[0]);
         }
 
         [TestMethod]
@@ -346,7 +346,7 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(dfirRoot);
 
-            Assert.IsTrue(functionalNode.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+            AssertTerminalHasTypeConflictMessage(functionalNode.InputTerminals[0]);
         }
 
         [TestMethod]
@@ -359,7 +359,7 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(dfirRoot);
 
-            Assert.IsFalse(functionalNode.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+            AssertTerminalDoesNotHaveTypeConflictMessage(functionalNode.InputTerminals[0]);
         }
 
         [TestMethod]
@@ -372,7 +372,7 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(dfirRoot);
 
-            Assert.IsTrue(functionalNode.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+            AssertTerminalHasTypeConflictMessage(functionalNode.InputTerminals[0]);
         }
 
         [TestMethod]
@@ -386,9 +386,9 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(dfirRoot);
 
-            Assert.IsTrue(functionalNode.InputTerminals[2].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+            AssertTerminalHasTypeConflictMessage(functionalNode.InputTerminals[2]);
         }
 
-#endregion
+        #endregion
     }
 }

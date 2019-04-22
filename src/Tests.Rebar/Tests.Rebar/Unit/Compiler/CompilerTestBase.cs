@@ -1,4 +1,7 @@
-﻿using NationalInstruments.Compiler;
+﻿using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NationalInstruments.Compiler;
+using NationalInstruments.Compiler.SemanticAnalysis;
 using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using Rebar.Common;
@@ -59,6 +62,16 @@ namespace Tests.Rebar.Unit.Compiler
             borrowTunnel.TerminateLifetimeTunnel = terminateLifetimeDfir;
             terminateLifetimeDfir.BeginLifetimeTunnel = borrowTunnel;
             return borrowTunnel;
+        }
+
+        protected void AssertTerminalHasTypeConflictMessage(Terminal terminal)
+        {
+            Assert.IsTrue(terminal.GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+        }
+
+        protected void AssertTerminalDoesNotHaveTypeConflictMessage(Terminal terminal)
+        {
+            Assert.IsFalse(terminal.GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
         }
     }
 }

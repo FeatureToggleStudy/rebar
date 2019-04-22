@@ -61,7 +61,7 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(function);
 
-            Assert.IsTrue(lockTunnel.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+            AssertTerminalHasTypeConflictMessage(lockTunnel.InputTerminals[0]);
         }
 
         private static LockTunnel CreateLockTunnel(Structure structure)

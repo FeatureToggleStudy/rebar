@@ -71,7 +71,7 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(function);
 
-            Assert.IsTrue(iterateTunnel.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+            AssertTerminalHasTypeConflictMessage(iterateTunnel.InputTerminals[0]);
         }
 
         private static IterateTunnel CreateIterateTunnel(Loop loop)
