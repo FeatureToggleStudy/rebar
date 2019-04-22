@@ -1,4 +1,6 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NationalInstruments.Compiler.SemanticAnalysis;
 using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using Rebar.Common;
@@ -46,6 +48,32 @@ namespace Tests.Rebar.Unit.Compiler
         }
 #endif
 
+        [TestMethod]
+        public void IterateTunnelWithImmutableRangeIteratorTypeWired_ValidateVariableUsages_MutableVariableRequiredErrorReported()
+        {
+            DfirRoot function = DfirRoot.Create();
+            Loop loop = new Loop(function.BlockDiagram);
+            var iterateTunnel = CreateIterateTunnel(loop);
+            ConnectRangeWithIntegerInputsToInputTerminal(iterateTunnel.InputTerminals[0], false);
+
+            RunSemanticAnalysisUpToValidation(function);
+
+            Assert.IsTrue(iterateTunnel.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == Messages.TerminalDoesNotAcceptImmutableType.Descriptor));
+        }
+
+        [TestMethod]
+        public void IterateTunnelWithNonIteratorTypeWired_ValidateVariableUsages_TypeConflictErrorReported()
+        {
+            DfirRoot function = DfirRoot.Create();
+            Loop loop = new Loop(function.BlockDiagram);
+            var iterateTunnel = CreateIterateTunnel(loop);
+            ConnectConstantToInputTerminal(iterateTunnel.InputTerminals[0], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToValidation(function);
+
+            Assert.IsTrue(iterateTunnel.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+        }
+
         private static IterateTunnel CreateIterateTunnel(Loop loop)
         {
             var iterateTunnel = new IterateTunnel(loop);
@@ -55,13 +83,13 @@ namespace Tests.Rebar.Unit.Compiler
             return iterateTunnel;
         }
 
-        private static FunctionalNode ConnectRangeWithIntegerInputsToInputTerminal(Terminal inputTerminal)
+        private static FunctionalNode ConnectRangeWithIntegerInputsToInputTerminal(Terminal inputTerminal, bool mutable = true)
         {
             FunctionalNode range = new FunctionalNode(inputTerminal.ParentDiagram, Signatures.RangeType);
             ConnectConstantToInputTerminal(range.InputTerminals[0], PFTypes.Int32, false);
             ConnectConstantToInputTerminal(range.InputTerminals[1], PFTypes.Int32, false);
             Wire wire = Wire.Create(inputTerminal.ParentDiagram, range.OutputTerminals[0], inputTerminal);
-            wire.SetWireBeginsMutableVariable(true);
+            wire.SetWireBeginsMutableVariable(mutable);
             return range;
         }
     }

@@ -84,14 +84,7 @@ namespace Rebar.Compiler
 
         public bool VisitFunctionalNode(FunctionalNode functionalNode)
         {
-            foreach (var inputTerminalPair in functionalNode.InputTerminals.Zip(Signatures.GetSignatureForNIType(functionalNode.Signature).Inputs))
-            {
-                Terminal inputTerminal = inputTerminalPair.Key;
-                if (inputTerminal.TestRequiredTerminalConnected())
-                {
-                    _typeUnificationResults.SetMessagesOnTerminal(inputTerminal);
-                }
-            }
+            functionalNode.InputTerminals.ForEach(ValidateRequiredInputTerminal);
 
             if (functionalNode.RequiredFeatureToggles.Any(feature => !FeatureToggleSupport.IsFeatureEnabled(feature)))
             {
@@ -103,16 +96,7 @@ namespace Rebar.Compiler
         public bool VisitIterateTunnel(IterateTunnel iterateTunnel)
         {
             Terminal inputTerminal = iterateTunnel.Terminals[0];
-            VariableUsageValidator validator = inputTerminal.GetValidator();
-            validator.TestUnderlyingType(
-                type => type.IsIteratorType() || type.IsVectorType(),
-                PFTypes.Void.CreateIterator());
-
-            NIType underlyingType = inputTerminal.GetFacadeVariable().Type.GetUnderlyingTypeFromRebarType();
-            if (underlyingType.IsIteratorType())
-            {
-                validator.TestVariableIsMutableType();
-            }
+            ValidateRequiredInputTerminal(inputTerminal);
             return true;
         }
 
@@ -176,6 +160,14 @@ namespace Rebar.Compiler
             validator.TestVariableIsOwnedType();
             validator.TestUnderlyingType(t => t.IsOptionType(), PFTypes.Void.CreateOption());
             return true;
+        }
+
+        private void ValidateRequiredInputTerminal(Terminal inputTerminal)
+        {
+            if (inputTerminal.TestRequiredTerminalConnected())
+            {
+                _typeUnificationResults.SetMessagesOnTerminal(inputTerminal);
+            }
         }
     }
 }
