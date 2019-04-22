@@ -95,15 +95,13 @@ namespace Rebar.Compiler
 
         public bool VisitIterateTunnel(IterateTunnel iterateTunnel)
         {
-            Terminal inputTerminal = iterateTunnel.Terminals[0];
-            ValidateRequiredInputTerminal(inputTerminal);
+            ValidateRequiredInputTerminal(iterateTunnel.InputTerminals[0]);
             return true;
         }
 
         public bool VisitLockTunnel(LockTunnel lockTunnel)
         {
-            VariableUsageValidator validator = lockTunnel.Terminals[0].GetValidator();
-            validator.TestUnderlyingType(DataTypes.IsLockingCellType, PFTypes.Void.CreateLockingCell());
+            ValidateRequiredInputTerminal(lockTunnel.InputTerminals[0]);
             return true;
         }
 
