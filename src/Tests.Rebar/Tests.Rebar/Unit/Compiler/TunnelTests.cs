@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
@@ -73,7 +69,20 @@ namespace Tests.Rebar.Unit.Compiler
             VariableReference outputVariable = tunnel.OutputTerminals[0].GetTrueVariable();
             Assert.IsTrue(outputVariable.Type.IsImmutableReferenceType());
             Assert.IsFalse(outputVariable.Lifetime.DoesOutlastDiagram(frame.Diagram));
-            // TODO: need a VariableUsageValidation test that an error message is reported here
+        }
+
+        [TestMethod]
+        public void FrameOutputTunnelWithInnerDiagramReferenceTypeWiredIn_ValidateVariableUsages_ErrorReported()
+        {
+            DfirRoot dfirRoot = DfirRoot.Create();
+            Frame frame = Frame.Create(dfirRoot.BlockDiagram);
+            Tunnel tunnel = CreateOutputTunnel(frame);
+            ExplicitBorrowNode borrow = ConnectExplicitBorrowToInputTerminal(tunnel.InputTerminals[0]);
+            ConnectConstantToInputTerminal(borrow.InputTerminals[0], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToValidation(dfirRoot);
+
+            Assert.IsTrue(tunnel.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == Messages.WiredReferenceDoesNotLiveLongEnough.Descriptor));
         }
 
         private Tunnel CreateInputTunnel(Frame frame)
