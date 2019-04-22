@@ -190,9 +190,8 @@ namespace Rebar.Compiler
                 _mutability = mutability;
                 _group = group;
                 _variableSet = terminal.GetVariableSet();
-                FacadeVariable = _variableSet.CreateNewVariable();
-                TrueVariable = _variableSet.CreateNewVariable();
-                TrueVariable.AdoptTypeVariableReference(referenceTypeReference);
+                FacadeVariable = _variableSet.CreateNewVariable(default(TypeVariableReference));
+                TrueVariable = _variableSet.CreateNewVariable(referenceTypeReference);
             }
 
             public override VariableReference FacadeVariable { get; }

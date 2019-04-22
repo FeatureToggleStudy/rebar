@@ -10,7 +10,10 @@ namespace Rebar.Compiler
 
         public TunnelTerminalFacade(Terminal terminal, TerminalFacade outputTerminalFacade) : base(terminal)
         {
-            TrueVariable = terminal.GetVariableSet().CreateNewVariable();
+            LifetimeGraphIdentifier innerDiagramLifetimeGraph = Terminal.ParentDiagram.GetLifetimeGraphIdentifier();
+            var constraint = new OutlastsLifetimeGraphConstraint(innerDiagramLifetimeGraph);
+            TypeVariableReference inputTypeReference = terminal.GetTypeVariableSet().CreateReferenceToNewTypeVariable(new List<Constraint>() { constraint });
+            TrueVariable = terminal.GetVariableSet().CreateNewVariable(inputTypeReference);
             _outputTerminalFacade = outputTerminalFacade;
         }
 
@@ -21,11 +24,8 @@ namespace Rebar.Compiler
         public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable, TerminalTypeUnificationResults unificationResults)
         {
             TypeVariableSet typeVariableSet = Terminal.GetTypeVariableSet();
-            LifetimeGraphIdentifier innerDiagramLifetimeGraph = Terminal.ParentDiagram.GetLifetimeGraphIdentifier();
-            var constraint = new OutlastsLifetimeGraphConstraint(innerDiagramLifetimeGraph);
-            TypeVariableReference inputTypeReference = typeVariableSet.CreateReferenceToNewTypeVariable(new List<Constraint>() { constraint });
-            ITypeUnificationResult inputUnificationResult = unificationResults.GetTypeUnificationResult(Terminal, inputTypeReference, wireFacadeVariable.TypeVariableReference);
-            typeVariableSet.Unify(inputTypeReference, wireFacadeVariable.TypeVariableReference, inputUnificationResult);
+            ITypeUnificationResult inputUnificationResult = unificationResults.GetTypeUnificationResult(Terminal, TrueVariable.TypeVariableReference, wireFacadeVariable.TypeVariableReference);
+            typeVariableSet.Unify(TrueVariable.TypeVariableReference, wireFacadeVariable.TypeVariableReference, inputUnificationResult);
             TrueVariable.MergeInto(wireFacadeVariable);
 
             string constructorName;
