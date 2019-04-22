@@ -47,6 +47,19 @@ namespace Tests.Rebar.Unit.Compiler
         }
 
         [TestMethod]
+        public void BorrowTunnelWithMutableModeAndImmutableVariableWired_ValidateVariableUsages_MutableValueRequiredErrorReported()
+        {
+            DfirRoot function = DfirRoot.Create();
+            Frame frame = Frame.Create(function.BlockDiagram);
+            var borrowTunnel = CreateBorrowTunnel(frame, BorrowMode.Mutable);
+            ConnectConstantToInputTerminal(borrowTunnel.InputTerminals[0], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToValidation(function);
+
+            Assert.IsTrue(borrowTunnel.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == Messages.TerminalDoesNotAcceptImmutableType.Descriptor));
+        }
+
+        [TestMethod]
         public void BorrowTunnel_SetVariableTypes_OutputLifetimeHasCorrectInterruptedVariables()
         {
             DfirRoot function = DfirRoot.Create();
