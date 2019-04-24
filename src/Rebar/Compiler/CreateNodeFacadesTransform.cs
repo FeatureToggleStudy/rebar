@@ -42,6 +42,11 @@ namespace Rebar.Compiler
             {
                 wireFacade[terminal] = new SimpleTerminalFacade(terminal, wireTypeVariable);
             }
+            Terminal sourceTerminal, firstSinkTerminal;
+            if (wire.TryGetSourceTerminal(out sourceTerminal) && (firstSinkTerminal = wire.SinkTerminals.FirstOrDefault()) != null)
+            {
+                wireFacade[firstSinkTerminal].FacadeVariable.MergeInto(wireFacade[sourceTerminal].FacadeVariable);
+            }
         }
 
         protected override void VisitNode(Node node)

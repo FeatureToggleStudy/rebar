@@ -12,6 +12,22 @@ namespace Tests.Rebar.Unit.Compiler
     public class WireTests : CompilerTestBase
     {
         [TestMethod]
+        public void Wire_SetVariableTypes_SinkAndSourceTerminalHaveSameVariable()
+        {
+            NIType signatureType = Signatures.MutablePassthroughType;
+            DfirRoot dfirRoot = DfirRoot.Create();
+            FunctionalNode sink = new FunctionalNode(dfirRoot.BlockDiagram, signatureType);
+            Constant constant = Constant.Create(dfirRoot.BlockDiagram, 0, PFTypes.Int32);
+            Wire wire = Wire.Create(dfirRoot.BlockDiagram, constant.OutputTerminal, sink.InputTerminals[0]);
+
+            RunSemanticAnalysisUpToSetVariableTypes(dfirRoot);
+
+            VariableReference wireSourceVariable = wire.SourceTerminal.GetTrueVariable(),
+                wireSinkVariable = wire.SinkTerminals[0].GetTrueVariable();
+            Assert.IsTrue(wireSourceVariable.ReferencesSame(wireSinkVariable));
+        }
+
+        [TestMethod]
         public void BranchedWire_SetVariableTypes_AllSinkVariablesGetTypes()
         {
             NIType signatureType = Signatures.MutablePassthroughType;
