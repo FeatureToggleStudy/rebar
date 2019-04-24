@@ -43,6 +43,8 @@ namespace Rebar.RebarTarget
             _functionalNodeCompilers["Or"] = (_, __) => CompilePureBinaryPrimitive(_, __, BinaryPrimitiveOps.Or);
             _functionalNodeCompilers["Xor"] = (_, __) => CompilePureBinaryPrimitive(_, __, BinaryPrimitiveOps.Xor);
 
+            _functionalNodeCompilers["AccumulateIncrement"] = (_, __) => CompileMutatingUnaryPrimitive(_, __, UnaryPrimitiveOps.Increment);
+            _functionalNodeCompilers["AccumulateNot"] = (_, __) => CompileMutatingUnaryPrimitive(_, __, UnaryPrimitiveOps.Not);
             _functionalNodeCompilers["AccumulateAdd"] = (_, __) => CompileMutatingBinaryPrimitive(_, __, BinaryPrimitiveOps.Add);
             _functionalNodeCompilers["AccumulateSubtract"] = (_, __) => CompileMutatingBinaryPrimitive(_, __, BinaryPrimitiveOps.Subtract);
             _functionalNodeCompilers["AccumulateMultiply"] = (_, __) => CompileMutatingBinaryPrimitive(_, __, BinaryPrimitiveOps.Multiply);
