@@ -30,20 +30,12 @@ namespace Rebar.Common
             /// cannot be rebound).</remarks>
             public bool Mutable { get; }
 
-            /// <summary>
-            /// The data <see cref="NIType"/> stored by the <see cref="Variable"/>.
-            /// </summary>
-            /// <remarks>This property should not store ImmutableValue or MutableValue types.
-            /// ImmutableReference and MutableReference types are allowed.</remarks>
-            public NIType Type { get; set; }
-
             public TypeVariableReference TypeVariableReference { get; }
 
             public Lifetime Lifetime { get; set; }
 
             public Variable(int id, int firstReferenceIndex, TypeVariableReference variableType, bool mutable)
             {
-                Type = PFTypes.Void;
                 Id = id;
                 FirstReferenceIndex = firstReferenceIndex;
                 TypeVariableReference = variableType;
@@ -53,7 +45,7 @@ namespace Rebar.Common
             public override string ToString()
             {
                 string mut = Mutable ? "mut" : string.Empty;
-                return $"v_{Id} : {mut} {Type}";
+                return $"v_{Id} : {mut} Type";
             }
         }
 
@@ -135,18 +127,7 @@ namespace Rebar.Common
 
         internal bool GetMutable(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Mutable;
 
-        internal NIType GetType(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Type;
-
-        internal Lifetime GetLifetime(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Lifetime;
-
         internal int GetId(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Id;
-
-        internal void SetTypeAndLifetime(VariableReference variableReference, NIType type, Lifetime lifetime)
-        {
-            Variable variable = GetVariableForVariableReference(variableReference);
-            variable.Type = type;
-            variable.Lifetime = lifetime;
-        }
 
         internal TypeVariableReference GetTypeVariableReference(VariableReference variableReference)
         {
