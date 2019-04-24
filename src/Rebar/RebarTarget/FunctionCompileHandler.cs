@@ -69,6 +69,8 @@ namespace Rebar.RebarTarget
                 CallingConvention.StdCall);
             BuildSpec htmlVIBuildSpec = specAndQName.BuildSpec;
 
+            ExecutionOrderSortingVisitor.SortDiagrams(targetDfir);
+
             var variableAllocations = VariableReference.CreateDictionaryWithUniqueVariableKeys<ValueSource>();
             var allocator = new Allocator(variableAllocations);
             await allocator.ExecuteTransform(targetDfir, cancellationToken);
