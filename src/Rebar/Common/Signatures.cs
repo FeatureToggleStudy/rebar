@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NationalInstruments;
 using NationalInstruments.DataTypes;
@@ -17,14 +16,6 @@ namespace Rebar.Common
         {
             var genericTypeParameters = functionBuilder.MakeGenericParameters(name);
             return genericTypeParameters.ElementAt(0).CreateType();
-        }
-
-        private static NIType AddGenericLifetimeTypeParameter(NIFunctionBuilder functionBuilder, string name)
-        {
-            var genericTypeParameters = functionBuilder.MakeGenericParameters(name);
-            var parameterBuilder = genericTypeParameters.ElementAt(0);
-            SetLifetimeTypeAttribute((NIAttributedBaseBuilder)parameterBuilder);
-            return parameterBuilder.CreateType();
         }
 
         private static void AddInputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
@@ -48,7 +39,7 @@ namespace Rebar.Common
             var tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
             AddInputOutputParameter(
                 functionTypeBuilder,
-                tDataParameter.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife")),
+                tDataParameter.CreateImmutableReference(),
                 "valueRef");
             ImmutablePassthroughType = functionTypeBuilder.CreateType();
 
@@ -56,7 +47,7 @@ namespace Rebar.Common
             tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
             AddInputOutputParameter(
                 functionTypeBuilder,
-                tDataParameter.CreateMutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife")),
+                tDataParameter.CreateMutableReference(),
                 "valueRef");
             MutablePassthroughType = functionTypeBuilder.CreateType();
 
@@ -65,7 +56,7 @@ namespace Rebar.Common
             tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
             AddInputOutputParameter(
                 functionTypeBuilder,
-                tDataParameter.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife")),
+                tDataParameter.CreateImmutableReference(),
                 "valueRef");
             AddOutputParameter(
                 functionTypeBuilder,
@@ -77,7 +68,7 @@ namespace Rebar.Common
             // TODO: allow other types later
             AddInputOutputParameter(
                 functionTypeBuilder,
-                PFTypes.Int32.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife")),
+                PFTypes.Int32.CreateImmutableReference(),
                 "valueRef");
             OutputType = functionTypeBuilder.CreateType();
 
@@ -113,11 +104,11 @@ namespace Rebar.Common
             tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
             AddInputOutputParameter(
                 functionTypeBuilder,
-                tDataParameter.CreateVector().CreateMutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife1")),
+                tDataParameter.CreateVector().CreateMutableReference(),
                 "vectorRef");
             AddInputOutputParameter(
                 functionTypeBuilder,
-                PFTypes.Int32.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife2")),
+                PFTypes.Int32.CreateImmutableReference(),
                 "indexRef");
             AddInputParameter(
                 functionTypeBuilder,
@@ -145,7 +136,7 @@ namespace Rebar.Common
             var functionTypeBuilder = PFTypes.Factory.DefineFunction(name);
             AddInputOutputParameter(
                 functionTypeBuilder,
-                inputType.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife")),
+                inputType.CreateImmutableReference(),
                 "operandRef");
             AddOutputParameter(
                 functionTypeBuilder,
@@ -159,11 +150,11 @@ namespace Rebar.Common
             var functionTypeBuilder = PFTypes.Factory.DefineFunction(name);
             AddInputOutputParameter(
                 functionTypeBuilder,
-                inputType.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife1")),
+                inputType.CreateImmutableReference(),
                 "operand1Ref");
             AddInputOutputParameter(
                 functionTypeBuilder,
-                inputType.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife2")),
+                inputType.CreateImmutableReference(),
                 "operand2Ref");
             AddOutputParameter(
                 functionTypeBuilder,
@@ -177,7 +168,7 @@ namespace Rebar.Common
             var functionTypeBuilder = PFTypes.Factory.DefineFunction(name);
             AddInputOutputParameter(
                 functionTypeBuilder,
-                inputType.CreateMutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife")),
+                inputType.CreateMutableReference(),
                 "operandRef");
             return functionTypeBuilder.CreateType();
         }
@@ -187,11 +178,11 @@ namespace Rebar.Common
             var functionTypeBuilder = PFTypes.Factory.DefineFunction(name);
             AddInputOutputParameter(
                 functionTypeBuilder,
-                inputType.CreateMutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife1")),
+                inputType.CreateMutableReference(),
                 "operand1Ref");
             AddInputOutputParameter(
                 functionTypeBuilder,
-                inputType.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife2")),
+                inputType.CreateImmutableReference(),
                 "operand2Ref");
             return functionTypeBuilder.CreateType();
         }
