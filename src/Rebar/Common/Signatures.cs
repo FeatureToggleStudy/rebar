@@ -7,11 +7,6 @@ namespace Rebar.Common
 {
     public static class Signatures
     {
-        private static void SetLifetimeTypeAttribute(NIAttributedBaseBuilder builder)
-        {
-            builder.AddAttribute("Lifetime", true, true);
-        }
-
         private static NIType AddGenericDataTypeParameter(NIFunctionBuilder functionBuilder, string name)
         {
             var genericTypeParameters = functionBuilder.MakeGenericParameters(name);
