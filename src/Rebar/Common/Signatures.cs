@@ -295,12 +295,31 @@ namespace Rebar.Common
             var functionTypeBuilder = PFTypes.Factory.DefineFunction(name);
             AddInputOutputParameter(
                 functionTypeBuilder,
-                inputType.CreateMutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife1")),
+                inputType.CreateMutableReference(),
                 "operand1Ref");
             AddInputOutputParameter(
                 functionTypeBuilder,
-                inputType.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife2")),
+                inputType.CreateImmutableReference(),
                 "operand2Ref");
+            return functionTypeBuilder.CreateType();
+        }
+
+        public static NIType DefineComparisonFunction(string name)
+        {
+            var functionTypeBuilder = PFTypes.Factory.DefineFunction(name);
+            NIType inputType = PFTypes.Int32, outputType = PFTypes.Boolean;
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                inputType.CreateImmutableReference(),
+                "operand1Ref");
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                inputType.CreateImmutableReference(),
+                "operand2Ref");
+            AddOutputParameter(
+                functionTypeBuilder,
+                outputType,
+                "result");
             return functionTypeBuilder.CreateType();
         }
 
