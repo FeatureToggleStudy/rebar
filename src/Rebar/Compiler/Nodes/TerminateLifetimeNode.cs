@@ -18,17 +18,21 @@ namespace Rebar.Compiler.Nodes
             {
                 CreateTerminal(Direction.Output, immutableReferenceType, "outer lifetime");
             }
+            UnificationState = new TerminateLifetimeUnificationState(ParentDiagram);
         }
 
         private TerminateLifetimeNode(Node parentNode, TerminateLifetimeNode nodeToCopy, NodeCopyInfo nodeCopyInfo)
             : base(parentNode, nodeToCopy, nodeCopyInfo)
         {
+            UnificationState = nodeToCopy.UnificationState;
         }
 
         protected override Node CopyNodeInto(Node newParentNode, NodeCopyInfo copyInfo)
         {
             return new TerminateLifetimeNode(newParentNode, this, copyInfo);
         }
+
+        public TerminateLifetimeUnificationState UnificationState { get; }
 
         public TerminateLifetimeErrorState ErrorState { get; set; }
 

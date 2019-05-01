@@ -65,18 +65,29 @@ namespace Rebar.Compiler
                         _state = State.LifetimeCannotBeTerminated;
                         return;
                     }
-                    else
+
+                    _state = State.VariablesInLifetimeRemaining;
+                    CommonLifetime = inputLifetime;
+                    // TODO: this does not account for Variables in singleLifetime that have already been consumed
+                    _variablesToTerminate = new Dictionary<VariableReference, bool>();
+                    // Problem: accessing VariableReference.Lifetime here is invalid for any Variables we haven't visited yet.
+                    foreach (VariableReference variable in _parentDiagram.GetVariableSet().GetUniqueVariableReferences())
                     {
-                        _state = State.VariablesInLifetimeRemaining;
-                        CommonLifetime = inputLifetime;
-                        // TODO: this does not account for Variables in singleLifetime that have already been consumed
-                        _variablesToTerminate = new Dictionary<VariableReference, bool>();
-                        foreach (VariableReference variableInLifetime in _parentDiagram.GetVariableSet().GetUniqueVariableReferences().Where(v => v.Lifetime == inputLifetime))
+                        // HACK
+                        try
                         {
-                            _variablesToTerminate[variableInLifetime] = false;
+                            if (variable.Lifetime != inputLifetime)
+                            {
+                                continue;
+                            }
                         }
-                        RemoveVariableFromTerminationSet(connectedInput);
+                        catch (ArgumentException)
+                        {
+                            continue;
+                        }
+                        _variablesToTerminate[variable] = false;
                     }
+                    RemoveVariableFromTerminationSet(connectedInput);
                     break;
                 case State.VariablesInLifetimeRemaining:
                 case State.AllVariablesInLifetimeTerminated:

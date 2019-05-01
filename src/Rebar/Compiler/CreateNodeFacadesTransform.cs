@@ -295,11 +295,10 @@ namespace Rebar.Compiler
 
         bool IDfirNodeVisitor<bool>.VisitTerminateLifetimeNode(TerminateLifetimeNode terminateLifetimeNode)
         {
-            var unificationState = new TerminateLifetimeUnificationState(terminateLifetimeNode.ParentDiagram);
             foreach (var terminal in terminateLifetimeNode.Terminals)
             {
                 // TODO: when updating terminals during SA, also update the TerminalFacades
-                _nodeFacade[terminal] = new TerminateLifetimeInputTerminalFacade(terminal, unificationState);
+                _nodeFacade[terminal] = new TerminateLifetimeInputTerminalFacade(terminal, terminateLifetimeNode.UnificationState);
             }
             return true;
         }
