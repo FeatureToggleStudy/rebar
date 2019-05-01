@@ -175,7 +175,6 @@
     <Compile Include="RebarTarget\TargetCompilerServicesInitialization.cs" />
     <Compile Include="RebarTarget\TargetDefinition.cs" />
     <Compile Include="RebarTarget\TargetDeployer.cs" />
-    <Compile Include="Compiler\SetVariableTypesTransform.cs" />
     <Compile Include="Compiler\ValidateVariableUsagesTransform.cs" />
     <Compile Include="Compiler\VariableExtensions.cs" />
     <Compile Include="Compiler\VariableUsageValidator.cs" />

@@ -30,7 +30,6 @@ namespace Tests.Rebar.Unit.Compiler
             lifetimeVariableAssociation = lifetimeVariableAssociation ?? new LifetimeVariableAssociation();
             RunSemanticAnalysisUpToCreateNodeFacades(dfirRoot, cancellationToken);
             new MergeVariablesAcrossWiresTransform(lifetimeVariableAssociation, unificationResults).Execute(dfirRoot, cancellationToken);
-            new SetVariableTypesAndLifetimesTransform(lifetimeVariableAssociation).Execute(dfirRoot, cancellationToken);
         }
 
         protected void RunSemanticAnalysisUpToValidation(DfirRoot dfirRoot)
