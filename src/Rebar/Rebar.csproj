@@ -146,7 +146,6 @@
     <Compile Include="Compiler\TerminalFacade.cs" />
     <Compile Include="Compiler\TerminalId.cs" />
     <Compile Include="Compiler\TerminalTypeUnificationResults.cs" />
-    <Compile Include="Compiler\TerminateLifetimeOutputTerminalFacade.cs" />
     <Compile Include="Compiler\TunnelTerminalFacade.cs" />
     <Compile Include="RebarTarget\Allocator.cs" />
     <Compile Include="RebarTarget\ApplicationCompileHandlerFactory.cs" />
