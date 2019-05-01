@@ -7,7 +7,7 @@ namespace Rebar.Common
 {
     public static class Signatures
     {
-        private static NIType AddGenericDataTypeParameter(NIFunctionBuilder functionBuilder, string name)
+        public static NIType AddGenericDataTypeParameter(NIFunctionBuilder functionBuilder, string name)
         {
             var genericTypeParameters = functionBuilder.MakeGenericParameters(name);
             return genericTypeParameters.ElementAt(0).CreateType();
@@ -39,17 +39,17 @@ namespace Rebar.Common
             builder.AddAttribute("Mutability", true, true);
         }
 
-        private static void AddInputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
+        public static void AddInputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
         {
             functionBuilder.DefineParameter(parameterType, name, NIParameterPassingRule.Required, NIParameterPassingRule.NotAllowed);
         }
 
-        private static void AddOutputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
+        public static void AddOutputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
         {
             functionBuilder.DefineParameter(parameterType, name, NIParameterPassingRule.NotAllowed, NIParameterPassingRule.Recommended);
         }
 
-        private static void AddInputOutputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
+        public static void AddInputOutputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
         {
             functionBuilder.DefineParameter(parameterType, name, NIParameterPassingRule.Required, NIParameterPassingRule.Recommended);
         }

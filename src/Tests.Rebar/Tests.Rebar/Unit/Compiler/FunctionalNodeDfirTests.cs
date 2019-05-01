@@ -157,6 +157,20 @@ namespace Tests.Rebar.Unit.Compiler
         }
 
         [TestMethod]
+        public void FunctionNodeWithGenericOutParameterWithDownstreamTypeDeterminant_SetVariableTypes_TypeSetOnOutput()
+        {
+            DfirRoot function = DfirRoot.Create();
+            var genericOutput = new FunctionalNode(function.BlockDiagram, DefineGenericOutputFunctionSignature());
+            var assignNode = new FunctionalNode(function.BlockDiagram, Signatures.AssignType);
+            genericOutput.OutputTerminals[0].WireTogether(assignNode.InputTerminals[0], SourceModelIdSource.NoSourceModelId);
+            ConnectConstantToInputTerminal(assignNode.InputTerminals[1], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToSetVariableTypes(function);
+
+            Assert.IsTrue(genericOutput.OutputTerminals[0].GetTrueVariable().Type.IsInt32());
+        }
+
+        [TestMethod]
         public void FunctionNodeWithSelectReferenceSignatureAndImmutableValuesWired_SetVariableTypes_ImmutableReferenceTypeSetOnOutput()
         {
             NIType signatureType = Signatures.SelectReferenceType;

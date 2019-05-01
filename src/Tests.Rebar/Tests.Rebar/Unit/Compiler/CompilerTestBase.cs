@@ -41,6 +41,14 @@ namespace Tests.Rebar.Unit.Compiler
             new ValidateVariableUsagesTransform(unificationResults).Execute(dfirRoot, cancellationToken);
         }
 
+        protected NIType DefineGenericOutputFunctionSignature()
+        {
+            NIFunctionBuilder functionBuilder = PFTypes.Factory.DefineFunction("genericOutput");
+            NIType typeParameter = Signatures.AddGenericDataTypeParameter(functionBuilder, "TData");
+            Signatures.AddOutputParameter(functionBuilder, typeParameter, "out");
+            return functionBuilder.CreateType();
+        }
+
         protected static void ConnectConstantToInputTerminal(Terminal inputTerminal, NIType variableType, bool mutable)
         {
             Constant constant = Constant.Create(inputTerminal.ParentDiagram, variableType.CreateDefaultValue(), variableType);
