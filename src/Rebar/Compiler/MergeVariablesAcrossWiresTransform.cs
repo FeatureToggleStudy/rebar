@@ -1,20 +1,21 @@
-﻿using System.Linq;
-using NationalInstruments;
-using NationalInstruments.Dfir;
+﻿using NationalInstruments.Dfir;
 using Rebar.Common;
+using Rebar.Compiler.Nodes;
 
 namespace Rebar.Compiler
 {
     internal class MergeVariablesAcrossWiresTransform : VisitorTransformBase
     {
+        private readonly LifetimeVariableAssociation _lifetimeVariableAssociation;
         private readonly TerminalTypeUnificationResults _typeUnificationResults;
 
-        public MergeVariablesAcrossWiresTransform(TerminalTypeUnificationResults typeUnificationResults)
+        public MergeVariablesAcrossWiresTransform(LifetimeVariableAssociation lifetimeVariableAssociation, TerminalTypeUnificationResults typeUnificationResults)
         {
+            _lifetimeVariableAssociation = lifetimeVariableAssociation;
             _typeUnificationResults = typeUnificationResults;
         }
 
-        protected override void VisitBorderNode(BorderNode borderNode)
+        protected override void VisitBorderNode(NationalInstruments.Dfir.BorderNode borderNode)
         {
             if (borderNode is Nodes.TerminateLifetimeTunnel)
             {
@@ -35,6 +36,13 @@ namespace Rebar.Compiler
             else
             {
                 UnifyNodeInputTerminalTypes(borderNode);
+            }
+
+            BorrowTunnel borrowTunnel = borderNode as BorrowTunnel;
+            if (borrowTunnel != null)
+            {
+                Terminal inputTerminal = borrowTunnel.InputTerminals[0], outputTerminal = borrowTunnel.OutputTerminals[0];
+                _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputTerminal.GetTrueVariable(), outputTerminal.GetTrueVariable().Lifetime);
             }
         }
 

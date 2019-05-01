@@ -29,7 +29,7 @@ namespace Tests.Rebar.Unit.Compiler
             unificationResults = unificationResults ?? new TerminalTypeUnificationResults();
             lifetimeVariableAssociation = lifetimeVariableAssociation ?? new LifetimeVariableAssociation();
             RunSemanticAnalysisUpToCreateNodeFacades(dfirRoot, cancellationToken);
-            new MergeVariablesAcrossWiresTransform(unificationResults).Execute(dfirRoot, cancellationToken);
+            new MergeVariablesAcrossWiresTransform(lifetimeVariableAssociation, unificationResults).Execute(dfirRoot, cancellationToken);
             new SetVariableTypesAndLifetimesTransform(lifetimeVariableAssociation).Execute(dfirRoot, cancellationToken);
         }
 

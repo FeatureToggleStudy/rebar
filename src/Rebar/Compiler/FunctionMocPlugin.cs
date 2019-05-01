@@ -88,7 +88,7 @@ namespace Rebar.Compiler
             List<IDfirTransformBase> semanticAnalysisTransforms = new List<IDfirTransformBase>()
             {
                 new CreateNodeFacadesTransform(),
-                new MergeVariablesAcrossWiresTransform(unificationResults),
+                new MergeVariablesAcrossWiresTransform(lifetimeVariableAssocation, unificationResults),
                 new SetVariableTypesAndLifetimesTransform(lifetimeVariableAssocation),
                 new ValidateVariableUsagesTransform(unificationResults),
                 new ReflectVariablesToTerminalsTransform(),

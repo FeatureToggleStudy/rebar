@@ -37,10 +37,6 @@ namespace Rebar.Compiler
 
         public bool VisitBorrowTunnel(BorrowTunnel borrowTunnel)
         {
-            Terminal inputTerminal = borrowTunnel.Terminals.ElementAt(0),
-                outputTerminal = borrowTunnel.Terminals.ElementAt(1);
-            VariableReference outputVariable = outputTerminal.GetTrueVariable();
-            _lifetimeVariableAssociation.AddVariableInterruptedByLifetime(inputTerminal.GetTrueVariable(), outputVariable.Lifetime);
             return true;
         }
 
@@ -54,6 +50,7 @@ namespace Rebar.Compiler
             return true;
         }
 
+        // In the middle of moving _lifetimeVariableAssociation usages from SetVariableTypesTransform to MergeVariablesAcrossWiresTransform
         public bool VisitExplicitBorrowNode(ExplicitBorrowNode explicitBorrowNode)
         {
             Lifetime outputLifetime = explicitBorrowNode.OutputTerminals[0].GetTrueVariable().Lifetime;
