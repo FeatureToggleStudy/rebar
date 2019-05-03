@@ -1,4 +1,5 @@
-﻿using NationalInstruments.Dfir;
+﻿using System.Collections.Generic;
+using NationalInstruments.Dfir;
 using Rebar.Common;
 
 namespace Rebar.Compiler
@@ -9,7 +10,10 @@ namespace Rebar.Compiler
 
         public TunnelTerminalFacade(Terminal terminal, TerminalFacade outputTerminalFacade) : base(terminal)
         {
-            TrueVariable = terminal.GetVariableSet().CreateNewVariable();
+            LifetimeGraphIdentifier innerDiagramLifetimeGraph = Terminal.ParentDiagram.GetLifetimeGraphIdentifier();
+            var constraint = new OutlastsLifetimeGraphConstraint(innerDiagramLifetimeGraph);
+            TypeVariableReference inputTypeReference = terminal.GetTypeVariableSet().CreateReferenceToNewTypeVariable(new List<Constraint>() { constraint });
+            TrueVariable = terminal.GetVariableSet().CreateNewVariable(inputTypeReference);
             _outputTerminalFacade = outputTerminalFacade;
         }
 
@@ -19,8 +23,11 @@ namespace Rebar.Compiler
 
         public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable, TerminalTypeUnificationResults unificationResults)
         {
-            TrueVariable.MergeInto(wireFacadeVariable);
             TypeVariableSet typeVariableSet = Terminal.GetTypeVariableSet();
+            ITypeUnificationResult inputUnificationResult = unificationResults.GetTypeUnificationResult(Terminal, TrueVariable.TypeVariableReference, wireFacadeVariable.TypeVariableReference);
+            typeVariableSet.Unify(TrueVariable.TypeVariableReference, wireFacadeVariable.TypeVariableReference, inputUnificationResult);
+            TrueVariable.MergeInto(wireFacadeVariable);
+
             string constructorName;
             TypeVariableReference innerType, optionType;
             if (typeVariableSet.TryDecomposeConstructorType(TrueVariable.TypeVariableReference, out constructorName, out innerType)
@@ -33,8 +40,8 @@ namespace Rebar.Compiler
                 optionType = typeVariableSet.CreateReferenceToConstructorType("Option", TrueVariable.TypeVariableReference);
             }
             TypeVariableReference outputTypeReference = _outputTerminalFacade.TrueVariable.TypeVariableReference;
-            ITypeUnificationResult unificationResult = unificationResults.GetTypeUnificationResult(_outputTerminalFacade.Terminal, outputTypeReference, optionType);
-            typeVariableSet.Unify(outputTypeReference, optionType, unificationResult);
+            ITypeUnificationResult outputUnificationResult = unificationResults.GetTypeUnificationResult(_outputTerminalFacade.Terminal, outputTypeReference, optionType);
+            typeVariableSet.Unify(outputTypeReference, optionType, outputUnificationResult);
         }
     }
 }

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using NationalInstruments.DataTypes;
 
 namespace Rebar.Common
 {
+    [DebuggerDisplay("{DebuggerDisplay}")]
     public struct VariableReference
     {
         private readonly VariableSet _variableSet;
@@ -65,11 +67,11 @@ namespace Rebar.Common
 
         internal TypeVariableReference TypeVariableReference => _variableSet.GetTypeVariableReference(this);
 
-        internal void AdoptTypeVariableReference(TypeVariableReference type) => _variableSet.SetTypeVariableReference(this, type);
-
         internal void UnifyTypeVariableInto(VariableReference intoVariable, ITypeUnificationResult unificationResult)
         {
             _variableSet.TypeVariableSet.Unify(TypeVariableReference, intoVariable.TypeVariableReference, unificationResult);
         }
+
+        private string DebuggerDisplay => _variableSet?.GetDebuggerDisplay(this);
     }
 }

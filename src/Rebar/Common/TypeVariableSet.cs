@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
 using System.Diagnostics;
+using System.Linq;
 using NationalInstruments.DataTypes;
 
 namespace Rebar.Common
@@ -21,12 +22,22 @@ namespace Rebar.Common
 
         private sealed class TypeVariable : TypeBase
         {
-            public TypeVariable(int id)
+            private Constraint[] _constraints;
+
+            public TypeVariable(int id, IEnumerable<Constraint> constraints)
             {
                 Id = id;
+                _constraints = constraints.ToArray();
             }
 
             public int Id { get; }
+
+            public IEnumerable<Constraint> Constraints => _constraints;
+
+            public void AdoptConstraintsFromVariable(TypeVariable other)
+            {
+                _constraints = _constraints.Concat(other._constraints).ToArray();
+            }
 
             public override string DebuggerDisplay => $"T${Id}";
 
@@ -318,8 +329,13 @@ namespace Rebar.Common
 
         public TypeVariableReference CreateReferenceToNewTypeVariable()
         {
+            return CreateReferenceToNewTypeVariable(Enumerable.Empty<Constraint>());
+        }
+
+        public TypeVariableReference CreateReferenceToNewTypeVariable(IEnumerable<Constraint> constraints)
+        {
             int id = _currentTypeVariable++;
-            return CreateReferenceToNewType(new TypeVariable(id));
+            return CreateReferenceToNewType(new TypeVariable(id, constraints));
         }
 
         public TypeVariableReference CreateReferenceToConstructorType(string constructorName, TypeVariableReference argument)
@@ -448,22 +464,33 @@ namespace Rebar.Common
                 toUnifyWithTypeVariable = toUnifyWithTypeBase as TypeVariable;
             if (toUnifyTypeVariable != null && toUnifyWithTypeVariable != null)
             {
+                toUnifyWithTypeVariable.AdoptConstraintsFromVariable(toUnifyTypeVariable);
                 MergeTypeVariableIntoTypeVariable(toUnify, toUnifyWith);
                 return;
             }
             if (toUnifyTypeVariable != null)
             {
-                MergeTypeVariableIntoTypeVariable(toUnify, toUnifyWith);
+                UnifyTypeVariableWithNonTypeVariable(toUnify, toUnifyWith, unificationResult);
                 return;
             }
             if (toUnifyWithTypeVariable != null)
             {
-                MergeTypeVariableIntoTypeVariable(toUnifyWith, toUnify);
+                UnifyTypeVariableWithNonTypeVariable(toUnifyWith, toUnify, unificationResult);
                 return;
             }
 
             unificationResult.SetTypeMismatch();
             return;
+        }
+
+        private void UnifyTypeVariableWithNonTypeVariable(TypeVariableReference typeVariable, TypeVariableReference nonTypeVariable, ITypeUnificationResult unificationResult)
+        {
+            var t = (TypeVariable)GetTypeForTypeVariableReference(typeVariable);
+            foreach (Constraint constraint in t.Constraints)
+            {
+                constraint.ValidateConstraintForType(nonTypeVariable, unificationResult);
+            }
+            MergeTypeVariableIntoTypeVariable(typeVariable, nonTypeVariable);
         }
 
         public string GetDebuggerDisplay(TypeVariableReference typeVariableReference)
@@ -559,5 +586,40 @@ namespace Rebar.Common
         public void AndWith(bool value) => TypeVariableSet.AndWith(this, value);
 
         public bool Mutable => TypeVariableSet.GetMutable(this);
+    }
+
+    internal abstract class Constraint
+    {
+        public abstract void ValidateConstraintForType(TypeVariableReference type, ITypeUnificationResult unificationResult);
+    }
+
+    internal class CopyConstraint : Constraint
+    {
+        public override void ValidateConstraintForType(TypeVariableReference type, ITypeUnificationResult unificationResult)
+        {
+            // TODO: probably not great to render an NIType at this stage
+            if (!type.RenderNIType().WireTypeMayFork())
+            {
+                unificationResult.AddFailedTypeConstraint(this);
+            }
+        }
+    }
+
+    internal class OutlastsLifetimeGraphConstraint : Constraint
+    {
+        private readonly LifetimeGraphIdentifier _lifetimeGraph;
+
+        public OutlastsLifetimeGraphConstraint(LifetimeGraphIdentifier lifetimeGraph)
+        {
+            _lifetimeGraph = lifetimeGraph;
+        }
+
+        public override void ValidateConstraintForType(TypeVariableReference type, ITypeUnificationResult unificationResult)
+        {
+            if (!type.Lifetime.DoesOutlastLifetimeGraph(_lifetimeGraph))
+            {
+                unificationResult.AddFailedTypeConstraint(this);
+            }
+        }
     }
 }

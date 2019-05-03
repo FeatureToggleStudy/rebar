@@ -32,7 +32,7 @@ namespace Tests.Rebar.Unit.Compiler
         }
 
         [TestMethod]
-        public void UnwrapOptionTunnelWithNonOptionTypeWired_ValidateVariableUsages_TypeMismatchErrorCreated()
+        public void UnwrapOptionTunnelWithNonOptionTypeWired_ValidateVariableUsages_TypeConflictErrorCreated()
         {
             DfirRoot function = DfirRoot.Create();
             Frame frame = Frame.Create(function.BlockDiagram);
@@ -41,7 +41,23 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(function);
 
-            Assert.IsTrue(unwrapOption.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+            AssertTerminalHasTypeConflictMessage(unwrapOption.InputTerminals[0]);
+        }
+
+        [TestMethod]
+        public void OutputTunnelWithInnerDiagramReferenceTypeInputOnFrameWithUnwrapOptionTunnel_ValidateVariableUsages_ErrorReported()
+        {
+            DfirRoot function = DfirRoot.Create();
+            Frame frame = Frame.Create(function.BlockDiagram);
+            UnwrapOptionTunnel unwrapOption = CreateUnwrapOptionTunnel(frame);
+            Tunnel outputTunnel = frame.CreateTunnel(Direction.Output, TunnelMode.LastValue, PFTypes.Void, PFTypes.Void);
+            FunctionalNode someConstructor = ConnectSomeConstructorToInputTerminal(outputTunnel.InputTerminals[0]);
+            ExplicitBorrowNode borrow = ConnectExplicitBorrowToInputTerminal(someConstructor.InputTerminals[0]);
+            ConnectConstantToInputTerminal(borrow.InputTerminals[0], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToValidation(function);
+
+            Assert.IsTrue(outputTunnel.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == Messages.WiredReferenceDoesNotLiveLongEnough.Descriptor));
         }
 
         [TestMethod]

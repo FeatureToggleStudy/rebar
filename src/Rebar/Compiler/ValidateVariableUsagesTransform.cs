@@ -1,7 +1,5 @@
 ﻿using System.Linq;
-using NationalInstruments;
 using NationalInstruments.Compiler.SemanticAnalysis;
-using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using NationalInstruments.FeatureToggles;
 using Rebar.Common;
@@ -32,11 +30,8 @@ namespace Rebar.Compiler
             Terminal sourceTerminal;
             if (wire.TryGetSourceTerminal(out sourceTerminal))
             {
+                _typeUnificationResults.SetMessagesOnTerminal(sourceTerminal);
                 VariableReference sourceVariable = sourceTerminal.GetFacadeVariable();
-                if (wire.SinkTerminals.HasMoreThan(1) && !WireTypeMayFork(sourceVariable.Type))
-                {
-                    wire.SetDfirMessage(Messages.WireCannotFork);
-                }
                 if (wire.Terminals.Any(t => !t.IsConnected))
                 {
                     wire.SetDfirMessage(WireSpecificUserMessages.LooseEnds);
@@ -48,27 +43,6 @@ namespace Rebar.Compiler
             }
         }
 
-        internal static bool WireTypeMayFork(NIType wireType)
-        {
-            if (wireType.IsImmutableReferenceType())
-            {
-                return true;
-            }
-
-            if (wireType.IsNumeric() || wireType.IsBoolean())
-            {
-                return true;
-            }
-
-            NIType optionValueType;
-            if (wireType.TryDestructureOptionType(out optionValueType))
-            {
-                return WireTypeMayFork(optionValueType);
-            }
-
-            return false;
-        }
-
         protected override void VisitBorderNode(NationalInstruments.Dfir.BorderNode borderNode)
         {
             this.VisitRebarNode(borderNode);
@@ -77,7 +51,7 @@ namespace Rebar.Compiler
         public bool VisitBorrowTunnel(BorrowTunnel borrowTunnel)
         {
             var validator = borrowTunnel.Terminals[0].GetValidator();
-            if (borrowTunnel.BorrowMode == Common.BorrowMode.Mutable)
+            if (borrowTunnel.BorrowMode == BorrowMode.Mutable)
             {
                 validator.TestVariableIsMutableType();
             }
@@ -108,14 +82,7 @@ namespace Rebar.Compiler
 
         public bool VisitFunctionalNode(FunctionalNode functionalNode)
         {
-            foreach (var inputTerminalPair in functionalNode.InputTerminals.Zip(Signatures.GetSignatureForNIType(functionalNode.Signature).Inputs))
-            {
-                Terminal inputTerminal = inputTerminalPair.Key;
-                if (inputTerminal.TestRequiredTerminalConnected())
-                {
-                    _typeUnificationResults.SetMessagesOnTerminal(inputTerminal);
-                }
-            }
+            functionalNode.InputTerminals.ForEach(ValidateRequiredInputTerminal);
 
             if (functionalNode.RequiredFeatureToggles.Any(feature => !FeatureToggleSupport.IsFeatureEnabled(feature)))
             {
@@ -126,33 +93,19 @@ namespace Rebar.Compiler
 
         public bool VisitIterateTunnel(IterateTunnel iterateTunnel)
         {
-            Terminal inputTerminal = iterateTunnel.Terminals[0];
-            VariableUsageValidator validator = inputTerminal.GetValidator();
-            validator.TestUnderlyingType(
-                type => type.IsIteratorType() || type.IsVectorType(),
-                PFTypes.Void.CreateIterator());
-
-            NIType underlyingType = inputTerminal.GetFacadeVariable().Type.GetUnderlyingTypeFromRebarType();
-            if (underlyingType.IsIteratorType())
-            {
-                validator.TestVariableIsMutableType();
-            }
+            ValidateRequiredInputTerminal(iterateTunnel.InputTerminals[0]);
             return true;
         }
 
         public bool VisitLockTunnel(LockTunnel lockTunnel)
         {
-            VariableUsageValidator validator = lockTunnel.Terminals[0].GetValidator();
-            validator.TestUnderlyingType(DataTypes.IsLockingCellType, PFTypes.Void.CreateLockingCell());
+            ValidateRequiredInputTerminal(lockTunnel.InputTerminals[0]);
             return true;
         }
 
         public bool VisitLoopConditionTunnel(LoopConditionTunnel loopConditionTunnel)
         {
-            Terminal inputTerminal = loopConditionTunnel.InputTerminals.ElementAt(0);
-            var validator = new VariableUsageValidator(inputTerminal, true, false);
-            validator.TestVariableIsOwnedType();
-            validator.TestExpectedUnderlyingType(PFTypes.Boolean);
+            ValidateOptionalInputTerminal(loopConditionTunnel.InputTerminals[0]);
             return true;
         }
 
@@ -180,6 +133,7 @@ namespace Rebar.Compiler
 
         public bool VisitTunnel(Tunnel tunnel)
         {
+            ValidateRequiredInputTerminal(tunnel.InputTerminals[0]);
             return true;
         }
 
@@ -191,15 +145,21 @@ namespace Rebar.Compiler
 
         public bool VisitUnwrapOptionTunnel(UnwrapOptionTunnel unwrapOptionTunnel)
         {
-            if (unwrapOptionTunnel.Direction != Direction.Input)
-            {
-                // TODO: report an error; this tunnel can only be an input
-                return true;
-            }
-            VariableUsageValidator validator = unwrapOptionTunnel.GetOuterTerminal(0).GetValidator();
-            validator.TestVariableIsOwnedType();
-            validator.TestUnderlyingType(t => t.IsOptionType(), PFTypes.Void.CreateOption());
+            ValidateRequiredInputTerminal(unwrapOptionTunnel.InputTerminals[0]);
             return true;
+        }
+
+        private void ValidateRequiredInputTerminal(Terminal inputTerminal)
+        {
+            if (inputTerminal.TestRequiredTerminalConnected())
+            {
+                _typeUnificationResults.SetMessagesOnTerminal(inputTerminal);
+            }
+        }
+
+        private void ValidateOptionalInputTerminal(Terminal inputTerminal)
+        {
+            _typeUnificationResults.SetMessagesOnTerminal(inputTerminal);
         }
     }
 }

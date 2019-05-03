@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using NationalInstruments.Compiler.SemanticAnalysis;
 using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
@@ -23,6 +24,8 @@ namespace Rebar.Compiler
             public bool TypeMismatch { get; set; }
 
             public bool ExpectedMutable { get; set; }
+
+            public List<Constraint> FailedConstraints { get; set; }
         }
 
         private class TerminalTypeUnificationResult : ITypeUnificationResult
@@ -42,6 +45,12 @@ namespace Rebar.Compiler
             public void SetTypeMismatch()
             {
                 _unificationResult.TypeMismatch = true;
+            }
+
+            public void AddFailedTypeConstraint(Constraint constraint)
+            {
+                _unificationResult.FailedConstraints = _unificationResult.FailedConstraints ?? new List<Constraint>();
+                _unificationResult.FailedConstraints.Add(constraint);
             }
         }
 
@@ -74,6 +83,17 @@ namespace Rebar.Compiler
             if (unificationResult.ExpectedMutable)
             {
                 terminal.SetDfirMessage(Messages.TerminalDoesNotAcceptImmutableType);
+            }
+            if (unificationResult.FailedConstraints != null)
+            {
+                if (unificationResult.FailedConstraints.OfType<Constraint>().Any())
+                {
+                    terminal.ParentNode.SetDfirMessage(Messages.WireCannotFork);
+                }
+                if (unificationResult.FailedConstraints.OfType<OutlastsLifetimeGraphConstraint>().Any())
+                {
+                    terminal.SetDfirMessage(Messages.WiredReferenceDoesNotLiveLongEnough);
+                }
             }
         }
     }

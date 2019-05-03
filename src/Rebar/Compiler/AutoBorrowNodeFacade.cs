@@ -45,9 +45,9 @@ namespace Rebar.Compiler
             }
         }
 
-        public ReferenceInputTerminalLifetimeGroup CreateInputLifetimeGroup(InputReferenceMutability mutability, Lazy<Lifetime> lazyNewLifetime)
+        public ReferenceInputTerminalLifetimeGroup CreateInputLifetimeGroup(InputReferenceMutability mutability, Lazy<Lifetime> lazyNewLifetime, TypeVariableReference lifetimeType)
         {
-            var lifetimeGroup = new ReferenceInputTerminalLifetimeGroup(this, mutability, lazyNewLifetime);
+            var lifetimeGroup = new ReferenceInputTerminalLifetimeGroup(this, mutability, lazyNewLifetime, lifetimeType);
             _lifetimeGroups = _lifetimeGroups ?? new List<ReferenceInputTerminalLifetimeGroup>();
             _lifetimeGroups.Add(lifetimeGroup);
             return lifetimeGroup;

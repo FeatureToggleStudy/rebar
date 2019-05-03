@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NationalInstruments.Compiler.SemanticAnalysis;
 using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using Rebar.Common;
@@ -155,6 +154,20 @@ namespace Tests.Rebar.Unit.Compiler
 
             Terminal outputTerminal = functionalNode.OutputTerminals[1];
             Assert.IsTrue(outputTerminal.GetTrueVariable().Type.IsInt32());
+        }
+
+        [TestMethod]
+        public void FunctionNodeWithGenericOutParameterWithDownstreamTypeDeterminant_SetVariableTypes_TypeSetOnOutput()
+        {
+            DfirRoot function = DfirRoot.Create();
+            var genericOutput = new FunctionalNode(function.BlockDiagram, DefineGenericOutputFunctionSignature());
+            var assignNode = new FunctionalNode(function.BlockDiagram, Signatures.AssignType);
+            genericOutput.OutputTerminals[0].WireTogether(assignNode.InputTerminals[0], SourceModelIdSource.NoSourceModelId);
+            ConnectConstantToInputTerminal(assignNode.InputTerminals[1], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToSetVariableTypes(function);
+
+            Assert.IsTrue(genericOutput.OutputTerminals[0].GetTrueVariable().Type.IsInt32());
         }
 
         [TestMethod]
@@ -320,7 +333,7 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(dfirRoot);
 
-            Assert.IsTrue(functionalNode.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+            AssertTerminalHasTypeConflictMessage(functionalNode.InputTerminals[0]);
         }
 
         [TestMethod]
@@ -346,7 +359,7 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(dfirRoot);
 
-            Assert.IsTrue(functionalNode.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+            AssertTerminalHasTypeConflictMessage(functionalNode.InputTerminals[0]);
         }
 
         [TestMethod]
@@ -359,7 +372,7 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(dfirRoot);
 
-            Assert.IsFalse(functionalNode.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+            AssertTerminalDoesNotHaveTypeConflictMessage(functionalNode.InputTerminals[0]);
         }
 
         [TestMethod]
@@ -372,7 +385,7 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(dfirRoot);
 
-            Assert.IsTrue(functionalNode.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+            AssertTerminalHasTypeConflictMessage(functionalNode.InputTerminals[0]);
         }
 
         [TestMethod]
@@ -386,9 +399,9 @@ namespace Tests.Rebar.Unit.Compiler
 
             RunSemanticAnalysisUpToValidation(dfirRoot);
 
-            Assert.IsTrue(functionalNode.InputTerminals[2].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+            AssertTerminalHasTypeConflictMessage(functionalNode.InputTerminals[2]);
         }
 
-#endregion
+        #endregion
     }
 }

@@ -43,6 +43,8 @@ namespace Rebar.RebarTarget
             _functionalNodeCompilers["Or"] = (_, __) => CompilePureBinaryPrimitive(_, __, BinaryPrimitiveOps.Or);
             _functionalNodeCompilers["Xor"] = (_, __) => CompilePureBinaryPrimitive(_, __, BinaryPrimitiveOps.Xor);
 
+            _functionalNodeCompilers["AccumulateIncrement"] = (_, __) => CompileMutatingUnaryPrimitive(_, __, UnaryPrimitiveOps.Increment);
+            _functionalNodeCompilers["AccumulateNot"] = (_, __) => CompileMutatingUnaryPrimitive(_, __, UnaryPrimitiveOps.Not);
             _functionalNodeCompilers["AccumulateAdd"] = (_, __) => CompileMutatingBinaryPrimitive(_, __, BinaryPrimitiveOps.Add);
             _functionalNodeCompilers["AccumulateSubtract"] = (_, __) => CompileMutatingBinaryPrimitive(_, __, BinaryPrimitiveOps.Subtract);
             _functionalNodeCompilers["AccumulateMultiply"] = (_, __) => CompileMutatingBinaryPrimitive(_, __, BinaryPrimitiveOps.Multiply);
@@ -50,6 +52,13 @@ namespace Rebar.RebarTarget
             _functionalNodeCompilers["AccumulateAnd"] = (_, __) => CompileMutatingBinaryPrimitive(_, __, BinaryPrimitiveOps.And);
             _functionalNodeCompilers["AccumulateOr"] = (_, __) => CompileMutatingBinaryPrimitive(_, __, BinaryPrimitiveOps.Or);
             _functionalNodeCompilers["AccumulateXor"] = (_, __) => CompileMutatingBinaryPrimitive(_, __, BinaryPrimitiveOps.Xor);
+
+            _functionalNodeCompilers["Equal"] = (_, __) => CompileComparison(_, __, b => b.EmitEquals());
+            _functionalNodeCompilers["NotEqual"] = (_, __) => CompileComparison(_, __, b => b.EmitNotEquals());
+            _functionalNodeCompilers["LessThan"] = (_, __) => CompileComparison(_, __, b => b.EmitLessThan());
+            _functionalNodeCompilers["LessEqual"] = (_, __) => CompileComparison(_, __, b => b.EmitLessThanOrEqual());
+            _functionalNodeCompilers["GreaterThan"] = (_, __) => CompileComparison(_, __, b => b.EmitGreaterThan());
+            _functionalNodeCompilers["GreaterEqual"] = (_, __) => CompileComparison(_, __, b => b.EmitGreaterThanOrEqual());
         }
 
         private static void CompileNothing(FunctionCompiler compiler, FunctionalNode noopNode)
@@ -167,6 +176,20 @@ namespace Rebar.RebarTarget
             compiler.LoadValueAsReference(input2);
             compiler._builder.EmitDerefInteger();
             compiler.EmitBinaryOperation(operation);
+            compiler._builder.EmitStoreInteger();
+        }
+
+        private static void CompileComparison(FunctionCompiler compiler, FunctionalNode comparisonNode, Action<FunctionBuilder> emitOperation)
+        {
+            VariableReference input1 = comparisonNode.InputTerminals[0].GetTrueVariable(),
+                input2 = comparisonNode.InputTerminals[1].GetTrueVariable(),
+                output = comparisonNode.OutputTerminals[2].GetTrueVariable();
+            compiler.LoadLocalAllocationReference(output);
+            compiler.LoadValueAsReference(input1);
+            compiler._builder.EmitDerefInteger();
+            compiler.LoadValueAsReference(input2);
+            compiler._builder.EmitDerefInteger();
+            emitOperation(compiler._builder);
             compiler._builder.EmitStoreInteger();
         }
 

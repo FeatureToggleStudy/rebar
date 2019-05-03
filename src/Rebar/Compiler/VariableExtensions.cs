@@ -91,9 +91,19 @@ namespace Rebar.Compiler
             return new VariableUsageValidator(terminal);
         }
 
+        public static Lifetime GetDiagramLifetime(this Terminal terminal)
+        {
+            return terminal.DfirRoot.GetLifetimeGraphTree().GetLifetimeGraphRootLifetime(terminal.ParentDiagram.GetLifetimeGraphIdentifier());
+        }
+
         public static Lifetime DefineLifetimeThatIsBoundedByDiagram(this Terminal terminal)
         {
             return terminal.DfirRoot.GetLifetimeGraphTree().CreateLifetimeThatIsBoundedByLifetimeGraph(terminal.ParentDiagram.GetLifetimeGraphIdentifier());
+        }
+
+        public static bool IsDiagramLifetime(this Lifetime lifetime, Diagram diagram)
+        {
+            return lifetime == diagram.DfirRoot.GetLifetimeGraphTree().GetLifetimeGraphRootLifetime(diagram.GetLifetimeGraphIdentifier());
         }
 
         public static bool DoesOutlastDiagram(this Lifetime lifetime, Diagram diagram)

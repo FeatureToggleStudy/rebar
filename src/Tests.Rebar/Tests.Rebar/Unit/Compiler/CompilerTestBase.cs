@@ -1,9 +1,13 @@
-﻿using NationalInstruments.Compiler;
+﻿using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NationalInstruments.Compiler;
+using NationalInstruments.Compiler.SemanticAnalysis;
 using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using Rebar.Common;
 using Rebar.Compiler;
 using Rebar.Compiler.Nodes;
+using Rebar.RebarTarget;
 
 namespace Tests.Rebar.Unit.Compiler
 {
@@ -26,19 +30,35 @@ namespace Tests.Rebar.Unit.Compiler
             unificationResults = unificationResults ?? new TerminalTypeUnificationResults();
             lifetimeVariableAssociation = lifetimeVariableAssociation ?? new LifetimeVariableAssociation();
             RunSemanticAnalysisUpToCreateNodeFacades(dfirRoot, cancellationToken);
-            new MergeVariablesAcrossWiresTransform(unificationResults).Execute(dfirRoot, cancellationToken);
-            new SetVariableTypesAndLifetimesTransform(lifetimeVariableAssociation).Execute(dfirRoot, cancellationToken);
+            new MergeVariablesAcrossWiresTransform(lifetimeVariableAssociation, unificationResults).Execute(dfirRoot, cancellationToken);
         }
 
-        protected void RunSemanticAnalysisUpToValidation(DfirRoot dfirRoot)
+        protected void RunSemanticAnalysisUpToValidation(DfirRoot dfirRoot, CompileCancellationToken cancellationToken = null)
         {
-            var cancellationToken = new CompileCancellationToken();
+            cancellationToken = cancellationToken ?? new CompileCancellationToken();
             var unificationResults = new TerminalTypeUnificationResults();
             RunSemanticAnalysisUpToSetVariableTypes(dfirRoot, cancellationToken, unificationResults);
             new ValidateVariableUsagesTransform(unificationResults).Execute(dfirRoot, cancellationToken);
         }
 
-        protected static void ConnectConstantToInputTerminal(Terminal inputTerminal, NIType variableType, bool mutable)
+        protected void RunSemanticAnalysisUpToCodeGeneration(DfirRoot dfirRoot)
+        {
+            var cancellationToken = new CompileCancellationToken();
+            RunSemanticAnalysisUpToValidation(dfirRoot, cancellationToken);
+
+            new AutoBorrowTransform().Execute(dfirRoot, cancellationToken);
+            FunctionCompileHandler.CompileFunction(dfirRoot, cancellationToken);
+        }
+
+        protected NIType DefineGenericOutputFunctionSignature()
+        {
+            NIFunctionBuilder functionBuilder = PFTypes.Factory.DefineFunction("genericOutput");
+            NIType typeParameter = Signatures.AddGenericDataTypeParameter(functionBuilder, "TData");
+            Signatures.AddOutputParameter(functionBuilder, typeParameter, "out");
+            return functionBuilder.CreateType();
+        }
+
+        protected void ConnectConstantToInputTerminal(Terminal inputTerminal, NIType variableType, bool mutable)
         {
             Constant constant = Constant.Create(inputTerminal.ParentDiagram, variableType.CreateDefaultValue(), variableType);
             Wire wire = Wire.Create(inputTerminal.ParentDiagram, constant.OutputTerminal, inputTerminal);
@@ -59,6 +79,16 @@ namespace Tests.Rebar.Unit.Compiler
             borrowTunnel.TerminateLifetimeTunnel = terminateLifetimeDfir;
             terminateLifetimeDfir.BeginLifetimeTunnel = borrowTunnel;
             return borrowTunnel;
+        }
+
+        protected void AssertTerminalHasTypeConflictMessage(Terminal terminal)
+        {
+            Assert.IsTrue(terminal.GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
+        }
+
+        protected void AssertTerminalDoesNotHaveTypeConflictMessage(Terminal terminal)
+        {
+            Assert.IsFalse(terminal.GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.TypeConflict));
         }
     }
 }

@@ -18,14 +18,18 @@ namespace Rebar.Compiler
         public ReferenceInputTerminalLifetimeGroup(
             AutoBorrowNodeFacade nodeFacade,
             InputReferenceMutability mutability,
-            Lazy<Lifetime> lazyNewLifetime)
+            Lazy<Lifetime> lazyNewLifetime,
+            TypeVariableReference lifetimeType)
         {
             _nodeFacade = nodeFacade;
             _mutability = mutability;
             _lazyBorrowLifetime = lazyNewLifetime;
+            LifetimeType = lifetimeType;
         }
 
         private Lifetime BorrowLifetime => _lazyBorrowLifetime.Value;
+
+        private TypeVariableReference LifetimeType;
 
         private void SetBorrowRequired(bool mutableBorrow)
         {
@@ -33,9 +37,30 @@ namespace Rebar.Compiler
             _mutableBorrow = mutableBorrow;
         }
 
-        public void AddTerminalFacade(Terminal inputTerminal, Terminal terminateLifetimeOutputTerminal = null)
+        public void AddTerminalFacade(Terminal inputTerminal, TypeVariableReference referentTypeReference, TypeVariableReference mutabilityTypeReference, Terminal terminateLifetimeOutputTerminal = null)
         {
-            var terminalFacade = new ReferenceInputTerminalFacade(inputTerminal, _mutability, this);
+            TypeVariableReference referenceType;
+            TypeVariableSet typeVariableSet = inputTerminal.GetTypeVariableSet();
+            if (_mutability == InputReferenceMutability.Polymorphic)
+            {
+                referenceType = typeVariableSet.CreateReferenceToPolymorphicReferenceType(
+                    mutabilityTypeReference,
+                    referentTypeReference,
+                    LifetimeType);
+            }
+            else
+            {
+                referenceType = typeVariableSet.CreateReferenceToReferenceType(
+                    (_mutability != InputReferenceMutability.AllowImmutable),
+                    referentTypeReference,
+                    LifetimeType);
+            }
+            if (_lazyBorrowLifetime.IsValueCreated)
+            {
+                throw new InvalidOperationException("Cannot add borrowed variables after creating new lifetime.");
+            }
+
+            var terminalFacade = new ReferenceInputTerminalFacade(inputTerminal, _mutability, this, referenceType);
             _nodeFacade[inputTerminal] = terminalFacade;
             _facades.Add(terminalFacade);
             if (terminateLifetimeOutputTerminal != null)
@@ -61,7 +86,6 @@ namespace Rebar.Compiler
             if (_borrowRequired)
             {
                 Node parentNode = _facades.First().Terminal.ParentNode;
-                NationalInstruments.Dfir.BorderNode parentBorderNode = parentNode as NationalInstruments.Dfir.BorderNode;
                 BorrowMode borrowMode = _mutableBorrow ? BorrowMode.Mutable : BorrowMode.Immutable;
                 int borrowInputCount = _facades.Count;
                 Diagram inputParentDiagram = _facades.First().Terminal.ParentDiagram;
@@ -69,14 +93,13 @@ namespace Rebar.Compiler
                 AutoBorrowNodeFacade borrowNodeFacade = AutoBorrowNodeFacade.GetNodeFacade(explicitBorrow);
                 foreach (var terminal in explicitBorrow.Terminals)
                 {
-                    borrowNodeFacade[terminal] = new SimpleTerminalFacade(terminal);
+                    borrowNodeFacade[terminal] = new SimpleTerminalFacade(terminal, default(TypeVariableReference));
                 }
 
                 int index = 0;
                 foreach (var facade in _facades)
                 {
                     Terminal input = facade.Terminal;
-                    Terminal borrowOutput = explicitBorrow.OutputTerminals.ElementAt(index);
                     InsertBorrowAheadOfTerminal(input, explicitBorrow, index);
                     ++index;
                 }
@@ -98,13 +121,14 @@ namespace Rebar.Compiler
                     AutoBorrowNodeFacade terminateLifetimeFacade = AutoBorrowNodeFacade.GetNodeFacade(terminateLifetime);
                     foreach (var terminal in terminateLifetime.Terminals)
                     {
-                        terminateLifetimeFacade[terminal] = new SimpleTerminalFacade(terminal);
+                        terminateLifetimeFacade[terminal] = new SimpleTerminalFacade(terminal, default(TypeVariableReference));
                     }
 
                     index = 0;
                     foreach (var terminate in terminates)
                     {
                         InsertTerminateLifetimeBehindTerminal(terminate.Terminal, terminateLifetime, index);
+                        ++index;
                     }
                 }
                 else if (terminates.Count > 0)
@@ -157,14 +181,18 @@ namespace Rebar.Compiler
             private readonly InputReferenceMutability _mutability;
             private readonly ReferenceInputTerminalLifetimeGroup _group;
 
-            public ReferenceInputTerminalFacade(Terminal terminal, InputReferenceMutability mutability, ReferenceInputTerminalLifetimeGroup group)
+            public ReferenceInputTerminalFacade(
+                Terminal terminal, 
+                InputReferenceMutability mutability, 
+                ReferenceInputTerminalLifetimeGroup group,
+                TypeVariableReference referenceTypeReference)
                 : base(terminal)
             {
                 _mutability = mutability;
                 _group = group;
                 _variableSet = terminal.GetVariableSet();
-                FacadeVariable = _variableSet.CreateNewVariable();
-                TrueVariable = _variableSet.CreateNewVariable();
+                FacadeVariable = _variableSet.CreateNewVariable(default(TypeVariableReference));
+                TrueVariable = _variableSet.CreateNewVariable(referenceTypeReference);
             }
 
             public override VariableReference FacadeVariable { get; }
@@ -255,6 +283,31 @@ namespace Rebar.Compiler
                             break;
                         }
                 }
+            }
+        }
+        
+        /// <summary>
+        /// <see cref="TerminalFacade"/> implementation for output terminals that will terminate the lifetime started by
+        /// a related auto-borrowed input terminal. Its variables are identical to the corresponding variables of the related input.
+        /// </summary>
+        private class TerminateLifetimeOutputTerminalFacade : TerminalFacade
+        {
+            public TerminateLifetimeOutputTerminalFacade(Terminal terminal, TerminalFacade inputFacade)
+                : base(terminal)
+            {
+                InputFacade = inputFacade;
+            }
+
+            public override VariableReference FacadeVariable => InputFacade.FacadeVariable;
+
+            public override VariableReference TrueVariable => InputFacade.TrueVariable;
+
+            public TerminalFacade InputFacade { get; }
+
+            public override void UnifyWithConnectedWireTypeAsNodeInput(VariableReference wireFacadeVariable, TerminalTypeUnificationResults unificationResults)
+            {
+                // we're a node output facade; this should never be called.
+                throw new NotImplementedException();
             }
         }
     }

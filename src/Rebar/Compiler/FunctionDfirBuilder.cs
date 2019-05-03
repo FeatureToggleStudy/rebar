@@ -361,7 +361,7 @@ namespace Rebar.Compiler
             {
                 dataType = dataType.GetUnderlyingTypeFromRebarType();
             }
-            NIType constantType = ValidateVariableUsagesTransform.WireTypeMayFork(dataType)
+            NIType constantType = dataType.WireTypeMayFork()
                 ? dataType
                 : dataType.CreateImmutableReference();
             Constant constant = Constant.Create(_currentDiagram, literal.Data, constantType);

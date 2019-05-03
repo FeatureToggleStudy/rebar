@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NationalInstruments.Compiler.SemanticAnalysis;
 using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using Rebar.Common;
@@ -48,6 +49,19 @@ namespace Tests.Rebar.Unit.Compiler
             IEnumerable<VariableReference> interruptedVariables = lifetimeAssociation.GetVariablesInterruptedByLifetime(lifetime);
             Assert.AreEqual(1, interruptedVariables.Count());
             Assert.AreEqual(lockInputVariable, interruptedVariables.First());
+        }
+
+        [TestMethod]
+        public void LockTunnelWithNonCellInput_ValidateVariableUsages_TypeConflictErrorReported()
+        {
+            DfirRoot function = DfirRoot.Create();
+            Frame frame = Frame.Create(function.BlockDiagram);
+            var lockTunnel = CreateLockTunnel(frame);
+            ConnectConstantToInputTerminal(lockTunnel.InputTerminals[0], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToValidation(function);
+
+            AssertTerminalHasTypeConflictMessage(lockTunnel.InputTerminals[0]);
         }
 
         private static LockTunnel CreateLockTunnel(Structure structure)

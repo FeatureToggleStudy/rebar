@@ -165,6 +165,15 @@ namespace Rebar.Common
             return InputReferenceMutability.Polymorphic;
         }
 
+        public static bool IsReferenceToSameTypeAs(this NIType type, NIType other)
+        {
+            if (!type.IsRebarReferenceType() || !other.IsRebarReferenceType())
+            {
+                return false;
+            }
+            return type.GetReferentType() == other.GetReferentType();
+        }
+
         public static NIType CreateOption(this NIType valueType)
         {
             return SpecializeGenericType(OptionGenericType, valueType);
@@ -299,6 +308,27 @@ namespace Rebar.Common
             }
             itemType = type.GetGenericParameters().ElementAt(0);
             return true;
+        }
+
+        internal static bool WireTypeMayFork(this NIType wireType)
+        {
+            if (wireType.IsImmutableReferenceType())
+            {
+                return true;
+            }
+
+            if (wireType.IsNumeric() || wireType.IsBoolean())
+            {
+                return true;
+            }
+
+            NIType optionValueType;
+            if (wireType.TryDestructureOptionType(out optionValueType))
+            {
+                return WireTypeMayFork(optionValueType);
+            }
+
+            return false;
         }
     }
 }

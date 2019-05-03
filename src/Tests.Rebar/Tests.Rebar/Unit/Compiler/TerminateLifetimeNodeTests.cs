@@ -67,7 +67,6 @@ namespace Tests.Rebar.Unit.Compiler
             Assert.IsTrue(terminateLifetime.GetDfirMessages().Any(message => message.Descriptor == Messages.TerminateLifetimeInputLifetimeCannotBeTerminated.Descriptor));
         }
 
-#if FALSE
         [TestMethod]
         public void TerminateLifetimeWithStructureBorderInputLifetimeWired_ValidateVariableUsages_LifetimeCannotBeTerminatedErrorMessageReported()
         {
@@ -82,7 +81,6 @@ namespace Tests.Rebar.Unit.Compiler
 
             Assert.IsTrue(terminateLifetime.GetDfirMessages().Any(message => message.Descriptor == Messages.TerminateLifetimeInputLifetimeCannotBeTerminated.Descriptor));
         }
-#endif
 
         [TestMethod]
         public void TerminateLifetimeWithNotAllVariablesInLifetimeWired_ValidateVariableUsages_NotAllVariablesInLifetimeConnectedErrorMessageReported()
@@ -115,6 +113,24 @@ namespace Tests.Rebar.Unit.Compiler
             Assert.AreEqual(2, terminateLifetime.OutputTerminals.Count);
             Assert.IsTrue(borrow.InputTerminals[0].GetTrueVariable().ReferencesSame(terminateLifetime.OutputTerminals[0].GetTrueVariable()));
             Assert.IsTrue(borrow.InputTerminals[1].GetTrueVariable().ReferencesSame(terminateLifetime.OutputTerminals[1].GetTrueVariable()));
+        }
+
+        [TestMethod]
+        public void TypeDeterminantDownstreamOfTerminateLifetime_SetVariableTypes_UpstreamTypeSetCorrectly()
+        {
+            DfirRoot function = DfirRoot.Create();
+            var genericOutput = new FunctionalNode(function.BlockDiagram, DefineGenericOutputFunctionSignature());
+            var borrow = new ExplicitBorrowNode(function.BlockDiagram, BorrowMode.Immutable, 1, true, true);
+            genericOutput.OutputTerminals[0].WireTogether(borrow.InputTerminals[0], SourceModelIdSource.NoSourceModelId);
+            var terminateLifetime = new TerminateLifetimeNode(function.BlockDiagram, 1, 1);
+            borrow.OutputTerminals[0].WireTogether(terminateLifetime.InputTerminals[0], SourceModelIdSource.NoSourceModelId);
+            var assignNode = new FunctionalNode(function.BlockDiagram, Signatures.AssignType);
+            terminateLifetime.OutputTerminals[0].WireTogether(assignNode.InputTerminals[0], SourceModelIdSource.NoSourceModelId);
+            ConnectConstantToInputTerminal(assignNode.InputTerminals[1], PFTypes.Int32, false);
+
+            RunSemanticAnalysisUpToSetVariableTypes(function);
+
+            Assert.IsTrue(genericOutput.OutputTerminals[0].GetTrueVariable().Type.IsInt32());
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Rebar.Common
 {
     public static class Signatures
     {
-        private static NIType AddGenericDataTypeParameter(NIFunctionBuilder functionBuilder, string name)
+        public static NIType AddGenericDataTypeParameter(NIFunctionBuilder functionBuilder, string name)
         {
             var genericTypeParameters = functionBuilder.MakeGenericParameters(name);
             return genericTypeParameters.ElementAt(0).CreateType();
@@ -39,17 +39,17 @@ namespace Rebar.Common
             builder.AddAttribute("Mutability", true, true);
         }
 
-        private static void AddInputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
+        public static void AddInputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
         {
             functionBuilder.DefineParameter(parameterType, name, NIParameterPassingRule.Required, NIParameterPassingRule.NotAllowed);
         }
 
-        private static void AddOutputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
+        public static void AddOutputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
         {
             functionBuilder.DefineParameter(parameterType, name, NIParameterPassingRule.NotAllowed, NIParameterPassingRule.Recommended);
         }
 
-        private static void AddInputOutputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
+        public static void AddInputOutputParameter(NIFunctionBuilder functionBuilder, NIType parameterType, string name)
         {
             functionBuilder.DefineParameter(parameterType, name, NIParameterPassingRule.Required, NIParameterPassingRule.Recommended);
         }
@@ -290,12 +290,31 @@ namespace Rebar.Common
             var functionTypeBuilder = PFTypes.Factory.DefineFunction(name);
             AddInputOutputParameter(
                 functionTypeBuilder,
-                inputType.CreateMutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife1")),
+                inputType.CreateMutableReference(),
                 "operand1Ref");
             AddInputOutputParameter(
                 functionTypeBuilder,
-                inputType.CreateImmutableReference(AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife2")),
+                inputType.CreateImmutableReference(),
                 "operand2Ref");
+            return functionTypeBuilder.CreateType();
+        }
+
+        public static NIType DefineComparisonFunction(string name)
+        {
+            var functionTypeBuilder = PFTypes.Factory.DefineFunction(name);
+            NIType inputType = PFTypes.Int32, outputType = PFTypes.Boolean;
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                inputType.CreateImmutableReference(),
+                "operand1Ref");
+            AddInputOutputParameter(
+                functionTypeBuilder,
+                inputType.CreateImmutableReference(),
+                "operand2Ref");
+            AddOutputParameter(
+                functionTypeBuilder,
+                outputType,
+                "result");
             return functionTypeBuilder.CreateType();
         }
 

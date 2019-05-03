@@ -30,46 +30,27 @@ namespace Rebar.Common
             /// cannot be rebound).</remarks>
             public bool Mutable { get; }
 
-            /// <summary>
-            /// The data <see cref="NIType"/> stored by the <see cref="Variable"/>.
-            /// </summary>
-            /// <remarks>This property should not store ImmutableValue or MutableValue types.
-            /// ImmutableReference and MutableReference types are allowed.</remarks>
-            public NIType Type { get; set; }
-
-            private TypeVariableReference _typeVariableReference;
-
-            public TypeVariableReference TypeVariableReference
-            {
-                get { return _typeVariableReference; }
-                set
-                {
-                    if (_typeVariableReference.TypeVariableSet != null)
-                    {
-                        throw new InvalidOperationException("Cannot set TypeVariableReference more than once.");
-                    }
-                    _typeVariableReference = value;
-                }
-            }
+            public TypeVariableReference TypeVariableReference { get; }
 
             public Lifetime Lifetime { get; set; }
 
-            public Variable(int id, int firstReferenceIndex, bool mutable)
+            public Variable(int id, int firstReferenceIndex, TypeVariableReference variableType, bool mutable)
             {
-                Type = PFTypes.Void;
                 Id = id;
                 FirstReferenceIndex = firstReferenceIndex;
+                TypeVariableReference = variableType;
                 Mutable = mutable;
             }
 
             public override string ToString()
             {
                 string mut = Mutable ? "mut" : string.Empty;
-                return $"v_{Id} : {mut} {Type}";
+                return $"v_{Id} : {mut} Type";
             }
         }
 
-        private int _currentVariableId = 1;
+        private int _currentVariableId = 0;
+        private int _currentVariableReferenceId = 1;
 
         private readonly List<Variable> _variables = new List<Variable>();
         private readonly List<Variable> _variableReferences = new List<Variable>();
@@ -86,9 +67,11 @@ namespace Rebar.Common
 
         public TypeVariableSet TypeVariableSet { get; }
 
-        private Variable CreateNewVariable(bool mutableVariable, int firstReferenceIndex)
+        private Variable CreateNewVariable(bool mutableVariable, int firstReferenceIndex, TypeVariableReference variableType)
         {
-            var variable = new Variable(_variables.Count, firstReferenceIndex, mutableVariable);
+            int variableId = _currentVariableId;
+            _currentVariableId++;
+            var variable = new Variable(variableId, firstReferenceIndex, variableType, mutableVariable);
             _variables.Add(variable);
             return variable;
         }
@@ -112,19 +95,17 @@ namespace Rebar.Common
             return new VariableReference(this, variable.FirstReferenceIndex);
         }
 
-        public VariableReference CreateNewVariable(bool mutable = false)
+        public VariableReference CreateNewVariable(TypeVariableReference variableType, bool mutable = false)
         {
-            int id = _currentVariableId++;
-            Variable variable = CreateNewVariable(mutable, id);
+            int id = _currentVariableReferenceId++;
+            Variable variable = CreateNewVariable(mutable, id, variableType);
             SetVariableAtReferenceIndex(variable, id);
             return new VariableReference(this, id);
         }
 
         public VariableReference CreateNewVariableForUnwiredTerminal()
         {
-            VariableReference newVariable = CreateNewVariable();
-            newVariable.AdoptTypeVariableReference(TypeVariableSet.CreateReferenceToLiteralType(PFTypes.Void));
-            return newVariable;
+            return CreateNewVariable(TypeVariableSet.CreateReferenceToLiteralType(PFTypes.Void));
         }
 
         public IEnumerable<VariableReference> GetUniqueVariableReferences()
@@ -149,17 +130,12 @@ namespace Rebar.Common
 
         internal bool GetMutable(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Mutable;
 
-        internal NIType GetType(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Type;
-
-        internal Lifetime GetLifetime(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Lifetime;
-
         internal int GetId(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Id;
 
-        internal void SetTypeAndLifetime(VariableReference variableReference, NIType type, Lifetime lifetime)
+        internal string GetDebuggerDisplay(VariableReference variableReference)
         {
             Variable variable = GetVariableForVariableReference(variableReference);
-            variable.Type = type;
-            variable.Lifetime = lifetime;
+            return variable.ToString();
         }
 
         internal TypeVariableReference GetTypeVariableReference(VariableReference variableReference)
@@ -171,12 +147,6 @@ namespace Rebar.Common
                 throw new ArgumentException("Getting TypeVariableReference for a variable that hasn't set one.");
             }
             return typeVariableReference;
-        }
-
-        internal void SetTypeVariableReference(VariableReference variableReference, TypeVariableReference typeVariableReference)
-        {
-            Variable variable = GetVariableForVariableReference(variableReference);
-            variable.TypeVariableReference = typeVariableReference;
         }
 
         internal bool ReferenceSameVariable(VariableReference x, VariableReference y) => GetVariableForVariableReference(x) == GetVariableForVariableReference(y);

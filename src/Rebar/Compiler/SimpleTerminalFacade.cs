@@ -10,7 +10,7 @@ namespace Rebar.Compiler
     /// </summary>
     internal class SimpleTerminalFacade : TerminalFacade
     {
-        public SimpleTerminalFacade(Terminal terminal)
+        public SimpleTerminalFacade(Terminal terminal, TypeVariableReference terminalTypeReference)
             : base(terminal)
         {
             bool terminalIsWireFirst = terminal.IsOutput && !(terminal.ParentNode is TerminateLifetimeNode);
@@ -26,7 +26,7 @@ namespace Rebar.Compiler
                 connectedWire.SetIsFirstVariableWire(true);
                 mutableVariable = connectedWire.GetWireBeginsMutableVariable();
             }
-            TrueVariable = terminal.GetVariableSet().CreateNewVariable(mutableVariable);
+            TrueVariable = terminal.GetVariableSet().CreateNewVariable(terminalTypeReference, mutableVariable);
         }
 
         public override VariableReference FacadeVariable => TrueVariable;

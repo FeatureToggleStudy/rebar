@@ -18,17 +18,21 @@ namespace Rebar.Compiler.Nodes
             {
                 CreateTerminal(Direction.Output, immutableReferenceType, "outer lifetime");
             }
+            UnificationState = new TerminateLifetimeUnificationState(ParentDiagram);
         }
 
         private TerminateLifetimeNode(Node parentNode, TerminateLifetimeNode nodeToCopy, NodeCopyInfo nodeCopyInfo)
             : base(parentNode, nodeToCopy, nodeCopyInfo)
         {
+            UnificationState = nodeToCopy.UnificationState;
         }
 
         protected override Node CopyNodeInto(Node newParentNode, NodeCopyInfo copyInfo)
         {
             return new TerminateLifetimeNode(newParentNode, this, copyInfo);
         }
+
+        public TerminateLifetimeUnificationState UnificationState { get; }
 
         public TerminateLifetimeErrorState ErrorState { get; set; }
 
@@ -52,7 +56,7 @@ namespace Rebar.Compiler.Nodes
                 for (; currentInputTerminalCount < inputTerminalCount; ++currentInputTerminalCount)
                 {
                     var terminal = CreateTerminal(Direction.Input, immutableReferenceType, "inner lifetime");
-                    nodeFacade[terminal] = new SimpleTerminalFacade(terminal);
+                    nodeFacade[terminal] = new SimpleTerminalFacade(terminal, terminal.GetTypeVariableSet().CreateReferenceToNewTypeVariable());
                     MoveTerminalToIndex(terminal, currentInputTerminalCount);
                 }
             }
@@ -77,7 +81,7 @@ namespace Rebar.Compiler.Nodes
                 for (; currentOutputTerminalCount < outputTerminalCount; ++currentOutputTerminalCount)
                 {
                     var terminal = CreateTerminal(Direction.Output, immutableReferenceType, "outer lifetime");
-                    nodeFacade[terminal] = new SimpleTerminalFacade(terminal);
+                    nodeFacade[terminal] = new SimpleTerminalFacade(terminal, terminal.GetTypeVariableSet().CreateReferenceToNewTypeVariable());
                 }
             }
             else if (currentOutputTerminalCount > outputTerminalCount)
