@@ -72,13 +72,6 @@ namespace Rebar.Common
             _variableSet.TypeVariableSet.Unify(TypeVariableReference, intoVariable.TypeVariableReference, unificationResult);
         }
 
-        private string DebuggerDisplay
-        {
-            get
-            {
-                string mut = Mutable ? "mut" : string.Empty;
-                return $"v_{Id} : {mut} {Type}";
-            }
-        }
+        private string DebuggerDisplay => _variableSet?.GetDebuggerDisplay(this);
     }
 }

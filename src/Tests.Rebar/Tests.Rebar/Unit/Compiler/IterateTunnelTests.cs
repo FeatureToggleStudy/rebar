@@ -83,7 +83,7 @@ namespace Tests.Rebar.Unit.Compiler
             return iterateTunnel;
         }
 
-        private static FunctionalNode ConnectRangeWithIntegerInputsToInputTerminal(Terminal inputTerminal, bool mutable = true)
+        private FunctionalNode ConnectRangeWithIntegerInputsToInputTerminal(Terminal inputTerminal, bool mutable = true)
         {
             FunctionalNode range = new FunctionalNode(inputTerminal.ParentDiagram, Signatures.RangeType);
             ConnectConstantToInputTerminal(range.InputTerminals[0], PFTypes.Int32, false);

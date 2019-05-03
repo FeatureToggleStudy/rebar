@@ -165,6 +165,15 @@ namespace Rebar.Common
             return InputReferenceMutability.Polymorphic;
         }
 
+        public static bool IsReferenceToSameTypeAs(this NIType type, NIType other)
+        {
+            if (!type.IsRebarReferenceType() || !other.IsRebarReferenceType())
+            {
+                return false;
+            }
+            return type.GetReferentType() == other.GetReferentType();
+        }
+
         public static NIType CreateOption(this NIType valueType)
         {
             return SpecializeGenericType(OptionGenericType, valueType);

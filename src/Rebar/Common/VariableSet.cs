@@ -49,7 +49,8 @@ namespace Rebar.Common
             }
         }
 
-        private int _currentVariableId = 1;
+        private int _currentVariableId = 0;
+        private int _currentVariableReferenceId = 1;
 
         private readonly List<Variable> _variables = new List<Variable>();
         private readonly List<Variable> _variableReferences = new List<Variable>();
@@ -68,7 +69,9 @@ namespace Rebar.Common
 
         private Variable CreateNewVariable(bool mutableVariable, int firstReferenceIndex, TypeVariableReference variableType)
         {
-            var variable = new Variable(_variables.Count, firstReferenceIndex, variableType, mutableVariable);
+            int variableId = _currentVariableId;
+            _currentVariableId++;
+            var variable = new Variable(variableId, firstReferenceIndex, variableType, mutableVariable);
             _variables.Add(variable);
             return variable;
         }
@@ -94,7 +97,7 @@ namespace Rebar.Common
 
         public VariableReference CreateNewVariable(TypeVariableReference variableType, bool mutable = false)
         {
-            int id = _currentVariableId++;
+            int id = _currentVariableReferenceId++;
             Variable variable = CreateNewVariable(mutable, id, variableType);
             SetVariableAtReferenceIndex(variable, id);
             return new VariableReference(this, id);
@@ -128,6 +131,12 @@ namespace Rebar.Common
         internal bool GetMutable(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Mutable;
 
         internal int GetId(VariableReference variableReference) => GetVariableForVariableReference(variableReference).Id;
+
+        internal string GetDebuggerDisplay(VariableReference variableReference)
+        {
+            Variable variable = GetVariableForVariableReference(variableReference);
+            return variable.ToString();
+        }
 
         internal TypeVariableReference GetTypeVariableReference(VariableReference variableReference)
         {
