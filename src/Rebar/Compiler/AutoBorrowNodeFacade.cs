@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using NationalInstruments.Dfir;
 using Rebar.Common;
 
@@ -51,10 +50,6 @@ namespace Rebar.Compiler
             _lifetimeGroups = _lifetimeGroups ?? new List<ReferenceInputTerminalLifetimeGroup>();
             _lifetimeGroups.Add(lifetimeGroup);
             return lifetimeGroup;
-        }
-
-        public void UpdateInputsFromFacadeTypes()
-        {
         }
 
         public void SetLifetimeInterruptedVariables(LifetimeVariableAssociation lifetimeVariableAssociation)
