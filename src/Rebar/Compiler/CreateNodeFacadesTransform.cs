@@ -309,7 +309,7 @@ namespace Rebar.Compiler
             Terminal valueInput = borrowTunnel.InputTerminals.ElementAt(0),
                 borrowOutput = borrowTunnel.OutputTerminals.ElementAt(0);
             TypeVariableReference dataTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable();
-            Lifetime innerLifetime = borrowOutput.DefineLifetimeThatIsBoundedByDiagram();
+            Lifetime innerLifetime = borrowOutput.GetDiagramLifetime();
             TypeVariableReference referenceType = _typeVariableSet.CreateReferenceToReferenceType(
                 borrowTunnel.BorrowMode == BorrowMode.Mutable,
                 dataTypeVariable,
@@ -346,7 +346,7 @@ namespace Rebar.Compiler
                 .CreateInputLifetimeGroup(InputReferenceMutability.AllowImmutable, lifetimeTypeVariableGroup.LazyNewLifetime, lifetimeTypeVariableGroup.LifetimeType)
                 .AddTerminalFacade(lockInput, lockType, default(TypeVariableReference));
 
-            Lifetime innerLifetime = referenceOutput.DefineLifetimeThatIsBoundedByDiagram();
+            Lifetime innerLifetime = referenceOutput.GetDiagramLifetime();
             TypeVariableReference referenceType = _typeVariableSet.CreateReferenceToReferenceType(
                 true,
                 lockType,
@@ -363,7 +363,7 @@ namespace Rebar.Compiler
 
             TypeVariableReference boolType = _typeVariableSet.CreateReferenceToLiteralType(PFTypes.Boolean);
             _nodeFacade[loopConditionInput] = new SimpleTerminalFacade(loopConditionInput, boolType);
-            Lifetime innerLifetime = loopConditionOutput.DefineLifetimeThatIsBoundedByDiagram();
+            Lifetime innerLifetime = loopConditionOutput.GetDiagramLifetime();
             TypeVariableReference boolReferenceType = _typeVariableSet.CreateReferenceToReferenceType(
                 true,
                 boolType,

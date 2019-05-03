@@ -67,7 +67,6 @@ namespace Tests.Rebar.Unit.Compiler
             Assert.IsTrue(terminateLifetime.GetDfirMessages().Any(message => message.Descriptor == Messages.TerminateLifetimeInputLifetimeCannotBeTerminated.Descriptor));
         }
 
-#if FALSE
         [TestMethod]
         public void TerminateLifetimeWithStructureBorderInputLifetimeWired_ValidateVariableUsages_LifetimeCannotBeTerminatedErrorMessageReported()
         {
@@ -82,7 +81,6 @@ namespace Tests.Rebar.Unit.Compiler
 
             Assert.IsTrue(terminateLifetime.GetDfirMessages().Any(message => message.Descriptor == Messages.TerminateLifetimeInputLifetimeCannotBeTerminated.Descriptor));
         }
-#endif
 
         [TestMethod]
         public void TerminateLifetimeWithNotAllVariablesInLifetimeWired_ValidateVariableUsages_NotAllVariablesInLifetimeConnectedErrorMessageReported()

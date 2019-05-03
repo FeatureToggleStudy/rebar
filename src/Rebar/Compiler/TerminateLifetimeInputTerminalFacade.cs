@@ -60,7 +60,9 @@ namespace Rebar.Compiler
             switch (_state)
             {
                 case State.NoVariableSeen:
-                    if (!inputLifetime.IsBounded || inputLifetime.DoesOutlastDiagram(_parentDiagram))
+                    if (!inputLifetime.IsBounded
+                        || inputLifetime.DoesOutlastDiagram(_parentDiagram)
+                        || inputLifetime.IsDiagramLifetime(_parentDiagram))
                     {
                         _state = State.LifetimeCannotBeTerminated;
                         return;

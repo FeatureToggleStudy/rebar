@@ -123,6 +123,11 @@ namespace Rebar.Common
             _graphParents[identifier] = parentIdentifier;
         }
 
+        public Lifetime GetLifetimeGraphRootLifetime(LifetimeGraphIdentifier graphIdentifier)
+        {
+            return _diagramGraphs[graphIdentifier].DiagramLifetime;
+        }
+
         public Lifetime CreateLifetimeThatIsBoundedByLifetimeGraph(LifetimeGraphIdentifier graphIdentifier)
         {
             return _diagramGraphs[graphIdentifier].CreateLifetimeThatIsBoundedByDiagram();
