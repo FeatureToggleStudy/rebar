@@ -23,13 +23,8 @@ namespace Rebar.Common
         {
             var genericTypeParameters = functionBuilder.MakeGenericParameters(name);
             var parameterBuilder = genericTypeParameters.ElementAt(0);
-            SetLifetimeTypeAttribute((NIAttributedBaseBuilder)parameterBuilder);
+            DataTypes.SetLifetimeTypeAttribute((NIAttributedBaseBuilder)parameterBuilder);
             return parameterBuilder.CreateType();
-        }
-
-        private static void SetLifetimeTypeAttribute(NIAttributedBaseBuilder builder)
-        {
-            builder.AddAttribute("Lifetime", true, true);
         }
 
         private static NIType AddGenericMutabilityTypeParameter(NIFunctionBuilder functionBuilder, string name)
@@ -240,6 +235,18 @@ namespace Rebar.Common
                 "slice");
             StringAppendType = functionTypeBuilder.CreateType();
 
+            functionTypeBuilder = PFTypes.Factory.DefineFunction("CreateStringSplitIterator");
+            tLifetimeParameter = AddGenericLifetimeTypeParameter(functionTypeBuilder, "TLife");
+            AddInputParameter(
+                functionTypeBuilder,
+                DataTypes.StringSliceType.CreateImmutableReference(tLifetimeParameter),
+                "slice");
+            AddOutputParameter(
+                functionTypeBuilder,
+                tLifetimeParameter.CreateStringSplitIterator(),
+                "iterator");
+            CreateStringSplitIteratorType = functionTypeBuilder.CreateType();
+
             functionTypeBuilder = PFTypes.Factory.DefineFunction("VectorCreate");
             // TODO
 #if FALSE
@@ -321,6 +328,8 @@ namespace Rebar.Common
         public static NIType StringConcatType { get; }
 
         public static NIType StringAppendType { get; }
+
+        public static NIType CreateStringSplitIteratorType { get; }
 
         public static NIType VectorCreateType { get; }
 
