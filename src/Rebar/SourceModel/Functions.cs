@@ -819,6 +819,30 @@ namespace Rebar.SourceModel
         public override IEnumerable<string> RequiredFeatureToggles => new string[1] { RebarFeatureToggles.VectorAndSliceTypes };
     }
 
+    public class VectorInitialize : FunctionalNode
+    {
+        private const string ElementName = "VectorInitialize";
+
+        protected VectorInitialize()
+            : base(Signatures.VectorInitializeType)
+        {
+        }
+
+        [XmlParserFactoryMethod(ElementName, Function.ParsableNamespaceName)]
+        public static VectorInitialize CreateVectorInitialize(IElementCreateInfo elementCreateInfo)
+        {
+            var vectorInitialize = new VectorInitialize();
+            vectorInitialize.Init(elementCreateInfo);
+            return vectorInitialize;
+        }
+
+        /// <inheritdoc />
+        public override XName XmlElementName => XName.Get(ElementName, Function.ParsableNamespaceName);
+
+        /// <inheritdoc />
+        public override IEnumerable<string> RequiredFeatureToggles => new string[1] { RebarFeatureToggles.VectorAndSliceTypes };
+    }
+
     #endregion
 
     #region Cell

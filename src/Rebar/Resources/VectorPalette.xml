@@ -14,6 +14,13 @@
           </pf:MergeItem>
         </pf:MergeScript>
       </Leaf>
+      <Leaf Display="Initialize Vector" UniqueId="Rebar:InitializeVector" ElementId="NI.MocCommon:Literal.NationalInstruments.MocCommon.Modeling.INumericBehavior" Weight="3" ImagePath="/NationalInstruments.LabVIEW.VI;component/Designer/Resources/BlockDiagram/FalseConstant_40x40.xml">
+        <pf:MergeScript>
+          <pf:MergeItem>
+            <rb:VectorInitialize />
+          </pf:MergeItem>
+        </pf:MergeScript>
+      </Leaf>
       <Leaf Display="Insert Into Vector" UniqueId="Rebar:InsertIntoVector" ElementId="NI.MocCommon:Literal.NationalInstruments.MocCommon.Modeling.INumericBehavior" Weight="3" ImagePath="/NationalInstruments.LabVIEW.VI;component/Designer/Resources/BlockDiagram/FalseConstant_40x40.xml">
         <pf:MergeScript>
           <pf:MergeItem>

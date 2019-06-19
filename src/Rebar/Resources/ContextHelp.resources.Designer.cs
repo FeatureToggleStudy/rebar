@@ -19,7 +19,7 @@ namespace Rebar.Resources {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class ContextHelp_resources {
@@ -2298,6 +2298,51 @@ namespace Rebar.Resources {
         internal static string VectorCreate_vector_Name {
             get {
                 return ResourceManager.GetString("VectorCreate_vector_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        internal static string VectorInitialize_Description {
+            get {
+                return ResourceManager.GetString("VectorInitialize_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to element.
+        /// </summary>
+        internal static string VectorInitialize_element_Name {
+            get {
+                return ResourceManager.GetString("VectorInitialize_element_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Initialize Vector.
+        /// </summary>
+        internal static string VectorInitialize_Name {
+            get {
+                return ResourceManager.GetString("VectorInitialize_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to size.
+        /// </summary>
+        internal static string VectorInitialize_size_Name {
+            get {
+                return ResourceManager.GetString("VectorInitialize_size_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to vector.
+        /// </summary>
+        internal static string VectorInitialize_vector_Name {
+            get {
+                return ResourceManager.GetString("VectorInitialize_vector_Name", resourceCulture);
             }
         }
         

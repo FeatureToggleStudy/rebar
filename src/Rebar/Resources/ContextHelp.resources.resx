@@ -906,4 +906,19 @@
   <data name="StringConcat_secondSlice_out_Name" xml:space="preserve">
     <value>second slice</value>
   </data>
+  <data name="VectorInitialize_Description" xml:space="preserve">
+    <value />
+  </data>
+  <data name="VectorInitialize_element_Name" xml:space="preserve">
+    <value>element</value>
+  </data>
+  <data name="VectorInitialize_Name" xml:space="preserve">
+    <value>Initialize Vector</value>
+  </data>
+  <data name="VectorInitialize_size_Name" xml:space="preserve">
+    <value>size</value>
+  </data>
+  <data name="VectorInitialize_vector_Name" xml:space="preserve">
+    <value>vector</value>
+  </data>
 </root>

@@ -62,6 +62,7 @@ namespace Rebar.Design
             AddSupportedModel<StringAppend>(n => new BasicNodeViewModel(n, "Append To String"));
 
             AddSupportedModel<VectorCreate>(n => new BasicNodeViewModel(n, "Create Vector"));
+            AddSupportedModel<VectorInitialize>(n => new BasicNodeViewModel(n, "Initialize Vector"));
             AddSupportedModel<VectorInsert>(n => new BasicNodeViewModel(n, "Insert Into Vector"));
 
             AddSupportedModel((SourceModel.FlatSequence s) => new FlatSequenceEditor(s));
