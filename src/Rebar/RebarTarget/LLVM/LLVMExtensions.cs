@@ -87,6 +87,10 @@ namespace Rebar.RebarTarget.LLVM
             {
                 return CreateLLVMOptionType(innerType.AsLLVMType());
             }
+            if (niType.TryDestructureVectorType(out innerType))
+            {
+                return CreateLLVMVectorType(innerType.AsLLVMType());
+            }
             if (niType.TryDestructureIteratorType(out innerType) && innerType.IsInt32())
             {
                 return RangeIteratorType;
@@ -97,6 +101,19 @@ namespace Rebar.RebarTarget.LLVM
         internal static LLVMTypeRef CreateLLVMOptionType(this LLVMTypeRef innerType)
         {
             return LLVMTypeRef.StructType(new LLVMTypeRef[] { LLVMTypeRef.Int1Type(), innerType }, false);
+        }
+
+        internal static LLVMTypeRef CreateLLVMVectorType(this LLVMTypeRef elementType)
+        {
+            return LLVMTypeRef.StructType(
+                // { allocationPtr, size, capacity }
+                new LLVMTypeRef[]
+                {
+                    LLVMTypeRef.PointerType(elementType, 0u),
+                    LLVMTypeRef.Int32Type(),
+                    LLVMTypeRef.Int32Type()
+                },
+                false);
         }
 
         #region Memory Buffer

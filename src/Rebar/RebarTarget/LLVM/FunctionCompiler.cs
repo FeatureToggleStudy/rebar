@@ -68,6 +68,7 @@ namespace Rebar.RebarTarget.LLVM
 
             _functionalNodeCompilers["VectorCreate"] = CompileNothing;
             _functionalNodeCompilers["VectorInsert"] = CompileNothing;
+            _functionalNodeCompilers["VectorInitialize"] = CompileVectorInitialize;
 
             _functionalNodeCompilers["CreateLockingCell"] = CompileNothing;
             _functionalNodeCompilers["CreateNonLockingCell"] = CompileNothing;
@@ -262,6 +263,66 @@ namespace Rebar.RebarTarget.LLVM
         {
             return (compiler, functionalNode) =>
                 compiler.CreateCallForFunctionalNode(compiler.GetImportedCommonFunction(functionName), functionalNode);
+        }
+
+        private static void CompileVectorInitialize(FunctionCompiler compiler, FunctionalNode vectorInitializeNode)
+        {
+            var elementSource = (LocalAllocationValueSource)compiler.GetTerminalValueSource(vectorInitializeNode.InputTerminals[0]);                        
+            LLVMValueRef vectorInitializeFunction = CreateVectorInitializeFunction(compiler.Module, elementSource.AllocationNIType.AsLLVMType());
+            compiler.CreateCallForFunctionalNode(vectorInitializeFunction, vectorInitializeNode);
+        }
+
+        private static LLVMValueRef CreateVectorInitializeFunction(Module module, LLVMTypeRef elementType)
+        {
+            LLVMTypeRef vectorInitializeFunctionType = LLVMTypeRef.FunctionType(
+                LLVMSharp.LLVM.VoidType(),
+                new LLVMTypeRef[]
+                {
+                    elementType,
+                    LLVMTypeRef.Int32Type(),
+                    LLVMTypeRef.PointerType(elementType.CreateLLVMVectorType(), 0u)
+                },
+                false);
+
+            LLVMValueRef vectorInitializeFunction = module.AddFunction("vector_initialize" /* TODO: add type argument to name */, vectorInitializeFunctionType);
+            LLVMBasicBlockRef entryBlock = vectorInitializeFunction.AppendBasicBlock("entry");
+            var builder = new IRBuilder();
+
+            builder.PositionBuilderAtEnd(entryBlock);
+            LLVMValueRef element = vectorInitializeFunction.GetParam(0u),
+                size = vectorInitializeFunction.GetParam(1u),
+                vectorPtr = vectorInitializeFunction.GetParam(2u);
+            LLVMValueRef allocationPtr = builder.CreateArrayMalloc(elementType, size, "allocationPtr");
+            LLVMValueRef vectorAllocationPtrPtr = builder.CreateStructGEP(vectorPtr, 0u, "vectorAllocationPtrPtr"),
+                vectorSizePtr = builder.CreateStructGEP(vectorPtr, 1u, "vectorSizePtr"),
+                vectorCapacityPtr = builder.CreateStructGEP(vectorPtr, 2u, "vectorCapacityPtr");
+            builder.CreateStore(allocationPtr, vectorAllocationPtrPtr);
+            builder.CreateStore(size, vectorSizePtr);
+            builder.CreateStore(size, vectorCapacityPtr);
+            LLVMBasicBlockRef loopStartBlock = vectorInitializeFunction.AppendBasicBlock("loopStart"),
+                loopBodyBlock = vectorInitializeFunction.AppendBasicBlock("loopBody"),
+                loopEndBlock = vectorInitializeFunction.AppendBasicBlock("loopEnd");
+            builder.CreateBr(loopStartBlock);
+
+            builder.PositionBuilderAtEnd(loopStartBlock);
+            LLVMValueRef index = builder.CreatePhi(LLVMTypeRef.Int32Type(), "index");
+            LLVMValueRef indexLessThanSize = builder.CreateICmp(LLVMIntPredicate.LLVMIntSLT, index, size, "indexLessThanSize");
+            builder.CreateCondBr(indexLessThanSize, loopBodyBlock, loopEndBlock);
+
+            builder.PositionBuilderAtEnd(loopBodyBlock);
+            LLVMValueRef vectorIndexPtr = builder.CreateGEP(allocationPtr, new LLVMValueRef[] { index }, "vectorIndexPtr");
+            builder.CreateStore(element, vectorIndexPtr);
+            LLVMValueRef incrementIndex = builder.CreateAdd(index, 1.AsLLVMValue(), "incrementIndex");
+            builder.CreateBr(loopStartBlock);
+
+            builder.PositionBuilderAtEnd(loopEndBlock);
+            builder.CreateRetVoid();
+
+            LLVMValueRef[] indexIncomingValues = new LLVMValueRef[2] { 0.AsLLVMValue(), incrementIndex };
+            LLVMBasicBlockRef[] indexIncomingBlocks = new LLVMBasicBlockRef[] { entryBlock, loopBodyBlock };
+            index.AddIncoming(indexIncomingValues, indexIncomingBlocks, 2u);
+
+            return vectorInitializeFunction;
         }
 
         #endregion
