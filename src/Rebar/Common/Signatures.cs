@@ -62,6 +62,9 @@ namespace Rebar.Common
 
         static Signatures()
         {
+            NITypeBuilder displayTraitConstraintBuilder = PFTypes.Factory.DefineValueInterface("Display");
+            NITypeBuilder copyTraitConstraintBuilder = PFTypes.Factory.DefineValueInterface("Copy");
+
             var functionTypeBuilder = PFTypes.Factory.DefineFunction("ImmutPass");
             var tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
             AddInputOutputParameter(
@@ -117,7 +120,6 @@ namespace Rebar.Common
             CreateCopyType = functionTypeBuilder.CreateType();
 
             functionTypeBuilder = PFTypes.Factory.DefineFunction("Output");
-            NITypeBuilder displayTraitConstraintBuilder = PFTypes.Factory.DefineValueInterface("Display");
             tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData", displayTraitConstraintBuilder);
             AddInputOutputParameter(
                 functionTypeBuilder,
@@ -253,6 +255,16 @@ namespace Rebar.Common
                 "vector");
             VectorCreateType = functionTypeBuilder.CreateType();
 
+            functionTypeBuilder = PFTypes.Factory.DefineFunction("VectorInitialize");
+            tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData", copyTraitConstraintBuilder);
+            AddInputParameter(functionTypeBuilder, tDataParameter, "element");
+            AddInputParameter(functionTypeBuilder, PFTypes.Int32, "size");
+            AddOutputParameter(
+                functionTypeBuilder,
+                tDataParameter.CreateVector(),
+                "vector");
+            VectorInitializeType = functionTypeBuilder.CreateType();
+
             functionTypeBuilder = PFTypes.Factory.DefineFunction("VectorInsert");
             tDataParameter = AddGenericDataTypeParameter(functionTypeBuilder, "TData");
             AddInputOutputParameter(
@@ -323,6 +335,8 @@ namespace Rebar.Common
         public static NIType StringAppendType { get; }
 
         public static NIType VectorCreateType { get; }
+
+        public static NIType VectorInitializeType { get; }
 
         public static NIType VectorInsertType { get; }
 
