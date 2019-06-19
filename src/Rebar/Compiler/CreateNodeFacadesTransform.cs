@@ -248,14 +248,18 @@ namespace Rebar.Compiler
 
         private Constraint CreateConstraintFromGenericNITypeConstraint(NIType niTypeConstraint)
         {
-            if (niTypeConstraint.IsInterface() && niTypeConstraint.GetName() == "Display")
+            if (niTypeConstraint.IsInterface())
             {
-                return new DisplayTraitConstraint();
+                string interfaceName = niTypeConstraint.GetName();
+                switch (interfaceName)
+                {
+                    case "Copy":
+                        return new CopyConstraint();
+                    case "Display":
+                        return new DisplayTraitConstraint();                        
+                }
             }
-            else
-            {
-                throw new NotImplementedException("Don't know how to translate generic type constraint " + niTypeConstraint);
-            }
+            throw new NotImplementedException("Don't know how to translate generic type constraint " + niTypeConstraint);
         }
 
         private void CreateFacadesForInoutReferenceParameter(
