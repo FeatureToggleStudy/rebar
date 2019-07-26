@@ -102,12 +102,15 @@ namespace Rebar.SourceModel
         }
 
         // TODO
-        public override IEnumerable<IDiagramParameter> Parameters => Components.OfType<FunctionParameter>();
+        public override IEnumerable<IDiagramParameter> Parameters => Components.OfType<IDiagramParameter>();
 
         internal void AddInputParameter()
         {
-            var parameter = new FunctionParameter(ParameterCallDirection.Input, PFTypes.String, "input");
-            AddComponent(parameter);
+            var dataItem = DataItem.Create(ElementCreateInfo.ForNew);
+            dataItem.CallDirection = ParameterCallDirection.Input;
+            dataItem.DataType = PFTypes.String;
+            dataItem.Name = "input";
+            AddComponent(dataItem);
 
             InputParameterAccessor inputAccessor = RootDiagram.Components.OfType<InputParameterAccessor>().FirstOrDefault();
             if (inputAccessor == null)
@@ -116,6 +119,7 @@ namespace Rebar.SourceModel
                 RootDiagram.AddChild(inputAccessor);
             }
             inputAccessor.UpdateTerminals();
+            ConnectorPane.AddParameter(dataItem);
         }
     }
 }

@@ -359,7 +359,6 @@
     <Compile Include="SourceModel\BorrowTunnel.cs" />
     <Compile Include="SourceModel\DropNode.cs" />
     <Compile Include="SourceModel\FunctionalNode.cs" />
-    <Compile Include="SourceModel\FunctionParameter.cs" />
     <Compile Include="SourceModel\Functions.cs" />
     <Compile Include="SourceModel\IBeginLifetimeTunnel.cs" />
     <Compile Include="SourceModel\IBorrowTunnel.cs" />

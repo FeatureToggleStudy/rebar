@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using NationalInstruments.Core;
+using NationalInstruments.MocCommon.SourceModel;
 using NationalInstruments.SourceModel;
 using NationalInstruments.SourceModel.Persistence;
 using Rebar.Compiler;
@@ -37,14 +38,14 @@ namespace Rebar.SourceModel
             Height = StockDiagramGeometries.GridSize * 2 * Math.Max(2, outputs);
         }
 
-        private readonly Dictionary<FunctionParameter, Terminal> _parameterTerminals = new Dictionary<FunctionParameter, Terminal>();
+        private readonly Dictionary<DataItem, Terminal> _parameterTerminals = new Dictionary<DataItem, Terminal>();
 
         internal void UpdateTerminals()
         {
             var function = (Function)Definition;
             var inputParameters = function
                 .Parameters
-                .OfType<FunctionParameter>()
+                .OfType<DataItem>()
                 .Where(parameter => parameter.CallDirection == NationalInstruments.CommonModel.ParameterCallDirection.Input).ToList();
             int index = 0;
             foreach (var parameter in inputParameters)
