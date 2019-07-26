@@ -8,6 +8,7 @@ namespace Rebar.Compiler
         void VisitFunction(SourceModel.Function function);
         void VisitFunctionalNode(SourceModel.FunctionalNode node);
         void VisitImmutableBorrowNode(SourceModel.ImmutableBorrowNode node);
+        void VisitInputParameterAccessor(SourceModel.InputParameterAccessor accessor);
         void VisitTerminateLifetimeNode(SourceModel.TerminateLifetime node);
     }
 }

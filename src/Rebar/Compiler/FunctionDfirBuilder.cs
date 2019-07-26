@@ -451,6 +451,16 @@ namespace Rebar.Compiler
             ConnectWires();
         }
 
+        public void VisitInputParameterAccessor(SourceModel.InputParameterAccessor accessor)
+        {
+            var inputParameterAccessorDfir = new Nodes.InputParameterAccessor(_currentDiagram, accessor.Terminals.Count());
+            _map.AddMapping(accessor, inputParameterAccessorDfir);
+            foreach (var terminalPair in accessor.Terminals.Zip(inputParameterAccessorDfir.Terminals))
+            {
+                _map.AddMapping(terminalPair.Key, terminalPair.Value);
+            }
+        }
+
         private void MapTerminalAndType(Terminal modelTerminal, NationalInstruments.Dfir.Terminal dfirTerminal)
         {
             _map.AddMapping(modelTerminal, dfirTerminal);

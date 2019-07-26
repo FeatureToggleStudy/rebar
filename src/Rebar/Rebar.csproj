@@ -228,6 +228,7 @@
     <Compile Include="Compiler\Nodes\IBeginLifetimeTunnel.cs" />
     <Compile Include="Compiler\Nodes\IDfirStructureVisitor.cs" />
     <Compile Include="Compiler\Nodes\IDfirNodeVisitor.cs" />
+    <Compile Include="Compiler\Nodes\InputParameterAccessor.cs" />
     <Compile Include="Compiler\Nodes\IterateTunnel.cs" />
     <Compile Include="Compiler\Nodes\LockTunnel.cs" />
     <Compile Include="Compiler\Nodes\Loop.cs" />
@@ -358,10 +359,12 @@
     <Compile Include="SourceModel\BorrowTunnel.cs" />
     <Compile Include="SourceModel\DropNode.cs" />
     <Compile Include="SourceModel\FunctionalNode.cs" />
+    <Compile Include="SourceModel\FunctionParameter.cs" />
     <Compile Include="SourceModel\Functions.cs" />
     <Compile Include="SourceModel\IBeginLifetimeTunnel.cs" />
     <Compile Include="SourceModel\IBorrowTunnel.cs" />
     <Compile Include="SourceModel\ImmutableBorrowNode.cs" />
+    <Compile Include="SourceModel\InputParameterAccessor.cs" />
     <Compile Include="SourceModel\ITerminateLifetimeTunnel.cs" />
     <Compile Include="SourceModel\LockTunnel.cs" />
     <Compile Include="SourceModel\Loop.cs" />

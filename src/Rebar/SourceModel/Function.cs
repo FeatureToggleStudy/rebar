@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using NationalInstruments.CommonModel;
 using NationalInstruments.Core;
+using NationalInstruments.DataTypes;
 using NationalInstruments.Design;
 using NationalInstruments.MocCommon.SourceModel;
 using NationalInstruments.SourceModel;
@@ -100,6 +102,20 @@ namespace Rebar.SourceModel
         }
 
         // TODO
-        public override IEnumerable<IDiagramParameter> Parameters => Enumerable.Empty<IDiagramParameter>();
+        public override IEnumerable<IDiagramParameter> Parameters => Components.OfType<FunctionParameter>();
+
+        internal void AddInputParameter()
+        {
+            var parameter = new FunctionParameter(ParameterCallDirection.Input, PFTypes.String, "input");
+            AddComponent(parameter);
+
+            InputParameterAccessor inputAccessor = RootDiagram.Components.OfType<InputParameterAccessor>().FirstOrDefault();
+            if (inputAccessor == null)
+            {
+                inputAccessor = new InputParameterAccessor(); // TODO: should be Create(ForNew)
+                RootDiagram.AddChild(inputAccessor);
+            }
+            inputAccessor.UpdateTerminals();
+        }
     }
 }

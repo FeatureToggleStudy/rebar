@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading;
+using NationalInstruments.Composition;
 using NationalInstruments.ContextualHelp.View;
 using NationalInstruments.Controls.Shell;
 using NationalInstruments.Core;
+using NationalInstruments.Design;
 using NationalInstruments.MocCommon.SourceModel;
 using NationalInstruments.Shell;
+using NationalInstruments.SourceModel;
 using NationalInstruments.SourceModel.Envoys;
 using NationalInstruments.VI.Design;
 using Rebar.SourceModel;
@@ -138,6 +141,25 @@ namespace Rebar.Design
         };
 
         /// <summary>
+        /// Adds an input parameter to the document.
+        /// </summary>
+        public static readonly ICommandEx AddInputParameterCommand = new ShellRelayCommand(HandleAddInputParameter)
+        {
+            UniqueId = _functionDocumentUniqueIdPrefix + "AddInputParameterCommand",
+            LabelTitle = "Add Input Parameter",
+        };
+
+        private static void HandleAddInputParameter(object parameter, ICompositionHost host, DocumentEditSite editSite)
+        {
+            var rustyWiresFunction = (Function)((DefinitionDocument)editSite.ActiveDocument).Definition;
+            using (IActiveTransaction transaction = rustyWiresFunction.TransactionManager.BeginTransaction("Add input parameter", TransactionPurpose.User))
+            {
+                rustyWiresFunction.AddInputParameter();
+                transaction.Commit();
+            }
+        }
+
+        /// <summary>
         ///  The default constructor
         /// </summary>
         public FunctionDocument()
@@ -162,6 +184,14 @@ namespace Rebar.Design
                 {
                     context.Add(DocumentCommands.Copy);
                     context.Add(DocumentCommands.Paste);
+                }
+            }
+
+            using (context.AddConfigurationPaneContent())
+            {
+                using (context.AddGroup(ConfigurationPaneCommands.DefaultGroupCommand))
+                {
+                    context.Add(AddInputParameterCommand);
                 }
             }
         }
