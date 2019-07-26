@@ -1,11 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using NationalInstruments.Core;
+using NationalInstruments.Design;
 using NationalInstruments.MocCommon.SourceModel;
 using NationalInstruments.SourceModel;
 using NationalInstruments.SourceModel.Persistence;
 using NationalInstruments.VI.SourceModel;
 using Rebar.Compiler;
+using Rebar.Design;
 
 namespace Rebar.SourceModel
 {
@@ -28,6 +31,11 @@ namespace Rebar.SourceModel
         /// DefinitionType
         /// </summary>
         public const string FunctionDefinitionType = "Rebar.SourceModel.Function";
+
+        /// <summary>
+        /// The clipboard format accepted by the diagram
+        /// </summary>
+        public static readonly string FunctionClipboardDataFormat = ClipboardFormatHelper.RegisterClipboardFormat(DragDrop.NIDataFormatPrefix + FunctionDiagramPaletteLoader.DiagramPaletteIdentifier, "RebarFunctionDiagram");
 
         /// <summary>
         ///  Get the root diagram of the function.

@@ -374,6 +374,7 @@
     <Compile Include="SourceModel\PairedTunnelBatchRule.cs" />
     <Compile Include="SourceModel\Function.cs" />
     <Compile Include="SourceModel\NamespaceSchema.cs" />
+    <Compile Include="SourceModel\FunctionMergeScriptDataServiceFactory.cs" />
     <Compile Include="SourceModel\RootDiagram.cs" />
     <Compile Include="SourceModel\CaseStructure.cs" />
     <Compile Include="SourceModel\FlatSequence.cs" />
