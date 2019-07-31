@@ -18,5 +18,9 @@ namespace Rebar.SourceModel
         }
 
         public override XName XmlElementName => XName.Get(ElementName, Function.ParsableNamespaceName);
+
+        /// <inheritdoc />
+        /// <remarks>This is necessary because the ancestor class NestedDiagram returns true for this.</remarks>
+        public override bool DoNotGenerateThisElement(ElementGenerationOptions options) => false;
     }
 }
