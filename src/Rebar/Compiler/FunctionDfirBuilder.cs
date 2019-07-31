@@ -393,7 +393,12 @@ namespace Rebar.Compiler
 
         public void VisitMethodCall(MocCommonMethodCall callStatic)
         {
-            throw new NotImplementedException();
+            var methodCallDfir = new MethodCallNode(_currentDiagram, callStatic.Signature);
+            _map.AddMapping(callStatic, methodCallDfir);
+            foreach (var terminalPair in callStatic.Terminals.Zip(methodCallDfir.Terminals))
+            {
+                _map.AddMapping(terminalPair.Key, terminalPair.Value);
+            }
         }
 
         public void VisitPropertyNode(PropertyNode propertyNode)
