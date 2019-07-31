@@ -33,7 +33,7 @@ namespace Rebar.SourceModel
 
         public override BorderNode MakeDefaultBorderNode(Diagram startDiagram, Diagram endDiagram, Wire wire, StructureIntersection intersection)
         {
-            return MakeBorderNode<OptionPatternStructureTunnel>();
+            return MakeDefaultTunnelCore<OptionPatternStructureTunnel>(startDiagram, endDiagram, wire);
         }
     }
 }
