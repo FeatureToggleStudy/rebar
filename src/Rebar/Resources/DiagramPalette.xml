@@ -33,6 +33,16 @@
         </pf:MergeItem>
       </pf:MergeScript>
     </Leaf>
+    <Leaf Display="Option Pattern Structure" UniqueId="Rebar:OptionPatternStructure" ElementId="NI.MocCommon:Literal.NationalInstruments.MocCommon.Modeling.INumericBehavior" Weight="3" ImagePath="/NationalInstruments.LabVIEW.VI;component/Designer/Resources/BlockDiagram/FalseConstant_40x40.xml">
+      <pf:MergeScript>
+        <pf:MergeItem>
+          <rb:OptionPatternStructure Id="1">
+            <rb:OptionPatternStructure.Diagram Id="2" />
+            <rb:OptionPatternStructure.Diagram Id="3" />
+          </rb:OptionPatternStructure>
+        </pf:MergeItem>
+      </pf:MergeScript>
+    </Leaf>
   </Category>
   <Category Display="Values" UniqueId="Rebar:PaletteCategory.Values" Weight=".1" BackgroundImagePath="/NationalInstruments.MocCommon;component/Resources/Palette/Backgrounds/PaletteCategory_40x40.xml">
     <Leaf Display="Create Copy" UniqueId="Rebar:CreateCopy" ElementId="NI.MocCommon:Literal.NationalInstruments.MocCommon.Modeling.INumericBehavior" Weight="3" ImagePath="/NationalInstruments.LabVIEW.VI;component/Designer/Resources/BlockDiagram/FalseConstant_40x40.xml">
