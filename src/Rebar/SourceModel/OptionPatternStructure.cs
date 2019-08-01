@@ -52,13 +52,14 @@ namespace Rebar.SourceModel
             // we'll always need to call EnsureView.
             optionPatternStructure.EnsureView(EnsureViewHints.Bounds);
 
-#if FALSE
-            CaseSelector selector = optionPatternStructure.Components.OfType<CaseSelector>().FirstOrDefault();
+            OptionPatternStructureSelector selector = optionPatternStructure.Components.OfType<OptionPatternStructureSelector>().FirstOrDefault();
             if (selector != null)
             {
                 var selectorOuterTerm = selector.BorderNodeTerminals.First();
                 selectorOuterTerm.Direction = Direction.Input;
+                selectorOuterTerm.Role = BorderNodeTerminalRole.Outer;
 
+#if FALSE
                 if (selectorOuterTerm.DataType.IsUnset() || selectorOuterTerm.DataType.IsVoid())
                 {
                     if (optionPatternStructure.LoadSelectorType.IsUnset() || optionPatternStructure.LoadSelectorType.IsVoid())
@@ -70,11 +71,16 @@ namespace Rebar.SourceModel
                         selectorOuterTerm.DataType = optionPatternStructure.LoadSelectorType;
                     }
                 }
+#endif
 
                 selectorOuterTerm.Hotspot = TerminalHotspots.Input1;
-                optionPatternStructure.Selector = selector;
+                optionPatternStructure.AddTerminalAlias(selectorOuterTerm);
+
+                var selectorSomeInnerTerminal = selector.BorderNodeTerminals.ElementAt(1);
+                selectorSomeInnerTerminal.Role = BorderNodeTerminalRole.Inner;
+                NestedDiagram diagram = optionPatternStructure.NestedDiagrams.ElementAt(0);
+                diagram.AddTerminalAlias(selectorSomeInnerTerminal);
             }
-#endif
 
             List<OptionPatternStructureTunnel> tunnels = optionPatternStructure.BorderNodes.OfType<OptionPatternStructureTunnel>().ToList();
             foreach (var tunnel in tunnels)
@@ -113,7 +119,7 @@ namespace Rebar.SourceModel
         public override IBorderNodeGuide GetGuide(BorderNode borderNode)
         {
             var max = GetMaxXYForBorderNode(this, borderNode);
-            RectangleSides sides = borderNode is CaseSelector ? RectangleSides.Left : RectangleSides.All;
+            RectangleSides sides = borderNode is OptionPatternStructureSelector ? RectangleSides.Left : RectangleSides.All;
             var height = max.Y + borderNode.Height + OuterBorderThickness.Bottom;
             var width = max.X + borderNode.Width + OuterBorderThickness.Right;
             RectangleBorderNodeGuide guide = new RectangleBorderNodeGuide(new SMRect(0, 0, width, height), sides, BorderNodeDocking.None, OuterBorderThickness, GetAvoidRects(borderNode));

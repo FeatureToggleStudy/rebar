@@ -84,6 +84,7 @@ namespace Rebar.Design
 
             AddSupportedModel<OptionPatternStructure>(s => new OptionPatternStructureEditor(s));
             AddSupportedModel<OptionPatternStructureDiagram>(d => new OptionPatternStructureDiagramViewModel(d));
+            AddSupportedModel<OptionPatternStructureSelector>(t => new BorderNodeViewModel(t));
             AddSupportedModel<OptionPatternStructureTunnel>(t => new BorderNodeViewModel(t));
         }
     }

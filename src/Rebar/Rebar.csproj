@@ -376,7 +376,9 @@
     <Compile Include="SourceModel\LoopTerminateLifetimeTunnel.cs" />
     <Compile Include="SourceModel\LoopTunnel.cs" />
     <Compile Include="SourceModel\OptionPatternStructure.cs" />
+    <Compile Include="SourceModel\OptionPatternStructureBatchRule.cs" />
     <Compile Include="SourceModel\OptionPatternStructureDiagram.cs" />
+    <Compile Include="SourceModel\OptionPatternStructureSelector.cs" />
     <Compile Include="SourceModel\OptionPatternStructureTunnel.cs" />
     <Compile Include="SourceModel\PairedTunnelBatchRule.cs" />
     <Compile Include="SourceModel\Function.cs" />
