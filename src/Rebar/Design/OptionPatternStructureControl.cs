@@ -7,6 +7,7 @@ namespace Rebar.Design
         protected override void UpdatePattern()
         {
             string pattern = OptionPatternStructureEditor.GetDiagramPattern(Model.SelectedDiagram);
+            SelectorText.Inlines.Clear();
             SelectorText.Inlines.Add(pattern);
         }
     }
