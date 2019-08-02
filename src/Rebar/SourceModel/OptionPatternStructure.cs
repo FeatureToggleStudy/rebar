@@ -55,29 +55,16 @@ namespace Rebar.SourceModel
             OptionPatternStructureSelector selector = optionPatternStructure.Components.OfType<OptionPatternStructureSelector>().FirstOrDefault();
             if (selector != null)
             {
-                var selectorOuterTerm = selector.BorderNodeTerminals.First();
-                selectorOuterTerm.Direction = Direction.Input;
-                selectorOuterTerm.Role = BorderNodeTerminalRole.Outer;
-
-#if FALSE
-                if (selectorOuterTerm.DataType.IsUnset() || selectorOuterTerm.DataType.IsVoid())
-                {
-                    if (optionPatternStructure.LoadSelectorType.IsUnset() || optionPatternStructure.LoadSelectorType.IsVoid())
-                    {
-                        selectorOuterTerm.DataType = PFTypes.Boolean;
-                    }
-                    else
-                    {
-                        selectorOuterTerm.DataType = optionPatternStructure.LoadSelectorType;
-                    }
-                }
-#endif
-
-                selectorOuterTerm.Hotspot = TerminalHotspots.Input1;
-                optionPatternStructure.AddTerminalAlias(selectorOuterTerm);
+                var selectorOuterTerminal = selector.BorderNodeTerminals.First();
+                selectorOuterTerminal.Direction = Direction.Input;
+                selectorOuterTerminal.Role = BorderNodeTerminalRole.Outer;
+                selectorOuterTerminal.Hotspot = TerminalHotspots.Input1;
+                optionPatternStructure.AddTerminalAlias(selectorOuterTerminal);
 
                 var selectorSomeInnerTerminal = selector.BorderNodeTerminals.ElementAt(1);
+                selectorSomeInnerTerminal.Direction = Direction.Output;
                 selectorSomeInnerTerminal.Role = BorderNodeTerminalRole.Inner;
+                selectorSomeInnerTerminal.Hotspot = TerminalHotspots.CreateOutputTerminalHotspot(TerminalSize.Small, selector.Width, 0u);
                 NestedDiagram diagram = optionPatternStructure.NestedDiagrams.ElementAt(0);
                 diagram.AddTerminalAlias(selectorSomeInnerTerminal);
             }

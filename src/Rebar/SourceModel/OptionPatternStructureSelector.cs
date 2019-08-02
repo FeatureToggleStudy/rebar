@@ -35,10 +35,8 @@ namespace Rebar.SourceModel
         {
             var outerTerminal = MakePrimaryOuterTerminal(null);
             outerTerminal.Direction = Direction.Input;
-            outerTerminal.Hotspot = TerminalHotspots.Input1;
             var innerTerminal = MakePrimaryInnerTerminal(null);
             innerTerminal.Direction = Direction.Output;
-            innerTerminal.Hotspot = TerminalHotspots.CreateOutputTerminalHotspot(TerminalSize.Small, Width, 0u);
 
             Docking = BorderNodeDocking.Left;
         }
