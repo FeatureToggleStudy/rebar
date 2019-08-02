@@ -413,10 +413,10 @@ namespace Rebar.RebarTarget.LLVM
             }
         }
 
-        protected override void VisitStructure(Structure structure, StructureTraversalPoint traversalPoint)
+        protected override void VisitStructure(Structure structure, StructureTraversalPoint traversalPoint, Diagram nestedDiagram)
         {
-            base.VisitStructure(structure, traversalPoint);
-            this.VisitRebarStructure(structure, traversalPoint);
+            base.VisitStructure(structure, traversalPoint, nestedDiagram);
+            this.VisitRebarStructure(structure, traversalPoint, nestedDiagram);
         }
 
         #endregion
@@ -867,7 +867,7 @@ namespace Rebar.RebarTarget.LLVM
 
         #region Option Pattern Structure
 
-        public bool VisitOptionPatternStructure(OptionPatternStructure optionPatternStructure, StructureTraversalPoint traversalPoint)
+        public bool VisitOptionPatternStructure(OptionPatternStructure optionPatternStructure, StructureTraversalPoint traversalPoint, Diagram nestedDiagram)
         {
             return true;
         }

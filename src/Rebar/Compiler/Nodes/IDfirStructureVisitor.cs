@@ -7,7 +7,7 @@ namespace Rebar.Compiler.Nodes
     {
         T VisitLoop(Loop loop, StructureTraversalPoint traversalPoint);
         T VisitFrame(Frame frame, StructureTraversalPoint traversalPoint);
-        T VisitOptionPatternStructure(OptionPatternStructure optionPatternStructure, StructureTraversalPoint traversalPoint);
+        T VisitOptionPatternStructure(OptionPatternStructure optionPatternStructure, StructureTraversalPoint traversalPoint, Diagram nestedDiagram);
     }
 
     internal enum StructureTraversalPoint
@@ -20,7 +20,7 @@ namespace Rebar.Compiler.Nodes
 
     internal static class DfirStructureVisitorExtensions
     {
-        public static T VisitRebarStructure<T>(this IDfirStructureVisitor<T> visitor, Structure structure, StructureTraversalPoint traversalPoint)
+        public static T VisitRebarStructure<T>(this IDfirStructureVisitor<T> visitor, Structure structure, StructureTraversalPoint traversalPoint, Diagram nestedDiagram)
         {
             var frame = structure as Frame;
             var loop = structure as Loop;
@@ -35,7 +35,7 @@ namespace Rebar.Compiler.Nodes
             }
             else if (optionPatternStructure != null)
             {
-                return visitor.VisitOptionPatternStructure(optionPatternStructure, traversalPoint);
+                return visitor.VisitOptionPatternStructure(optionPatternStructure, traversalPoint, nestedDiagram);
             }
             throw new NotSupportedException();
         }
