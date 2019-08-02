@@ -185,6 +185,9 @@ namespace Rebar.RebarTarget
 
         public bool VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
         {
+            Terminal someValueTerminal = optionPatternStructureSelector.OutputTerminals[0];
+            VariableReference someValueVariable = someValueTerminal.GetTrueVariable();
+            CreateLocalAllocationForVariable(someValueVariable);
             return true;
         }
 
