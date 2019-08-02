@@ -940,6 +940,18 @@ namespace Rebar.RebarTarget.LLVM
 
         public bool VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
         {
+            LLVMBasicBlockRef currentBlock = _builder.GetInsertBlock();
+            var optionPatternStructure = (OptionPatternStructure)optionPatternStructureSelector.ParentStructure;
+            OptionPatternStructureData data = _optionPatternStructureData[optionPatternStructure];
+
+            _builder.PositionBuilderAtEnd(data.SomeDiagramEntryBlock);
+            LocalAllocationValueSource selectorInputAllocationSource = (LocalAllocationValueSource)GetTerminalValueSource(optionPatternStructureSelector.InputTerminals[0]),
+                selectorOutputAllocationSource = (LocalAllocationValueSource)GetTerminalValueSource(optionPatternStructureSelector.OutputTerminals[0]);
+            LLVMValueRef innerValuePtr = _builder.CreateStructGEP(selectorInputAllocationSource.AllocationPointer, 1, "innerValuePtr");
+            LLVMValueRef innerValue = _builder.CreateLoad(innerValuePtr, "innerValue");
+            selectorOutputAllocationSource.UpdateValue(_builder, innerValue);
+
+            _builder.PositionBuilderAtEnd(currentBlock);
             return true;
         }
 

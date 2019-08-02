@@ -79,5 +79,22 @@ namespace Tests.Rebar.Unit.Execution
 
             public byte[] NoneInspectNodeValue { get; set; }
         }
+
+        [TestMethod]
+        public void OptionPatternStructureSelectorWiredToInspectOnSomeValueDiagram_Execute_CorrectValue()
+        {
+            DfirRoot function = DfirRoot.Create();
+            OptionPatternStructure patternStructure = CreateOptionPatternStructure(function.BlockDiagram);
+            FunctionalNode someConstructor = new FunctionalNode(function.BlockDiagram, Signatures.SomeConstructorType);
+            Wire.Create(function.BlockDiagram, someConstructor.OutputTerminals[0], patternStructure.Selector.InputTerminals[0]);
+            ConnectConstantToInputTerminal(someConstructor.InputTerminals[0], PFTypes.Int32, 1, false);
+            FunctionalNode someInspectNode = new FunctionalNode(patternStructure.Diagrams[0], Signatures.InspectType);
+            Wire.Create(patternStructure.Diagrams[0], patternStructure.Selector.OutputTerminals[0], someInspectNode.InputTerminals[0]);
+
+            TestExecutionInstance executionInstance = CompileAndExecuteFunction(function);
+
+            byte[] inspectValue = executionInstance.GetLastValueFromInspectNode(someInspectNode);
+            AssertByteArrayIsInt32(inspectValue, 1);
+        }
     }
 }
