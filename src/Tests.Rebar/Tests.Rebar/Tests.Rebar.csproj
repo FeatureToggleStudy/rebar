@@ -186,6 +186,7 @@
     <Compile Include="Unit\Execution\IteratorExecutionTests.cs" />
     <Compile Include="Unit\Execution\LoopExecutionTests.cs" />
     <Compile Include="Unit\Execution\NumericExecutionTests.cs" />
+    <Compile Include="Unit\Execution\OptionPatternStructureExecutionTests.cs" />
     <Compile Include="Unit\Execution\OptionTypeExecutionTests.cs" />
     <Compile Include="Unit\Execution\PrimitiveOpExecutionTest.cs" />
     <Compile Include="Unit\Execution\StringExecutionTests.cs" />

@@ -38,12 +38,5 @@ namespace Tests.Rebar.Unit.Compiler
             OptionPatternStructureSelector selector = patternStructure.Selector;
             Assert.IsTrue(selector.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.RequiredTerminalUnconnected));
         }
-
-        private OptionPatternStructure CreateOptionPatternStructure(Diagram parentDiagram)
-        {
-            OptionPatternStructure patternStructure = new OptionPatternStructure(parentDiagram);
-            patternStructure.CreateDiagram();
-            return patternStructure;
-        }
     }
 }
