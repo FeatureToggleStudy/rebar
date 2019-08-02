@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NationalInstruments.Compiler.SemanticAnalysis;
 using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using Rebar.Common;
@@ -28,6 +25,18 @@ namespace Tests.Rebar.Unit.Compiler
 
             VariableReference innerSelectorVariable = patternStructure.Selector.OutputTerminals[0].GetTrueVariable();
             Assert.IsTrue(innerSelectorVariable.Type.IsInt32());
+        }
+
+        [TestMethod]
+        public void OptionPatternStructureWithUnwiredSelector_ValidateVariableUsages_RequiredTerminalUnconnectedError()
+        {
+            DfirRoot function = DfirRoot.Create();
+            OptionPatternStructure patternStructure = CreateOptionPatternStructure(function.BlockDiagram);
+
+            RunSemanticAnalysisUpToValidation(function);
+
+            OptionPatternStructureSelector selector = patternStructure.Selector;
+            Assert.IsTrue(selector.InputTerminals[0].GetDfirMessages().Any(message => message.Descriptor == AllModelsOfComputationErrorMessages.RequiredTerminalUnconnected));
         }
 
         private OptionPatternStructure CreateOptionPatternStructure(Diagram parentDiagram)

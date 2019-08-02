@@ -132,6 +132,7 @@ namespace Rebar.Compiler
 
         public bool VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
         {
+            ValidateRequiredInputTerminal(optionPatternStructureSelector.InputTerminals[0]);
             return true;
         }
 
