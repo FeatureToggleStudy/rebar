@@ -399,6 +399,13 @@ namespace Rebar.Compiler
 
         bool IDfirNodeVisitor<bool>.VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
         {
+            Terminal selectorInput = optionPatternStructureSelector.InputTerminals[0],
+                selectorSomeOutput = optionPatternStructureSelector.OutputTerminals[0];
+
+            TypeVariableReference innerTypeVariable = _typeVariableSet.CreateReferenceToNewTypeVariable(),
+                outerTypeReference = _typeVariableSet.CreateReferenceToConstructorType("Option", innerTypeVariable);
+            _nodeFacade[selectorInput] = new SimpleTerminalFacade(selectorInput, outerTypeReference);
+            _nodeFacade[selectorSomeOutput] = new SimpleTerminalFacade(selectorSomeOutput, innerTypeVariable);
             return true;
         }
 

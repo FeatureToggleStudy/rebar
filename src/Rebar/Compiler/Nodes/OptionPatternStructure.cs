@@ -1,4 +1,5 @@
-﻿using NationalInstruments.Dfir;
+﻿using System.Linq;
+using NationalInstruments.Dfir;
 
 namespace Rebar.Compiler.Nodes
 {
@@ -6,6 +7,7 @@ namespace Rebar.Compiler.Nodes
     {
         public OptionPatternStructure(Diagram parentDiagram) : base(parentDiagram)
         {
+            new OptionPatternStructureSelector(this);
         }
 
         private OptionPatternStructure(Diagram parentDiagram, OptionPatternStructure nodeToCopy, NodeCopyInfo nodeCopyInfo)
@@ -30,5 +32,7 @@ namespace Rebar.Compiler.Nodes
         {
             return base.CreateDiagram();
         }
+
+        public OptionPatternStructureSelector Selector => BorderNodes.OfType<OptionPatternStructureSelector>().First();
     }
 }

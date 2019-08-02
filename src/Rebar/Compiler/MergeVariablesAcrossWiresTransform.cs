@@ -125,6 +125,7 @@ namespace Rebar.Compiler
 
         bool IDfirNodeVisitor<bool>.VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
         {
+            UnifyNodeInputTerminalTypes(optionPatternStructureSelector);
             return true;
         }
 

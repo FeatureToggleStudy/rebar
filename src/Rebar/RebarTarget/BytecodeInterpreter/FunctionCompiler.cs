@@ -697,11 +697,6 @@ namespace Rebar.RebarTarget.BytecodeInterpreter
             throw new NotImplementedException();
         }
 
-        public bool VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
-        {
-            return true;
-        }
-
         public bool VisitTerminateLifetimeNode(TerminateLifetimeNode terminateLifetimeNode)
         {
             return true;
@@ -970,6 +965,20 @@ namespace Rebar.RebarTarget.BytecodeInterpreter
             return true;
         }
 
-#endregion
+        #endregion
+
+        #region Option Pattern Structure
+
+        public bool VisitOptionPatternStructure(OptionPatternStructure optionPatternStructure, StructureTraversalPoint traversalPoint)
+        {
+            return true;
+        }
+
+        public bool VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
+        {
+            return true;
+        }
+
+        #endregion
     }
 }

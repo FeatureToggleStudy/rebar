@@ -228,7 +228,7 @@ namespace Rebar.Compiler
             }
             else if (optionPatternStructureSelector != null)
             {
-                return new Nodes.OptionPatternStructureSelector((Nodes.OptionPatternStructure)dfirParentStructure);
+                return ((Nodes.OptionPatternStructure)dfirParentStructure).Selector;
             }
             throw new NotImplementedException("Unknown BorderNode type: " + sourceModelBorderNode.GetType().Name);
         }

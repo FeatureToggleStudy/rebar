@@ -7,6 +7,7 @@ namespace Rebar.Compiler.Nodes
     {
         T VisitLoop(Loop loop, StructureTraversalPoint traversalPoint);
         T VisitFrame(Frame frame, StructureTraversalPoint traversalPoint);
+        T VisitOptionPatternStructure(OptionPatternStructure optionPatternStructure, StructureTraversalPoint traversalPoint);
     }
 
     internal enum StructureTraversalPoint
@@ -23,6 +24,7 @@ namespace Rebar.Compiler.Nodes
         {
             var frame = structure as Frame;
             var loop = structure as Loop;
+            var optionPatternStructure = structure as OptionPatternStructure;
             if (frame != null)
             {
                 return visitor.VisitFrame(frame, traversalPoint);
@@ -30,6 +32,10 @@ namespace Rebar.Compiler.Nodes
             else if (loop != null)
             {
                 return visitor.VisitLoop(loop, traversalPoint);
+            }
+            else if (optionPatternStructure != null)
+            {
+                return visitor.VisitOptionPatternStructure(optionPatternStructure, traversalPoint);
             }
             throw new NotSupportedException();
         }

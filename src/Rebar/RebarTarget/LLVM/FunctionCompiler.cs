@@ -610,11 +610,6 @@ namespace Rebar.RebarTarget.LLVM
             throw new NotImplementedException();
         }
 
-        public bool VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
-        {
-            return true;
-        }
-
         public bool VisitTerminateLifetimeNode(TerminateLifetimeNode terminateLifetimeNode)
         {
             return true;
@@ -865,6 +860,20 @@ namespace Rebar.RebarTarget.LLVM
 
             // bind the inner value to the output tunnel
             itemSource.UpdateValue(_builder, item);
+            return true;
+        }
+
+        #endregion
+
+        #region Option Pattern Structure
+
+        public bool VisitOptionPatternStructure(OptionPatternStructure optionPatternStructure, StructureTraversalPoint traversalPoint)
+        {
+            return true;
+        }
+
+        public bool VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
+        {
             return true;
         }
 

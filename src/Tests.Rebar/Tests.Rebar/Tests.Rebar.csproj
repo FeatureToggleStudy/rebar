@@ -173,6 +173,7 @@
     <Compile Include="Unit\Compiler\LockTunnelTests.cs" />
     <Compile Include="Unit\Compiler\LoopConditionTunnelTests.cs" />
     <Compile Include="Unit\Compiler\LoopTests.cs" />
+    <Compile Include="Unit\Compiler\OptionPatternStructureTests.cs" />
     <Compile Include="Unit\Compiler\OptionTypeTests.cs" />
     <Compile Include="Unit\Compiler\StringTypeTests.cs" />
     <Compile Include="Unit\Compiler\TerminateLifetimeNodeTests.cs" />
