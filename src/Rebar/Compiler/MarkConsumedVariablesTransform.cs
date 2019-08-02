@@ -134,6 +134,11 @@ namespace Rebar.Compiler
             return true;
         }
 
+        bool IDfirNodeVisitor<bool>.VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
+        {
+            return true;
+        }
+
         bool IDfirNodeVisitor<bool>.VisitTerminateLifetimeNode(TerminateLifetimeNode terminateLifetimeNode)
         {
             terminateLifetimeNode.UnificationState.FinalizeTerminateLifetimeInputs(terminateLifetimeNode, _lifetimeVariableAssociation);

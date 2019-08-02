@@ -397,6 +397,11 @@ namespace Rebar.Compiler
             return true;
         }
 
+        bool IDfirNodeVisitor<bool>.VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
+        {
+            return true;
+        }
+
         bool IDfirNodeVisitor<bool>.VisitTunnel(Tunnel tunnel)
         {
             CreateTunnelNodeFacade(tunnel);

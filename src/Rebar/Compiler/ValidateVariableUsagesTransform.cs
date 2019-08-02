@@ -130,6 +130,11 @@ namespace Rebar.Compiler
             return true;
         }
 
+        public bool VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
+        {
+            return true;
+        }
+
         public bool VisitTerminateLifetimeNode(TerminateLifetimeNode terminateLifetimeNode)
         {
             foreach (var inputTerminal in terminateLifetimeNode.InputTerminals)

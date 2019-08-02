@@ -173,6 +173,7 @@ namespace Rebar.Compiler
             var flatSequenceTerminateLifetimeTunnel = sourceModelBorderNode as FlatSequenceTerminateLifetimeTunnel;
             var loopTerminateLifetimeTunnel = sourceModelBorderNode as LoopTerminateLifetimeTunnel;
             var unwrapOptionTunnel = sourceModelBorderNode as SourceModel.UnwrapOptionTunnel;
+            var optionPatternStructureSelector = sourceModelBorderNode as SourceModel.OptionPatternStructureSelector;
             if (borrowTunnel != null)
             {
                 var borrowDfir = new Nodes.BorrowTunnel(dfirParentStructure, borrowTunnel.BorrowMode);
@@ -225,6 +226,10 @@ namespace Rebar.Compiler
             {
                 return new Nodes.UnwrapOptionTunnel(dfirParentStructure);
             }
+            else if (optionPatternStructureSelector != null)
+            {
+                return new Nodes.OptionPatternStructureSelector((Nodes.OptionPatternStructure)dfirParentStructure);
+            }
             throw new NotImplementedException("Unknown BorderNode type: " + sourceModelBorderNode.GetType().Name);
         }
 
@@ -252,6 +257,7 @@ namespace Rebar.Compiler
                     // TODO: won't work for border nodes with multiple inner terminals per diagram
                     // also assumes that the border node has the same terminals on each diagram, which
                     // won't be true for the pattern selector
+                    // Fortunately, for now, the only inner terminal on OptionPatternStructureSelector is on the first diagram
                     MapTerminalAndType(terminal, dfirBorderNode.GetInnerTerminal(i, 0));
                     ++i;
                 }

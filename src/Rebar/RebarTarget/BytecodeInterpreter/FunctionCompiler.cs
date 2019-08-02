@@ -697,6 +697,11 @@ namespace Rebar.RebarTarget.BytecodeInterpreter
             throw new NotImplementedException();
         }
 
+        public bool VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
+        {
+            return true;
+        }
+
         public bool VisitTerminateLifetimeNode(TerminateLifetimeNode terminateLifetimeNode)
         {
             return true;
