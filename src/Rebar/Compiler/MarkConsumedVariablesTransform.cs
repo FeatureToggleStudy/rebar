@@ -136,6 +136,8 @@ namespace Rebar.Compiler
 
         bool IDfirNodeVisitor<bool>.VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
         {
+            MarkTrueVariableOfTerminalConsumed(optionPatternStructureSelector.InputTerminals[0]);
+            MarkFacadeVariableOfTerminalLive(optionPatternStructureSelector.OutputTerminals[0]);
             return true;
         }
 
