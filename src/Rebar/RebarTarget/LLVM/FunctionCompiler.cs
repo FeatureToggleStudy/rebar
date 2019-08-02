@@ -649,14 +649,11 @@ namespace Rebar.RebarTarget.LLVM
 
         private struct FrameData
         {
-            public FrameData(
-                LLVMBasicBlockRef interiorBlock,
-                LLVMBasicBlockRef unwrapFailedBlock, 
-                LLVMBasicBlockRef endBlock)
+            public FrameData(Frame frame, FunctionCompiler functionCompiler)
             {
-                InteriorBlock = interiorBlock;
-                UnwrapFailedBlock = unwrapFailedBlock;
-                EndBlock = endBlock;
+                InteriorBlock = functionCompiler._topLevelFunction.AppendBasicBlock($"frame{frame.UniqueId}_interior");
+                UnwrapFailedBlock = functionCompiler._topLevelFunction.AppendBasicBlock($"frame{frame.UniqueId}_unwrapFailed");
+                EndBlock = functionCompiler._topLevelFunction.AppendBasicBlock($"frame{frame.UniqueId}_end");
             }
 
             public LLVMBasicBlockRef InteriorBlock { get; }
@@ -687,10 +684,7 @@ namespace Rebar.RebarTarget.LLVM
 
         private void VisitFrameBeforeLeftBorderNodes(Frame frame)
         {
-            LLVMBasicBlockRef interiorBlock = _topLevelFunction.AppendBasicBlock($"frame{frame.UniqueId}_interior"),
-                unwrapFailedBlock = _topLevelFunction.AppendBasicBlock($"frame{frame.UniqueId}_unwrapFailed"),
-                endBlock = _topLevelFunction.AppendBasicBlock($"frame{frame.UniqueId}_end");
-            _frameData[frame] = new FrameData(interiorBlock, unwrapFailedBlock, endBlock);
+            _frameData[frame] = new FrameData(frame, this);
         }
 
         private void VisitFrameAfterLeftBorderNodes(Frame frame)
@@ -753,7 +747,20 @@ namespace Rebar.RebarTarget.LLVM
                 InteriorBlock = interiorBlock;
                 EndBlock = endBlock;
             }
-            
+
+            public LoopData(
+                Compiler.Nodes.Loop loop,
+                FunctionCompiler functionCompiler)
+            {
+                var function = functionCompiler._topLevelFunction;
+                StartBlock = function.AppendBasicBlock($"loop{loop.UniqueId}_start");
+                InteriorBlock = function.AppendBasicBlock($"loop{loop.UniqueId}_interior");
+                EndBlock = function.AppendBasicBlock($"loop{loop.UniqueId}_end");
+                LoopConditionTunnel loopCondition = loop.BorderNodes.OfType<LoopConditionTunnel>().First();
+                Terminal loopConditionInput = loopCondition.InputTerminals[0];
+                ConditionAllocationSource = (LocalAllocationValueSource)functionCompiler.GetTerminalValueSource(loopConditionInput);
+            }
+
             public LocalAllocationValueSource ConditionAllocationSource { get; }
 
             public LLVMBasicBlockRef StartBlock { get; }
@@ -787,18 +794,15 @@ namespace Rebar.RebarTarget.LLVM
 
         private void VisitLoopBeforeLeftBorderNodes(Compiler.Nodes.Loop loop)
         {
-            LLVMBasicBlockRef startBlock = _topLevelFunction.AppendBasicBlock($"loop{loop.UniqueId}_start"),
-                interiorBlock = _topLevelFunction.AppendBasicBlock($"loop{loop.UniqueId}_interior"),
-                endBlock = _topLevelFunction.AppendBasicBlock($"loop{loop.UniqueId}_end");
             LoopConditionTunnel loopCondition = loop.BorderNodes.OfType<LoopConditionTunnel>().First();
             Terminal loopConditionInput = loopCondition.InputTerminals[0];
-            var conditionAllocationSource = (LocalAllocationValueSource)GetTerminalValueSource(loopConditionInput);
-            _loopData[loop] = new LoopData(conditionAllocationSource, startBlock, interiorBlock, endBlock);
+            LoopData loopData = new LoopData(loop, this);
+            _loopData[loop] = loopData;
 
             if (!loopConditionInput.IsConnected)
             {
                 // if loop condition was unwired, initialize it to true
-                conditionAllocationSource.UpdateValue(_builder, true.AsLLVMValue());
+                loopData.ConditionAllocationSource.UpdateValue(_builder, true.AsLLVMValue());
             }
 
             // initialize all output tunnels with None values, in case the loop interior does not execute
@@ -810,8 +814,8 @@ namespace Rebar.RebarTarget.LLVM
                 tunnelOutputSource.UpdateValue(_builder, LLVMSharp.LLVM.ConstNull(tunnelOutputType));
             }
 
-            _builder.CreateBr(startBlock);
-            _builder.PositionBuilderAtEnd(startBlock);
+            _builder.CreateBr(loopData.StartBlock);
+            _builder.PositionBuilderAtEnd(loopData.StartBlock);
         }
 
         private void VisitLoopAfterLeftBorderNodes(Compiler.Nodes.Loop loop)
@@ -867,9 +871,71 @@ namespace Rebar.RebarTarget.LLVM
 
         #region Option Pattern Structure
 
+        private struct OptionPatternStructureData
+        {
+            public OptionPatternStructureData(OptionPatternStructure optionPatternStructure, LLVMValueRef function)
+            {
+                SomeDiagramEntryBlock = function.AppendBasicBlock($"optionPatternStructure{optionPatternStructure.UniqueId}_someEntry");
+                NoneDiagramEntryBlock = function.AppendBasicBlock($"optionPatternStructure{optionPatternStructure.UniqueId}_noneEntry");
+                EndBlock = function.AppendBasicBlock($"optionPatternStructure{optionPatternStructure.UniqueId}_end");
+            }
+
+            public LLVMBasicBlockRef SomeDiagramEntryBlock { get; }
+            public LLVMBasicBlockRef NoneDiagramEntryBlock { get; }
+            public LLVMBasicBlockRef EndBlock { get; }
+        }
+
+        private readonly Dictionary<OptionPatternStructure, OptionPatternStructureData> _optionPatternStructureData = new Dictionary<OptionPatternStructure, OptionPatternStructureData>();
+
         public bool VisitOptionPatternStructure(OptionPatternStructure optionPatternStructure, StructureTraversalPoint traversalPoint, Diagram nestedDiagram)
         {
+            switch (traversalPoint)
+            {
+                case StructureTraversalPoint.BeforeLeftBorderNodes:
+                    VisitOptionPatternStructureBeforeLeftBorderNodes(optionPatternStructure);
+                    break;
+                case StructureTraversalPoint.AfterLeftBorderNodesAndBeforeDiagram:
+                    VisitOptionPatternStructureBeforeDiagram(optionPatternStructure, nestedDiagram);
+                    break;
+                case StructureTraversalPoint.AfterDiagramAndBeforeRightBorderNodes:
+                    VisitOptionPatternStructureAfterDiagram(optionPatternStructure, nestedDiagram);
+                    break;
+                case StructureTraversalPoint.AfterRightBorderNodes:
+                    VisitOptionPatterStructureAfterRightBorderNodes(optionPatternStructure);
+                    break;
+            }
             return true;
+        }
+
+        private void VisitOptionPatternStructureBeforeLeftBorderNodes(OptionPatternStructure optionPatternStructure)
+        {
+            OptionPatternStructureData data = new OptionPatternStructureData(optionPatternStructure, _topLevelFunction);
+            _optionPatternStructureData[optionPatternStructure] = data;
+
+            OptionPatternStructureSelector selector = optionPatternStructure.Selector;
+            var selectorInputAllocationSource = (LocalAllocationValueSource)GetTerminalValueSource(selector.InputTerminals[0]);
+            LLVMValueRef isSomePtr = _builder.CreateStructGEP(selectorInputAllocationSource.AllocationPointer, 0, "isSomePtr");
+            LLVMValueRef isSome = _builder.CreateLoad(isSomePtr, "isSome");
+            _builder.CreateCondBr(isSome, data.SomeDiagramEntryBlock, data.NoneDiagramEntryBlock);
+        }
+
+        private void VisitOptionPatternStructureBeforeDiagram(OptionPatternStructure optionPatternStructure, Diagram diagram)
+        {
+            OptionPatternStructureData data = _optionPatternStructureData[optionPatternStructure];
+            LLVMBasicBlockRef block = diagram == optionPatternStructure.Diagrams[0] ? data.SomeDiagramEntryBlock : data.NoneDiagramEntryBlock;
+            _builder.PositionBuilderAtEnd(block);
+        }
+        
+        private void VisitOptionPatternStructureAfterDiagram(OptionPatternStructure optionPatternStructure, Diagram diagram)
+        {
+            OptionPatternStructureData data = _optionPatternStructureData[optionPatternStructure];
+            _builder.CreateBr(data.EndBlock);
+        }
+
+        private void VisitOptionPatterStructureAfterRightBorderNodes(OptionPatternStructure optionPatternStructure)
+        {
+            OptionPatternStructureData data = _optionPatternStructureData[optionPatternStructure];
+            _builder.PositionBuilderAtEnd(data.EndBlock);
         }
 
         public bool VisitOptionPatternStructureSelector(OptionPatternStructureSelector optionPatternStructureSelector)
