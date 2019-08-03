@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NationalInstruments.DataTypes;
 using NationalInstruments.Dfir;
 using Rebar.Common;
@@ -34,32 +35,17 @@ namespace Tests.Rebar.Unit.Execution
 
         private class OptionPatternStructureWithInspectOnEachDiagramTest
         {
-            private readonly ExecutionTestBase _test;
+            private readonly OptionPatternStructureExecutionTests _test;
             private readonly DfirRoot _function;
             private readonly FunctionalNode _someInspectNode, _noneInspectNode;
 
-            public OptionPatternStructureWithInspectOnEachDiagramTest(ExecutionTestBase test, bool selectorValueIsSome)
+            public OptionPatternStructureWithInspectOnEachDiagramTest(OptionPatternStructureExecutionTests test, bool selectorValueIsSome)
             {
                 _test = test;
                 _function = DfirRoot.Create();
-                OptionPatternStructure patternStructure = _test.CreateOptionPatternStructure(_function.BlockDiagram);
-                if (selectorValueIsSome)
-                {
-                    FunctionalNode someConstructor = new FunctionalNode(_function.BlockDiagram, Signatures.SomeConstructorType);
-                    Wire.Create(_function.BlockDiagram, someConstructor.OutputTerminals[0], patternStructure.Selector.InputTerminals[0]);
-                    _test.ConnectConstantToInputTerminal(someConstructor.InputTerminals[0], PFTypes.Int32, 0, false);
-                }
-                else
-                {
-                    FunctionalNode someConstructor = new FunctionalNode(_function.BlockDiagram, Signatures.SomeConstructorType);
-                    _test.ConnectConstantToInputTerminal(someConstructor.InputTerminals[0], PFTypes.Int32, 0, false);
-                    FunctionalNode assign = new FunctionalNode(_function.BlockDiagram, Signatures.AssignType);
-                    Wire optionValueWire = Wire.Create(_function.BlockDiagram, someConstructor.OutputTerminals[0], assign.InputTerminals[0]);
-                    optionValueWire.SetWireBeginsMutableVariable(true);
-                    FunctionalNode noneConstructor = new FunctionalNode(_function.BlockDiagram, Signatures.NoneConstructorType);
-                    Wire.Create(_function.BlockDiagram, noneConstructor.OutputTerminals[0], assign.InputTerminals[1]);
-                    Wire.Create(_function.BlockDiagram, assign.OutputTerminals[0], patternStructure.Selector.InputTerminals[0]);
-                }
+                OptionPatternStructure patternStructure = _test.CreateOptionPatternStructureWithOptionValueWiredToSelector(
+                    _function.BlockDiagram,
+                    selectorValueIsSome ? (int?)0 : null);
 
                 _someInspectNode = new FunctionalNode(patternStructure.Diagrams[0], Signatures.InspectType);
                 _test.ConnectConstantToInputTerminal(_someInspectNode.InputTerminals[0], PFTypes.Int32, 1, false);
@@ -84,10 +70,7 @@ namespace Tests.Rebar.Unit.Execution
         public void OptionPatternStructureSelectorWiredToInspectOnSomeValueDiagram_Execute_CorrectValue()
         {
             DfirRoot function = DfirRoot.Create();
-            OptionPatternStructure patternStructure = CreateOptionPatternStructure(function.BlockDiagram);
-            FunctionalNode someConstructor = new FunctionalNode(function.BlockDiagram, Signatures.SomeConstructorType);
-            Wire.Create(function.BlockDiagram, someConstructor.OutputTerminals[0], patternStructure.Selector.InputTerminals[0]);
-            ConnectConstantToInputTerminal(someConstructor.InputTerminals[0], PFTypes.Int32, 1, false);
+            OptionPatternStructure patternStructure = CreateOptionPatternStructureWithOptionValueWiredToSelector(function.BlockDiagram, 1);
             FunctionalNode someInspectNode = new FunctionalNode(patternStructure.Diagrams[0], Signatures.InspectType);
             Wire.Create(patternStructure.Diagrams[0], patternStructure.Selector.OutputTerminals[0], someInspectNode.InputTerminals[0]);
 
@@ -95,6 +78,66 @@ namespace Tests.Rebar.Unit.Execution
 
             byte[] inspectValue = executionInstance.GetLastValueFromInspectNode(someInspectNode);
             AssertByteArrayIsInt32(inspectValue, 1);
+        }
+
+        [TestMethod]
+        public void OptionPatternStructureWithOutputTunnelAndSomeValueWiredToSelector_Execute_CorrectValueFromOutputTunnel()
+        {
+            DfirRoot function = CreateOptionPatternStructureWithOutputTunnelAndInspect(true, 1, 0);
+
+            TestExecutionInstance executionInstance = CompileAndExecuteFunction(function);
+
+            var inspectNode = function.BlockDiagram.Nodes.OfType<FunctionalNode>().Where(f => f.Signature == Signatures.InspectType).First();
+            byte[] inspectValue = executionInstance.GetLastValueFromInspectNode(inspectNode);
+            AssertByteArrayIsInt32(inspectValue, 1);
+        }
+
+        [TestMethod]
+        public void OptionPatternStructureWithOutputTunnelAndNoneValueWiredToSelector_Execute_CorrectValueFromOutputTunnel()
+        {
+            DfirRoot function = CreateOptionPatternStructureWithOutputTunnelAndInspect(false, 0, 1);
+
+            TestExecutionInstance executionInstance = CompileAndExecuteFunction(function);
+
+            var inspectNode = function.BlockDiagram.Nodes.OfType<FunctionalNode>().Where(f => f.Signature == Signatures.InspectType).First();
+            byte[] inspectValue = executionInstance.GetLastValueFromInspectNode(inspectNode);
+            AssertByteArrayIsInt32(inspectValue, 1);
+        }
+
+        private DfirRoot CreateOptionPatternStructureWithOutputTunnelAndInspect(bool selectorValueIsSome, int someDiagramTunnelValue, int noneDiagramTunnelValue)
+        {
+            DfirRoot function = DfirRoot.Create();
+            OptionPatternStructure patternStructure = CreateOptionPatternStructureWithOptionValueWiredToSelector(
+                function.BlockDiagram,
+                selectorValueIsSome ? (int?)0 : null);
+            Tunnel outputTunnel = CreateOutputTunnel(patternStructure);
+            ConnectConstantToInputTerminal(outputTunnel.InputTerminals[0], PFTypes.Int32, someDiagramTunnelValue, false);
+            ConnectConstantToInputTerminal(outputTunnel.InputTerminals[1], PFTypes.Int32, noneDiagramTunnelValue, false);
+            FunctionalNode inspectNode = new FunctionalNode(function.BlockDiagram, Signatures.InspectType);
+            Wire.Create(function.BlockDiagram, outputTunnel.OutputTerminals[0], inspectNode.InputTerminals[0]);
+            return function;
+        }
+
+        private OptionPatternStructure CreateOptionPatternStructureWithOptionValueWiredToSelector(Diagram parentDiagram, int? selectorValue)
+        {
+            OptionPatternStructure patternStructure = CreateOptionPatternStructure(parentDiagram);
+            FunctionalNode someConstructor = new FunctionalNode(parentDiagram, Signatures.SomeConstructorType);
+            if (selectorValue != null)
+            {
+                Wire.Create(parentDiagram, someConstructor.OutputTerminals[0], patternStructure.Selector.InputTerminals[0]);
+                ConnectConstantToInputTerminal(someConstructor.InputTerminals[0], PFTypes.Int32, selectorValue, false);
+            }
+            else
+            {
+                ConnectConstantToInputTerminal(someConstructor.InputTerminals[0], PFTypes.Int32, 0, false);
+                FunctionalNode assign = new FunctionalNode(parentDiagram, Signatures.AssignType);
+                Wire optionValueWire = Wire.Create(parentDiagram, someConstructor.OutputTerminals[0], assign.InputTerminals[0]);
+                optionValueWire.SetWireBeginsMutableVariable(true);
+                FunctionalNode noneConstructor = new FunctionalNode(parentDiagram, Signatures.NoneConstructorType);
+                Wire.Create(parentDiagram, noneConstructor.OutputTerminals[0], assign.InputTerminals[1]);
+                Wire.Create(parentDiagram, assign.OutputTerminals[0], patternStructure.Selector.InputTerminals[0]);
+            }
+            return patternStructure;
         }
     }
 }

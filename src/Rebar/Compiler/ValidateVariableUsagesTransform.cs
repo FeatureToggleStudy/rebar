@@ -160,7 +160,10 @@ namespace Rebar.Compiler
 
         public bool VisitTunnel(Tunnel tunnel)
         {
-            ValidateRequiredInputTerminal(tunnel.InputTerminals[0]);
+            foreach (Terminal inputTerminal in tunnel.InputTerminals)
+            {
+                ValidateRequiredInputTerminal(inputTerminal);
+            }
             return true;
         }
 

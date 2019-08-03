@@ -14,7 +14,8 @@ namespace Rebar.Compiler.Nodes
     {
         BeforeLeftBorderNodes,
         AfterLeftBorderNodesAndBeforeDiagram,
-        AfterDiagramAndBeforeRightBorderNodes,
+        AfterDiagram,
+        AfterAllDiagramsAndBeforeRightBorderNodes,
         AfterRightBorderNodes
     }
 

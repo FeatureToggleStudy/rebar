@@ -419,14 +419,15 @@ namespace Rebar.Compiler
         {
             AutoBorrowNodeFacade nodeFacade = AutoBorrowNodeFacade.GetNodeFacade(tunnel);
             TypeVariableSet typeVariableSet = tunnel.DfirRoot.GetTypeVariableSet();
-            Terminal valueInput = tunnel.InputTerminals.ElementAt(0),
-                valueOutput = tunnel.OutputTerminals.ElementAt(0);
 
             TypeVariableReference typeVariable;
 
             bool executesConditionally = DoesStructureExecuteConditionally(tunnel.ParentStructure);
             if (executesConditionally && tunnel.Direction == Direction.Output)
             {
+                Terminal valueInput = tunnel.InputTerminals.ElementAt(0),
+                    valueOutput = tunnel.OutputTerminals.ElementAt(0);
+
                 typeVariable = typeVariableSet.CreateReferenceToNewTypeVariable();
                 nodeFacade[valueOutput] = new SimpleTerminalFacade(valueOutput, typeVariable);
                 nodeFacade[valueInput] = new TunnelTerminalFacade(valueInput, nodeFacade[valueOutput]);
@@ -436,13 +437,15 @@ namespace Rebar.Compiler
                 List<Constraint> constraints = new List<Constraint>();
                 if (tunnel.Direction == Direction.Output)
                 {
-                    // TODO: for multi-frame structures, not sure which lifetime graph to use here
-                    LifetimeGraphIdentifier parentLifetimeGraph = valueInput.ParentDiagram.GetLifetimeGraphIdentifier();
+                    // TODO: for multi-diagram structures, each diagram should share a lifetime related to the entire structure
+                    LifetimeGraphIdentifier parentLifetimeGraph = tunnel.InputTerminals[0].ParentDiagram.GetLifetimeGraphIdentifier();
                     constraints.Add(new OutlastsLifetimeGraphConstraint(parentLifetimeGraph));
                 }
                 typeVariable = typeVariableSet.CreateReferenceToNewTypeVariable(constraints);
-                nodeFacade[valueOutput] = new SimpleTerminalFacade(valueOutput, typeVariable);
-                nodeFacade[valueInput] = new SimpleTerminalFacade(valueInput, typeVariable);
+                foreach (Terminal terminal in tunnel.Terminals)
+                {
+                    nodeFacade[terminal] = new SimpleTerminalFacade(terminal, typeVariable);
+                }
             }
         }
 

@@ -58,8 +58,9 @@ namespace Rebar.Compiler
             {
                 VisitStructure(structure, Nodes.StructureTraversalPoint.AfterLeftBorderNodesAndBeforeDiagram, diagram);
                 TraverseDiagram(diagram);
-                VisitStructure(structure, Nodes.StructureTraversalPoint.AfterDiagramAndBeforeRightBorderNodes, diagram);
+                VisitStructure(structure, Nodes.StructureTraversalPoint.AfterDiagram, diagram);
             }
+            VisitStructure(structure, Nodes.StructureTraversalPoint.AfterAllDiagramsAndBeforeRightBorderNodes, null);
             foreach (BorderNode outputBorderNode in structure.BorderNodes.Where(bn => bn.Direction == Direction.Output))
             {
                 VisitBorderNode(outputBorderNode);

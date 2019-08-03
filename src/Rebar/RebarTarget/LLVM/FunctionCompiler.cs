@@ -416,6 +416,15 @@ namespace Rebar.RebarTarget.LLVM
         protected override void VisitStructure(Structure structure, StructureTraversalPoint traversalPoint, Diagram nestedDiagram)
         {
             base.VisitStructure(structure, traversalPoint, nestedDiagram);
+
+            if (traversalPoint == StructureTraversalPoint.BeforeLeftBorderNodes)
+            {
+                foreach (Tunnel tunnel in structure.BorderNodes.OfType<Tunnel>())
+                {
+                    _tunnelInfos[tunnel] = new TunnelInfo();
+                }
+            }
+
             this.VisitRebarStructure(structure, traversalPoint, nestedDiagram);
         }
 
@@ -620,27 +629,71 @@ namespace Rebar.RebarTarget.LLVM
             return true;
         }
 
-        public bool VisitTunnel(Tunnel tunnel)
+        private class TunnelInfo
         {
-            VariableReference input = tunnel.InputTerminals[0].GetTrueVariable(),
-                output = tunnel.OutputTerminals[0].GetTrueVariable();
-            ValueSource inputValueSource = _variableValues[input],
-                outputValueSource = _variableValues[output];
-            if (output.Type == input.Type.CreateOption())
+            private readonly Dictionary<Diagram, LLVMBasicBlockRef> _tunnelDiagramFinalBasicBlocks = new Dictionary<Diagram, LLVMBasicBlockRef>();
+
+            public void AddDiagramFinalBasicBlock(Diagram diagram, LLVMBasicBlockRef finalBasicBlock)
             {
-                LLVMValueRef[] someFieldValues = new[]
-                {
-                    true.AsLLVMValue(),
-                    inputValueSource.GetValue(_builder)
-                };
-                ((LocalAllocationValueSource)outputValueSource).UpdateStructValue(_builder, someFieldValues);
-                return true;
+                _tunnelDiagramFinalBasicBlocks[diagram] = finalBasicBlock;
             }
 
-            if (inputValueSource != outputValueSource)
+            public LLVMBasicBlockRef GetDiagramFinalBasicBlock(Diagram diagram) => _tunnelDiagramFinalBasicBlocks[diagram];
+        }
+
+        private readonly Dictionary<Tunnel, TunnelInfo> _tunnelInfos = new Dictionary<Tunnel, TunnelInfo>();
+
+        public bool VisitTunnel(Tunnel tunnel)
+        {
+            if (tunnel.Terminals.HasExactly(2))
             {
-                // For now assume that the allocator will always make the input and output the same ValueSource.
-                throw new NotImplementedException();
+                VariableReference input = tunnel.InputTerminals[0].GetTrueVariable(),
+                    output = tunnel.OutputTerminals[0].GetTrueVariable();
+                ValueSource inputValueSource = _variableValues[input],
+                    outputValueSource = _variableValues[output];
+                if (output.Type == input.Type.CreateOption())
+                {
+                    LLVMValueRef[] someFieldValues = new[]
+                    {
+                        true.AsLLVMValue(),
+                        inputValueSource.GetValue(_builder)
+                    };
+                    ((LocalAllocationValueSource)outputValueSource).UpdateStructValue(_builder, someFieldValues);
+                    return true;
+                }
+
+                if (inputValueSource != outputValueSource)
+                {
+                    // For now assume that the allocator will always make the input and output the same ValueSource.
+                    throw new NotImplementedException();
+                }
+            }
+            else
+            {
+                if (tunnel.InputTerminals.HasMoreThan(1))
+                {
+                    var inputVariables = tunnel.InputTerminals.Select(VariableExtensions.GetTrueVariable);
+                    var inputValuePtrs = new List<LLVMValueRef>();
+                    var inputBasicBlocks = new List<LLVMBasicBlockRef>();
+                    TunnelInfo tunnelInfo = _tunnelInfos[tunnel];
+                    foreach (var inputTerminal in tunnel.InputTerminals)
+                    {
+                        var inputAllocation = (LocalAllocationValueSource)GetTerminalValueSource(inputTerminal);
+                        inputValuePtrs.Add(inputAllocation.AllocationPointer);
+                        LLVMBasicBlockRef inputBasicBlock = tunnelInfo.GetDiagramFinalBasicBlock(inputTerminal.ParentDiagram);
+                        inputBasicBlocks.Add(inputBasicBlock);
+                    }
+
+                    var outputAllocation = (LocalAllocationValueSource)GetTerminalValueSource(tunnel.OutputTerminals[0]);
+                    LLVMValueRef tunnelValuePtr = _builder.CreatePhi(outputAllocation.AllocationPointer.TypeOf(), "tunnelValuePtr");
+                    tunnelValuePtr.AddIncoming(inputValuePtrs.ToArray(), inputBasicBlocks.ToArray(), (uint)inputValuePtrs.Count);
+                    LLVMValueRef tunnelValue = _builder.CreateLoad(tunnelValuePtr, nameof(tunnelValue));
+                    outputAllocation.UpdateValue(_builder, tunnelValue);
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
             }
             return true;
         }
@@ -897,11 +950,11 @@ namespace Rebar.RebarTarget.LLVM
                 case StructureTraversalPoint.AfterLeftBorderNodesAndBeforeDiagram:
                     VisitOptionPatternStructureBeforeDiagram(optionPatternStructure, nestedDiagram);
                     break;
-                case StructureTraversalPoint.AfterDiagramAndBeforeRightBorderNodes:
+                case StructureTraversalPoint.AfterDiagram:
                     VisitOptionPatternStructureAfterDiagram(optionPatternStructure, nestedDiagram);
                     break;
-                case StructureTraversalPoint.AfterRightBorderNodes:
-                    VisitOptionPatterStructureAfterRightBorderNodes(optionPatternStructure);
+                case StructureTraversalPoint.AfterAllDiagramsAndBeforeRightBorderNodes:
+                    VisitOptionPatternStructureAfterAllDiagramsAndBeforeRightBorderNodes(optionPatternStructure);
                     break;
             }
             return true;
@@ -928,11 +981,17 @@ namespace Rebar.RebarTarget.LLVM
         
         private void VisitOptionPatternStructureAfterDiagram(OptionPatternStructure optionPatternStructure, Diagram diagram)
         {
+            LLVMBasicBlockRef currentBlock = _builder.GetInsertBlock();
+            foreach (Tunnel outputTunnel in optionPatternStructure.Tunnels.Where(tunnel => tunnel.Direction == Direction.Output))
+            {
+                _tunnelInfos[outputTunnel].AddDiagramFinalBasicBlock(diagram, currentBlock);
+            }
+
             OptionPatternStructureData data = _optionPatternStructureData[optionPatternStructure];
             _builder.CreateBr(data.EndBlock);
         }
 
-        private void VisitOptionPatterStructureAfterRightBorderNodes(OptionPatternStructure optionPatternStructure)
+        private void VisitOptionPatternStructureAfterAllDiagramsAndBeforeRightBorderNodes(OptionPatternStructure optionPatternStructure)
         {
             OptionPatternStructureData data = _optionPatternStructureData[optionPatternStructure];
             _builder.PositionBuilderAtEnd(data.EndBlock);
