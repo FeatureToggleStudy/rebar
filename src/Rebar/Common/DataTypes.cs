@@ -30,6 +30,8 @@ namespace Rebar.Common
 
         private static NIType StringSplitIteratorGenericType { get; }
 
+        public static NIType FileHandleType { get; }
+
         static DataTypes()
         {
             var mutableReferenceGenericTypeBuilder = PFTypes.Factory.DefineReferenceClass("MutableReference");
@@ -89,6 +91,10 @@ namespace Rebar.Common
             vectorGenericTypeBuilder.MakeGenericParameters("T");
             vectorGenericTypeBuilder.AddTypeKeywordProviderAttribute(RebarTypeKeyword);
             VectorGenericType = vectorGenericTypeBuilder.CreateType();
+
+            var fileHandleTypeBuilder = PFTypes.Factory.DefineValueClass("FileHandle");
+            fileHandleTypeBuilder.AddTypeKeywordProviderAttribute(RebarTypeKeyword);
+            FileHandleType = fileHandleTypeBuilder.CreateType();
         }
 
         private static NIType SpecializeGenericType(NIType genericTypeDefinition, params NIType[] typeParameters)
@@ -385,13 +391,23 @@ namespace Rebar.Common
             return false;
         }
 
+        internal static bool IsSupportedIntegerType(this NIType type)
+        {
+            return type.IsInt32() || (type.IsInteger() && RebarFeatureToggles.IsAllIntegerTypesEnabled);
+        }
+
         internal static bool TypeHasDisplayTrait(this NIType type)
         {
             if (type.IsString() || type == StringSliceType)
             {
                 return RebarFeatureToggles.IsStringDataTypeEnabled;
             }
-            return type.IsInt32();
+            return type.IsSupportedIntegerType() || type.IsBoolean();
+        }
+
+        internal static bool TypeHasDropTrait(this NIType type)
+        {
+            return type == PFTypes.String || type == FileHandleType;
         }
     }
 }

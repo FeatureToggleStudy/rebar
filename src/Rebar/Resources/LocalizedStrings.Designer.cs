@@ -81,6 +81,24 @@ namespace Rebar.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Rebar.
         /// </summary>
+        internal static string FeatureToggle_AllIntegerTypes_Category {
+            get {
+                return ResourceManager.GetString("FeatureToggle_AllIntegerTypes_Category", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable support for all integer data types..
+        /// </summary>
+        internal static string FeatureToggle_AllIntegerTypes_Description {
+            get {
+                return ResourceManager.GetString("FeatureToggle_AllIntegerTypes_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rebar.
+        /// </summary>
         internal static string FeatureToggle_CellDataType_Category {
             get {
                 return ResourceManager.GetString("FeatureToggle_CellDataType_Category", resourceCulture);
@@ -93,6 +111,42 @@ namespace Rebar.Resources {
         internal static string FeatureToggle_CellDataType_Description {
             get {
                 return ResourceManager.GetString("FeatureToggle_CellDataType_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rebar.
+        /// </summary>
+        internal static string FeatureToggle_FileHandleDataType_Category {
+            get {
+                return ResourceManager.GetString("FeatureToggle_FileHandleDataType_Category", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable File Handle data type and related nodes.
+        /// </summary>
+        internal static string FeatureToggle_FileHandleDataType_Description {
+            get {
+                return ResourceManager.GetString("FeatureToggle_FileHandleDataType_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rebar.
+        /// </summary>
+        internal static string FeatureToggle_LLVMCompiler_Category {
+            get {
+                return ResourceManager.GetString("FeatureToggle_LLVMCompiler_Category", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable LLVM-based compiler for Rebar execution target (requires enabling Rebar execution target).
+        /// </summary>
+        internal static string FeatureToggle_LLVMCompiler_Description {
+            get {
+                return ResourceManager.GetString("FeatureToggle_LLVMCompiler_Description", resourceCulture);
             }
         }
         

@@ -1,10 +1,11 @@
-﻿using System.Linq;
+﻿#define LLVM_TEST
+
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NationalInstruments.Dfir;
 using Rebar.Common;
 using Rebar.Compiler;
 using Rebar.Compiler.Nodes;
-using Rebar.RebarTarget.Execution;
 
 namespace Tests.Rebar.Unit.Execution
 {
@@ -22,12 +23,18 @@ namespace Tests.Rebar.Unit.Execution
             ExplicitBorrowNode borrow2 = ConnectExplicitBorrowToInputTerminals(inspect2Node.InputTerminals[0]);
             Wire.Create(function.BlockDiagram, stringSliceConstant.OutputTerminal, borrow1.InputTerminals[0], borrow2.InputTerminals[0]);
 
-            ExecutionContext context = CompileAndExecuteFunction(function);
+            TestExecutionInstance executionInstance = CompileAndExecuteFunction(function);
 
-            byte[] inspect1Value = GetLastValueFromInspectNode(context, inspect1Node);
-            Assert.AreEqual(8, inspect1Value.Length);
-            byte[] inspect2Value = GetLastValueFromInspectNode(context, inspect2Node);
-            Assert.AreEqual(8, inspect2Value.Length);
+#if LLVM_TEST
+            const int stringSliceReferenceSize = 16;
+#else
+            const int stringSliceReferenceSize = 8;
+#endif
+
+            byte[] inspect1Value = executionInstance.GetLastValueFromInspectNode(inspect1Node);
+            Assert.AreEqual(stringSliceReferenceSize, inspect1Value.Length);
+            byte[] inspect2Value = executionInstance.GetLastValueFromInspectNode(inspect2Node);
+            Assert.AreEqual(stringSliceReferenceSize, inspect2Value.Length);
             Assert.IsTrue(inspect1Value.Zip(inspect2Value, (a, b) => a == b).All(b => b));
         }
 
@@ -38,13 +45,11 @@ namespace Tests.Rebar.Unit.Execution
             FunctionalNode output = new FunctionalNode(function.BlockDiagram, Signatures.OutputType);
             FunctionalNode stringFromSlice = new FunctionalNode(function.BlockDiagram, Signatures.StringFromSliceType);
             Wire.Create(function.BlockDiagram, stringFromSlice.OutputTerminals[1], output.InputTerminals[0]);
-            Constant stringConstant = ConnectConstantToInputTerminal(stringFromSlice.InputTerminals[0], DataTypes.StringSliceType.CreateImmutableReference(), false);
-            stringConstant.Value = "test";
+            Constant stringConstant = ConnectStringConstantToInputTerminal(stringFromSlice.InputTerminals[0], "test");
 
-            var runtimeServices = new TestRuntimeServices();
-            ExecutionContext context = CompileAndExecuteFunction(function, runtimeServices);
+            TestExecutionInstance executionInstance = CompileAndExecuteFunction(function);
 
-            Assert.AreEqual("test", runtimeServices.LastOutputValue);
+            Assert.AreEqual("test", executionInstance.RuntimeServices.LastOutputValue);
         }
 
         [TestMethod]
@@ -56,13 +61,11 @@ namespace Tests.Rebar.Unit.Execution
             Wire.Create(function.BlockDiagram, stringToSlice.OutputTerminals[0], output.InputTerminals[0]);
             FunctionalNode stringFromSlice = new FunctionalNode(function.BlockDiagram, Signatures.StringFromSliceType);
             Wire.Create(function.BlockDiagram, stringFromSlice.OutputTerminals[1], stringToSlice.InputTerminals[0]);
-            Constant stringConstant = ConnectConstantToInputTerminal(stringFromSlice.InputTerminals[0], DataTypes.StringSliceType.CreateImmutableReference(), false);
-            stringConstant.Value = "test";
+            Constant stringConstant = ConnectStringConstantToInputTerminal(stringFromSlice.InputTerminals[0], "test");
 
-            var runtimeServices = new TestRuntimeServices();
-            ExecutionContext context = CompileAndExecuteFunction(function, runtimeServices);
+            TestExecutionInstance executionInstance = CompileAndExecuteFunction(function);
 
-            Assert.AreEqual("test", runtimeServices.LastOutputValue);
+            Assert.AreEqual("test", executionInstance.RuntimeServices.LastOutputValue);
         }
 
         [TestMethod]
@@ -72,15 +75,31 @@ namespace Tests.Rebar.Unit.Execution
             FunctionalNode output = new FunctionalNode(function.BlockDiagram, Signatures.OutputType);
             FunctionalNode stringConcat = new FunctionalNode(function.BlockDiagram, Signatures.StringConcatType);
             Wire.Create(function.BlockDiagram, stringConcat.OutputTerminals[2], output.InputTerminals[0]);
-            Constant stringAConstant = ConnectConstantToInputTerminal(stringConcat.InputTerminals[0], DataTypes.StringSliceType.CreateImmutableReference(), false);
-            stringAConstant.Value = "stringA";
-            Constant stringBConstant = ConnectConstantToInputTerminal(stringConcat.InputTerminals[1], DataTypes.StringSliceType.CreateImmutableReference(), false);
-            stringBConstant.Value = "stringB";
+            Constant stringAConstant = ConnectStringConstantToInputTerminal(stringConcat.InputTerminals[0], "stringA");
+            Constant stringBConstant = ConnectStringConstantToInputTerminal(stringConcat.InputTerminals[1], "stringB");
 
-            var runtimeServices = new TestRuntimeServices();
-            ExecutionContext context = CompileAndExecuteFunction(function, runtimeServices);
+            TestExecutionInstance executionInstance = CompileAndExecuteFunction(function);
 
-            Assert.AreEqual("stringAstringB", runtimeServices.LastOutputValue);
+            Assert.AreEqual("stringAstringB", executionInstance.RuntimeServices.LastOutputValue);
+        }
+
+        [TestMethod]
+        public void StringConcatOwnedStrings_Execute_CorrectResult()
+        {
+            DfirRoot function = DfirRoot.Create();
+            FunctionalNode output = new FunctionalNode(function.BlockDiagram, Signatures.OutputType);
+            FunctionalNode stringConcat = new FunctionalNode(function.BlockDiagram, Signatures.StringConcatType);
+            Wire.Create(function.BlockDiagram, stringConcat.OutputTerminals[2], output.InputTerminals[0]);
+            FunctionalNode stringFromSliceA = new FunctionalNode(function.BlockDiagram, Signatures.StringFromSliceType),
+                stringFromSliceB = new FunctionalNode(function.BlockDiagram, Signatures.StringFromSliceType);
+            Wire.Create(function.BlockDiagram, stringFromSliceA.OutputTerminals[1], stringConcat.InputTerminals[0]);
+            Wire.Create(function.BlockDiagram, stringFromSliceB.OutputTerminals[1], stringConcat.InputTerminals[1]);
+            Constant stringAConstant = ConnectStringConstantToInputTerminal(stringFromSliceA.InputTerminals[0], "stringA");
+            Constant stringBConstant = ConnectStringConstantToInputTerminal(stringFromSliceB.InputTerminals[0], "stringB");
+
+            TestExecutionInstance executionInstance = CompileAndExecuteFunction(function);
+
+            Assert.AreEqual("stringAstringB", executionInstance.RuntimeServices.LastOutputValue);
         }
 
         [TestMethod]
@@ -93,15 +112,12 @@ namespace Tests.Rebar.Unit.Execution
             FunctionalNode stringFromSlice = new FunctionalNode(function.BlockDiagram, Signatures.StringFromSliceType);
             Wire stringWire = Wire.Create(function.BlockDiagram, stringFromSlice.OutputTerminals[1], stringAppend.InputTerminals[0]);
             stringWire.SetWireBeginsMutableVariable(true);
-            Constant stringAConstant = ConnectConstantToInputTerminal(stringFromSlice.InputTerminals[0], DataTypes.StringSliceType.CreateImmutableReference(), false);
-            stringAConstant.Value = "longString";
-            Constant stringBConstant = ConnectConstantToInputTerminal(stringAppend.InputTerminals[1], DataTypes.StringSliceType.CreateImmutableReference(), false);
-            stringBConstant.Value = "short";
+            Constant stringAConstant = ConnectStringConstantToInputTerminal(stringFromSlice.InputTerminals[0], "longString");
+            Constant stringBConstant = ConnectStringConstantToInputTerminal(stringAppend.InputTerminals[1], "short");
 
-            var runtimeServices = new TestRuntimeServices();
-            ExecutionContext context = CompileAndExecuteFunction(function, runtimeServices);
+            TestExecutionInstance executionInstance = CompileAndExecuteFunction(function);
 
-            Assert.AreEqual("longStringshort", runtimeServices.LastOutputValue);
+            Assert.AreEqual("longStringshort", executionInstance.RuntimeServices.LastOutputValue);
         }
     }
 }
